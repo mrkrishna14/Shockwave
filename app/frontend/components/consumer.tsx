@@ -9,7 +9,13 @@ const useSite=(r:DetailedRisk)=>[...r.evidence].reverse().find(e=>e.kind==='sour
 type Proof={expected:string;actual:string};
 // Assertion evidence from the private test log: harness reports ("expected $10.00, actual $0.10")
 // or unittest failures ('$0.10' != '$10.00').
+const shown=(v:unknown)=>typeof v==='boolean'?(v?'Flagged':'Not flagged'):String(v);
+// Scenario case reports (SHOCKWAVE-PROOF lines: the relevant case per phase) win; otherwise
+// assertion messages from the test log.
 function proofFrom(log:string){
+  const cases=log.split('\n').filter(l=>l.startsWith('SHOCKWAVE-PROOF ')).map(l=>{try{return JSON.parse(l.slice(16))}catch{return null}}).filter(Boolean);
+  const find=(phase:string)=>{const c=cases.find((x:{phase:string})=>x.phase===phase);return c?{expected:shown(c.expected),actual:shown(c.actual)}:undefined};
+  if(cases.length)return {baseline:find('baseline'),proposed:find('proposed')};
   const pairs:Proof[]=[...log.matchAll(/expected (\$[\d.,]+), actual (\$[\d.,]+)/g)].map(m=>({expected:m[1],actual:m[2]}));
   for(const m of log.matchAll(/'(\$[\d.,]+)' != '(\$[\d.,]+)'/g))pairs.push({expected:m[2],actual:m[1]});
   return {baseline:pairs.find(p=>p.actual===p.expected),proposed:pairs.find(p=>p.actual!==p.expected)};

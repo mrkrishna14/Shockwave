@@ -6,11 +6,11 @@ import {Empty,Status,Table} from './status';
 
 type Workspace=ReturnType<typeof useWorkspace>;
 export function Provider({w,run}:{w:Workspace;run:(fn:()=>Promise<unknown>)=>void}){
-  const [projectName,setProjectName]=useState('Demo Payments');
+  const [projectName,setProjectName]=useState('Stripe');
   const [email,setEmail]=useState('consumer@example.test');
-  const [search,setSearch]=useState('');
-  const [oldSemantics,setOldSemantics]=useState('USD cents; 1000 = $10');
-  const [newSemantics,setNewSemantics]=useState('USD dollars; 10 = $10');
+  const [search,setSearch]=useState('payment_intents');
+  const [oldSemantics,setOldSemantics]=useState('GET /v1/payment_intents/{intent} amount: USD in cents (minor units). 1000 = $10.00');
+  const [newSemantics,setNewSemantics]=useState('GET /v1/payment_intents/{intent} amount: USD in dollars (major units). 10 = $10.00');
   const data=w.data,org=w.org!;
   const project=data.projects.find(p=>p.id===w.project);
   const tab=w.location.tab;
@@ -24,14 +24,14 @@ export function Provider({w,run}:{w:Workspace;run:(fn:()=>Promise<unknown>)=>voi
     <section className="panel">
       <div className="panel-header"><div><span className="eyebrow">API PROJECT</span><h2>Choose an API</h2></div><Status value={w.capabilities?.discovery==='fixture'?'ready':w.capabilities?.discovery??'unavailable'}/></div>
       {data.projects.length>0&&<label className="field">Project<select value={w.project} onChange={e=>w.navigate({project:e.target.value})}>{data.projects.map(p=><option key={p.id} value={p.id}>{p.name} · {p.service_id}</option>)}</select></label>}
-      <form className="inline-form" onSubmit={e=>{e.preventDefault();run(async()=>{const created=await api<APIProject>('/api-projects',{method:'POST',org:org.id,body:{name:projectName,service_id:'demo-payments',base_urls:['http://demo-payments.test']}});w.navigate({project:created.id,tab:'endpoints'})})}}>
+      <form className="inline-form" onSubmit={e=>{e.preventDefault();run(async()=>{const created=await api<APIProject>('/api-projects',{method:'POST',org:org.id,body:real?{name:projectName,service_id:'stripe',base_urls:['https://api.stripe.com']}:{name:projectName,service_id:'demo-payments',base_urls:['http://demo-payments.test']}});w.navigate({project:created.id,tab:'endpoints'})})}}>
         <label className="field">New project name<input value={projectName} onChange={e=>setProjectName(e.target.value)} required/></label>
-        <button className="button primary">Create Demo Payments API</button>
+        <button className="button primary">{real?'Create Stripe API project':'Create Demo Payments API'}</button>
       </form>
     </section>
     {project&&(tab==='overview'||tab==='endpoints')&&<section className="panel">
       <div className="panel-header"><div><span className="eyebrow">CONTRACT INVENTORY</span><h2>Endpoints and provenance</h2></div><button className="button primary" disabled={w.capabilities?.discovery!=='fixture'} onClick={()=>run(()=>api(`/api-projects/${project.id}/discoveries`,{method:'POST',org:org.id,body:{spec_reference:'demo-fixture'}}))}>Load contract</button></div>
-      <p>Shockwave reads the API&apos;s OpenAPI description and its server code, then reconciles the two. An incomplete scan never means an endpoint is absent.</p>
+      <p>{project.service_id==='stripe'?'Shockwave reads Stripe\'s published OpenAPI description (pinned version 2026-09-30). Stripe\'s server code is not part of this inventory.':'Shockwave reads the API\'s OpenAPI description and its server code, then reconciles the two.'} An incomplete scan never means an endpoint is absent.</p>
       <label className="field search">Search methods and paths<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="GET /v1/charges"/></label>
       {data.endpoints.length?<Table headers={['Method','Path','Provenance','Coverage']}>
         {data.endpoints.filter(e=>(e.method+' '+e.path).toLowerCase().includes(search.toLowerCase())).map(e=><tr key={e.id}><td><Status value={e.method}/></td><td><code>{e.path}</code></td><td>{e.evidence.map(x=>x.source_uri).join(', ')}<div className="small-muted">{e.confidence}</div></td><td><Status value={e.reconciliation}/></td></tr>)}
