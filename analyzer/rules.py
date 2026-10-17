@@ -104,6 +104,10 @@ STORAGE_CAVEAT = (
 )
 STORAGE_MISSING_EVIDENCE = ("units/schema of the destination", "historical records", "migration plan")
 MISSING_SCENARIO = "an executable scenario for this usage"
+MISSING_COMPARISON_SCENARIO = "an executable comparison scenario"
+# Missing-evidence items that name an absent scenario: dropped from a Risk whose dependencies a
+# catalog scenario is bound to (the scenario exists; only its execution is outstanding).
+SCENARIO_MISSING_EVIDENCE = frozenset({MISSING_SCENARIO, MISSING_COMPARISON_SCENARIO})
 
 REASON_UNRESOLVED_DEPENDENCY = "the scanner could not resolve the dependency's origin or usage"
 REASON_ENCLOSING_OBJECT = "it consumes an enclosing object, so use of the changed field is not visible"
@@ -462,7 +466,7 @@ def _threshold_shift(change: APIChange, dependency: Dependency, context: UnitsCo
             f"No threshold rescale is needed at {_place(dependency)}; confirm that {change.field_path} is compared "
             "as received and keep a comparison test across the cutover."
         )
-        missing = ("whether the value is transformed before the comparison", "an executable comparison scenario")
+        missing = ("whether the value is transformed before the comparison", MISSING_COMPARISON_SCENARIO)
         return RuleOutcome("comparison", "low", "inferred", explanation, action, missing)
     if threshold is None:
         explanation = (
@@ -488,7 +492,7 @@ def _threshold_shift(change: APIChange, dependency: Dependency, context: UnitsCo
         f"Confirm the unit of the threshold at {_place(dependency)}; if it is in {old}, {rescale} for the proposed "
         "contract and add a comparison test before cutover."
     )
-    missing = ("intended unit of the threshold", "an executable comparison scenario")
+    missing = ("intended unit of the threshold", MISSING_COMPARISON_SCENARIO)
     return RuleOutcome("comparison", "high", "inferred", explanation, action, missing)
 
 
@@ -618,7 +622,10 @@ __all__ = [
     "CONFIDENCE_ORDER",
     "MAX_ACTION_CHARS",
     "MAX_EXPLANATION_CHARS",
+    "MISSING_COMPARISON_SCENARIO",
+    "MISSING_SCENARIO",
     "RULES_LABEL",
+    "SCENARIO_MISSING_EVIDENCE",
     "SEVERITY_ORDER",
     "STORAGE_CAVEAT",
     "STORAGE_MISSING_EVIDENCE",

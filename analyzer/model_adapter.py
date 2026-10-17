@@ -25,7 +25,8 @@ under strict bounds:
   positions, schema fields and enum values only, so model text never reaches an error, a
   warning or the repair prompt. The model never supplies evidence: Risks are assembled by
   ``analyzer.impact.build_risk`` from the referenced dependencies, the change and catalog
-  scenario pointers, exactly as in rules mode (conversion risks split per bound scenario).
+  scenario pointers, exactly as in rules mode (conversion and comparison risks split per bound
+  scenario of their category).
 - Honest labels: ``analysis_mode`` is "model" only for live replies; replayed fixture replies
   (hand-authored, or captured from a live call) are "fixture". Warnings name the serving model
   and say these are predictions.
@@ -868,8 +869,8 @@ class ModelImpactAnalyzer:
         if judgement is None:
             judgement = self._request(slice_json, by_id, bounds)
             self._remember(key, judgement)
-        # One Risk per assessment, except that conversion dependencies split by their bound
-        # scenario, exactly as in the rules path (the split Risks share the assessment's text).
+        # One Risk per assessment, except that conversion and comparison dependencies split by
+        # their bound scenario, exactly as in the rules path (the split Risks share the text).
         risks = tuple(
             build_risk(
                 change,

@@ -25,14 +25,16 @@ cannot decide are reported as unresolved: unknown, never safe.
 
 Evidence: a Risk's evidence is assembled here, never by a model: every evidence item of its
 dependencies verbatim, the change's evidence (shared with every enrolled consumer's Risk,
-provider_owned declared, docs or source items included), and - for conversion risks only - the
-catalog's pointer to the executable scenario bound to its dependencies. Input evidence that uses the
-reserved ``shockwave-scenario://`` scheme is never copied (a counted warning says so), so
-pointers come only from the catalog. A conversion Risk holds the dependencies of exactly one
-scenario (its id is keyed by ``conversion:<scenario_id>``) or only unbound ones, so a verdict
-never covers a location its scenario did not run; ``risk_category`` recovers the category
-from a Risk id. Comparison and storage risks never get a pointer, so they stay predictions
-until their own proof exists.
+provider_owned declared, docs or source items included), and - for conversion and comparison
+risks - the catalog's pointer to the executable scenario bound to its dependencies, only when
+that scenario's category is the Risk's category (a divide scenario proves a conversion, a
+compare scenario a comparison). Input evidence that uses the reserved ``shockwave-scenario://``
+scheme is never copied (a counted warning says so), so pointers come only from the catalog. A
+conversion or comparison Risk holds the dependencies of exactly one scenario (its id is keyed by
+``<category>:<scenario_id>``) or only unbound ones, so a verdict never covers a location its
+scenario did not run; ``risk_category`` recovers the category from a Risk id. Storage and read
+risks never get a pointer, and neither does a usage no scenario is bound to, so they stay
+predictions until their own proof exists.
 """
 
 from __future__ import annotations
@@ -47,6 +49,7 @@ from analyzer.rules import (
     CONFIDENCE_ORDER,
     MAX_ACTION_CHARS,
     RULES_LABEL,
+    SCENARIO_MISSING_EVIDENCE,
     SEVERITY_ORDER,
     Category,
     RuleOutcome,
@@ -72,9 +75,11 @@ from discovery.ids import EndpointIdentity, risk_id, same_endpoint
 from discovery.ids import endpoint_identities as identity_map
 from discovery.text import clip_text_flagged
 from verification.scenarios.catalog import (
+    SCENARIO_CATEGORIES,
     SCENARIOS,
     find_applicable_scenario,
     is_scenario_pointer,
+    pointer_scenario_id,
     scenario_pointer_evidence,
 )
 
@@ -193,19 +198,32 @@ def no_match_warnings(
 # Risk assembly (shared by the rules and model paths) -----------------------------------------
 
 
-def _bound_scenario(change: APIChange, dependency: Dependency, identities: Identities | None) -> str | None:
+def _bound_scenario(
+    change: APIChange, dependency: Dependency, identities: Identities | None, category: str | None = None
+) -> str | None:
+    """The scenario bound to (change, dependency); with ``category``, only one of that category."""
     spec = find_applicable_scenario(change, dependency, endpoint_identities=identities)
-    return None if spec is None else spec.scenario_id
+    if spec is None or (category is not None and spec.category != category):
+        return None
+    return spec.scenario_id
 
 
 def scenario_pointers(
-    change: APIChange, dependencies: Iterable[Dependency], *, endpoint_identities: Identities | None = None
+    change: APIChange,
+    dependencies: Iterable[Dependency],
+    *,
+    endpoint_identities: Identities | None = None,
+    category: str | None = None,
 ) -> list[Evidence]:
-    """Catalog pointers to executable scenarios bound to (change, dependency), sorted by id."""
+    """Catalog pointers to executable scenarios bound to (change, dependency), sorted by id.
+
+    With ``category`` only scenarios of that category count: a pointer belongs only on a Risk of
+    its scenario's category.
+    """
     pointers = {}
     for dependency in dependencies:
         spec = find_applicable_scenario(change, dependency, endpoint_identities=endpoint_identities)
-        if spec is not None:
+        if spec is not None and (category is None or spec.category == category):
             pointer = scenario_pointer_evidence(spec, dependency)
             pointers[str(pointer.id)] = pointer
     return [pointers[key] for key in sorted(pointers)]
@@ -218,18 +236,19 @@ def split_by_scenario(
     *,
     endpoint_identities: Identities | None = None,
 ) -> list[list[Dependency]]:
-    """``dependencies`` as Risk groups: conversion dependencies split by the scenario bound to them.
+    """``dependencies`` as Risk groups: conversion/comparison dependencies split by their bound scenario.
 
-    Each conversion group holds the dependencies of exactly one executable scenario, or only
-    unbound ones, so a scenario verdict never covers a location the scenario did not run (and a
-    repository with Python and TypeScript display code gets one plannable Risk per scenario).
-    Other categories stay one group.
+    Each conversion or comparison group holds the dependencies of exactly one executable scenario
+    of that category, or only unbound ones, so a scenario verdict never covers a location the
+    scenario did not run (and a repository with Python and TypeScript display code gets one
+    plannable Risk per scenario). Other categories stay one group.
     """
-    if category != "conversion":
+    if category not in SCENARIO_CATEGORIES:
         return [list(dependencies)]
     groups: dict[str, list[Dependency]] = {}
     for dependency in dependencies:
-        groups.setdefault(_bound_scenario(change, dependency, endpoint_identities) or "", []).append(dependency)
+        key = _bound_scenario(change, dependency, endpoint_identities, category) or ""
+        groups.setdefault(key, []).append(dependency)
     return [groups[key] for key in sorted(groups)]
 
 
@@ -240,16 +259,18 @@ def risk_evidence(
     *,
     endpoint_identities: Identities | None = None,
 ) -> list[Evidence]:
-    """Dependency evidence verbatim, then change evidence, then (conversion only) scenario pointers.
+    """Dependency evidence verbatim, then change evidence, then (conversion/comparison) scenario pointers.
 
     Input evidence using the reserved ``shockwave-scenario://`` scheme is never copied: scenario
-    pointers come only from the catalog.
+    pointers come only from the catalog, and only for scenarios of the Risk's own category.
     """
     ordered = sorted(dependencies, key=lambda item: str(item.id))
     items = [item for dependency in ordered for item in dependency.evidence if not is_scenario_pointer(item)]
     items.extend(item for item in change.evidence if not is_scenario_pointer(item))
-    if category == "conversion":
-        items.extend(scenario_pointers(change, ordered, endpoint_identities=endpoint_identities))
+    if category in SCENARIO_CATEGORIES:
+        items.extend(
+            scenario_pointers(change, ordered, endpoint_identities=endpoint_identities, category=category)
+        )
     unique: dict[str, Evidence] = {}
     for item in items:
         unique.setdefault(str(item.id), item)
@@ -273,23 +294,23 @@ def reserved_evidence_warning(change: APIChange, dependencies: Iterable[Dependen
     )
 
 
-def _scenario_key(scenario_id: str) -> str:
-    return f"conversion:{scenario_id}"
+def _scenario_key(category: str, scenario_id: str) -> str:
+    return f"{category}:{scenario_id}"
 
 
 def _risk_key(
     change: APIChange, dependencies: Sequence[Dependency], category: Category, identities: Identities | None
 ) -> str:
-    if category != "conversion":
+    if category not in SCENARIO_CATEGORIES:
         return category
-    scenarios = {_bound_scenario(change, dependency, identities) for dependency in dependencies}
+    scenarios = {_bound_scenario(change, dependency, identities, category) for dependency in dependencies}
     if len(scenarios) != 1:
         raise ValueError(
-            "a conversion Risk holds the dependencies of exactly one executable scenario, or only unbound ones "
+            f"a {category} Risk holds the dependencies of exactly one executable scenario, or only unbound ones "
             "(group them with split_by_scenario)"
         )
     scenario_id = scenarios.pop()
-    return category if scenario_id is None else _scenario_key(scenario_id)
+    return category if scenario_id is None else _scenario_key(category, scenario_id)
 
 
 def build_risk(
@@ -305,9 +326,10 @@ def build_risk(
 ) -> Risk:
     """One Risk for dependencies of a single (consumer org, enrollment, repository snapshot).
 
-    A conversion Risk whose dependencies are bound to one executable scenario gets an id keyed
-    by ``conversion:<scenario_id>`` and that scenario's pointers; mixing scenarios, or bound
-    with unbound dependencies, raises ValueError (``split_by_scenario`` groups them).
+    A conversion or comparison Risk whose dependencies are bound to one executable scenario of
+    its category gets an id keyed by ``<category>:<scenario_id>`` and that scenario's pointers;
+    mixing scenarios, or bound with unbound dependencies, raises ValueError
+    (``split_by_scenario`` groups them).
     """
     if not dependencies:
         raise ValueError("a Risk needs at least one dependency")
@@ -334,14 +356,20 @@ def build_risk(
 def risk_category(change: APIChange, risk: Risk) -> Category | None:
     """The category a Risk id was derived from, or None (the contract has no category field).
 
-    Scenario-keyed conversion Risks (``conversion:<scenario_id>``) report "conversion".
+    Scenario-keyed Risks (``conversion:<scenario_id>``, ``comparison:<scenario_id>``) report
+    their category.
     """
     key = _derived_key(change, risk)
     return None if key is None else cast(Category, key.partition(":")[0])
 
 
 def _derived_key(change: APIChange, risk: Risk) -> str | None:
-    keys = (*CATEGORIES, *(_scenario_key(scenario_id) for scenario_id in sorted(SCENARIOS)))
+    scenario_keys = (
+        _scenario_key(spec.category, scenario_id)
+        for scenario_id, spec in sorted(SCENARIOS.items())
+        if spec.category is not None
+    )
+    keys = (*CATEGORIES, *scenario_keys)
     for key in keys:
         if risk_id(change.id, risk.enrollment_id, risk.repository_snapshot_id, key) == str(risk.id):
             return key
@@ -451,9 +479,14 @@ def _rules_risk(
     ]
     if others:
         core += f" Also affected: {', '.join(others)}."
-    if category == "conversion" and scenario_pointers(change, dependencies, endpoint_identities=identities):
+    bound = category in SCENARIO_CATEGORIES and bool(
+        scenario_pointers(change, dependencies, endpoint_identities=identities, category=category)
+    )
+    if bound:
         core += " An executable scenario exists for this usage; it has not run."
     missing = [item for _, outcome in members for item in outcome.missing_evidence]
+    if bound:  # the scenario exists; only its execution is outstanding
+        missing = [item for item in missing if item not in SCENARIO_MISSING_EVIDENCE]
     explanation, _ = compose_explanation(core, RULES_LABEL, missing)
     suggested_action, _ = clip_text_flagged(primary.suggested_action, MAX_ACTION_CHARS)
     return build_risk(
@@ -577,8 +610,8 @@ def analyze_impact(
     (the backend's responsibility; status is not re-checked here). Each ``endpoint_id`` must be
     a record of ``change.old_snapshot_id``'s catalog, unless ``endpoints`` (additive keyword)
     supplies the Endpoint records of that snapshot and of the catalog the scan was keyed to.
-    Risks are grouped per enrollment, repository snapshot and category (conversion also per
-    bound scenario); nothing here is executed or verified.
+    Risks are grouped per enrollment, repository snapshot and category (conversion and
+    comparison also per bound scenario); nothing here is executed or verified.
     """
     return _default_analyzer.analyze(change, dependencies, endpoints=endpoints)
 
@@ -600,9 +633,10 @@ def validate_risk_evidence(
     """Problems with the references in ``result``; [] when every reference is real.
 
     Checks that each Risk names matched input dependencies of its own owner, carries their
-    evidence verbatim, and otherwise holds only the change's evidence and - on a conversion
-    Risk keyed by a scenario, whose dependencies are all bound to it - that scenario's catalog
-    pointers. Pass the ``endpoints`` the analysis was given.
+    evidence verbatim, and otherwise holds only the change's evidence and - on a conversion or
+    comparison Risk keyed by a scenario of its category, whose dependencies are all bound to
+    it - that scenario's catalog pointers. A pointer to a scenario of another category (or to a
+    control) is rejected. Pass the ``endpoints`` the analysis was given.
     """
     identities = _identities(endpoints)
     problems: list[str] = []
@@ -653,8 +687,8 @@ def _risk_problems(
         if owner_of.setdefault(dependency_id, str(risk.id)) != str(risk.id):
             problems.append(f"{label}: dependency {dependency_id} is also in risk {owner_of[dependency_id]}")
         members.append(dependency)
-        if category == "conversion":
-            bound = _bound_scenario(change, dependency, identities)
+        if category in SCENARIO_CATEGORIES:
+            bound = _bound_scenario(change, dependency, identities, category)
             if bound == (scenario_id or None):
                 bound_members.append(dependency)
             elif scenario_id:  # the scenario's verdict would cover a location it never ran
@@ -665,7 +699,10 @@ def _risk_problems(
         str(item.id): item for dependency in members for item in dependency.evidence if not is_scenario_pointer(item)
     }
     pointers = (
-        {str(item.id): item for item in scenario_pointers(change, bound_members, endpoint_identities=identities)}
+        {
+            str(item.id): item
+            for item in scenario_pointers(change, bound_members, endpoint_identities=identities, category=category)
+        }
         if scenario_id
         else {}
     )
@@ -689,11 +726,22 @@ def _evidence_problem(
 ) -> str | None:
     key = str(item.id)
     # The reserved scheme first: whatever copied it in, only the catalog's pointer for one of this
-    # conversion risk's own dependencies (and its scenario) is executable proof.
+    # conversion/comparison risk's own dependencies (and its scenario, of the risk's category) is
+    # executable proof.
     if is_scenario_pointer(item):
-        if category != "conversion":
+        if category not in SCENARIO_CATEGORIES:
             kind = category or "unknown"
-            return f"is a scenario pointer on a risk of category {kind} (only conversion risks have executable proof)"
+            return (
+                f"is a scenario pointer on a risk of category {kind} (only conversion and comparison risks have "
+                "executable proof)"
+            )
+        named = SCENARIOS.get(pointer_scenario_id(item) or "")
+        if named is not None and named.category != category:
+            scenario_category = named.category or "control"
+            return (
+                f"points to a {scenario_category} scenario, but the risk's category is {category} (a scenario proves "
+                "only risks of its own category)"
+            )
         expected = pointers.get(key)
         if expected is None or not _same(expected, item):
             return "points to a scenario that is not applicable to this risk's dependencies"
