@@ -1,0 +1,154 @@
+{
+  "schema_version": "shockwave.v1",
+  "repository_snapshot_id": "snap-consumer-1",
+  "dependencies": [
+    {
+      "id": "e7b08ba3-0411-58f8-adf5-8040c5365e26",
+      "consumer_org_id": "org-consumer-1",
+      "enrollment_id": "enr-1",
+      "repository_snapshot_id": "snap-consumer-1",
+      "service_id": "demo-payments",
+      "endpoint_id": "ep-demo-payments-get-v1-charges-id",
+      "language": "python",
+      "field_path": "response.amount",
+      "origin": {
+        "kind": "http_response",
+        "library": "requests",
+        "call": "requests.get"
+      },
+      "usage": {
+        "operation": "divide",
+        "operand": 100,
+        "destination": null
+      },
+      "confidence": "inferred",
+      "evidence": [
+        {
+          "id": "5aef5462-59b0-5708-a6d9-c7b484552447",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://snap-consumer-1/python-display/demo_display/charges.py#L19",
+          "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
+          "file": "python-display/demo_display/charges.py",
+          "line_start": 19,
+          "line_end": 19,
+          "json_pointer": null,
+          "excerpt": "resp = requests.get(f\"{DEMO_BASE_URL}/v1/charges/{charge_id}\", timeout=5)"
+        },
+        {
+          "id": "491a43d0-b2fe-54ef-bbba-ea2219f0a847",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://snap-consumer-1/python-display/demo_display/charges.py#L21",
+          "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
+          "file": "python-display/demo_display/charges.py",
+          "line_start": 21,
+          "line_end": 21,
+          "json_pointer": null,
+          "excerpt": "charge = resp.json()"
+        },
+        {
+          "id": "aa784bdf-cc22-52cd-9093-44784aadbac4",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://snap-consumer-1/python-display/demo_display/charges.py#L22",
+          "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
+          "file": "python-display/demo_display/charges.py",
+          "line_start": 22,
+          "line_end": 22,
+          "json_pointer": null,
+          "excerpt": "return display_amount(charge)"
+        },
+        {
+          "id": "2790575a-7345-5a20-97ae-8885a4d7126c",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://snap-consumer-1/python-display/demo_display/charges.py#L11",
+          "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
+          "file": "python-display/demo_display/charges.py",
+          "line_start": 11,
+          "line_end": 11,
+          "json_pointer": null,
+          "excerpt": "dollars = response[\"amount\"] / 100"
+        }
+      ]
+    },
+    {
+      "id": "7c825418-8bcd-5c12-b8e8-6632da73fb31",
+      "consumer_org_id": "org-consumer-1",
+      "enrollment_id": "enr-1",
+      "repository_snapshot_id": "snap-consumer-1",
+      "service_id": "demo-payments",
+      "endpoint_id": "ep-demo-payments-get-v1-charges-id",
+      "language": "typescript",
+      "field_path": "response.amount",
+      "origin": {
+        "kind": "http_response",
+        "library": "fetch",
+        "call": "fetch"
+      },
+      "usage": {
+        "operation": "divide",
+        "operand": 100,
+        "destination": null
+      },
+      "confidence": "inferred",
+      "evidence": [
+        {
+          "id": "cfa7330c-55ad-5c21-b765-37ca64c49fa4",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://snap-consumer-1/typescript-display/src/charges.ts#L19",
+          "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
+          "file": "typescript-display/src/charges.ts",
+          "line_start": 19,
+          "line_end": 19,
+          "json_pointer": null,
+          "excerpt": "const res = await fetch(`${DEMO_BASE_URL}/v1/charges/${chargeId}`);"
+        },
+        {
+          "id": "3eff8ae4-29b4-5158-ac3b-8980e47fbe46",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://snap-consumer-1/typescript-display/src/charges.ts#L21",
+          "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
+          "file": "typescript-display/src/charges.ts",
+          "line_start": 21,
+          "line_end": 21,
+          "json_pointer": null,
+          "excerpt": "const charge = await res.json();"
+        },
+        {
+          "id": "4bb04b50-0e32-5d25-9112-20980152d98b",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://snap-consumer-1/typescript-display/src/charges.ts#L22",
+          "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
+          "file": "typescript-display/src/charges.ts",
+          "line_start": 22,
+          "line_end": 22,
+          "json_pointer": null,
+          "excerpt": "return displayAmount(charge);"
+        },
+        {
+          "id": "e707a550-46c9-54f6-a0ec-8a230187a3db",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://snap-consumer-1/typescript-display/src/charges.ts#L13",
+          "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
+          "file": "typescript-display/src/charges.ts",
+          "line_start": 13,
+          "line_end": 13,
+          "json_pointer": null,
+          "excerpt": "const dollars = response.amount / 100;"
+        }
+      ]
+    }
+  ],
+  "coverage": {
+    "files_scanned": 10,
+    "files_skipped": 0,
+    "unsupported_patterns": []
+  },
+  "warnings": []
+}
