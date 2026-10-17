@@ -32,12 +32,14 @@ export SHOCKWAVE_WORK_DIR="${SHOCKWAVE_WORK_DIR:-$ROOT/app/.shockwave-integrated
 
 cd "$ROOT/app"
 if lsof -nP -iTCP:8000 -sTCP:LISTEN >/dev/null 2>&1; then
-  echo "A backend is already running on port 8000 (another terminal?); the website will use it."
-else
-  "$VENV/python" -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
-  BACKEND=$!
-  trap 'kill $BACKEND 2>/dev/null || true' EXIT INT TERM
+  echo "Port 8000 is already in use. Stop the existing backend before starting the website." >&2
+  echo "An older backend may be missing routes required by this dashboard; it cannot be reused safely." >&2
+  lsof -nP -iTCP:8000 -sTCP:LISTEN >&2 || true
+  exit 1
 fi
+"$VENV/python" -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
+BACKEND=$!
+trap 'kill $BACKEND 2>/dev/null || true' EXIT INT TERM
 if lsof -nP -iTCP:3000 -sTCP:LISTEN >/dev/null 2>&1; then
   echo "Port 3000 is already in use: the website may already be running at http://127.0.0.1:3000" >&2
   exit 1
