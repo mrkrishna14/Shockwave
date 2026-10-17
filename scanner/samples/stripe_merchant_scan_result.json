@@ -1,14 +1,14 @@
 {
   "schema_version": "shockwave.v1",
-  "repository_snapshot_id": "snap-consumer-1",
+  "repository_snapshot_id": "0a023322-1bdb-5ef3-b4c4-49e49c7b35c9",
   "dependencies": [
     {
-      "id": "242c5668-2aed-5d3b-8d5c-03689268b696",
-      "consumer_org_id": "org-consumer-1",
-      "enrollment_id": "enr-1",
-      "repository_snapshot_id": "snap-consumer-1",
+      "id": "2ffd3331-9a4f-5596-8fd6-214003f3868a",
+      "consumer_org_id": "2800ba56-2e1f-5492-bccb-6ffd4be3021d",
+      "enrollment_id": "ecd7fdc6-59fa-5f04-a1c0-5bf8dad12ac6",
+      "repository_snapshot_id": "0a023322-1bdb-5ef3-b4c4-49e49c7b35c9",
       "service_id": "stripe",
-      "endpoint_id": "ep-stripe-post-v1-payment-intents",
+      "endpoint_id": "ca854375-9019-5c1e-822e-c4a392ff6630",
       "language": "javascript",
       "field_path": "response.client_secret",
       "origin": {
@@ -24,10 +24,10 @@
       "confidence": "direct",
       "evidence": [
         {
-          "id": "039a451f-5ebc-555e-99f6-c9922e8d0acb",
+          "id": "3074f7c1-a987-5745-808e-ee7170cb6f55",
           "kind": "source",
           "visibility": "consumer_private",
-          "source_uri": "repository-snapshot://snap-consumer-1/node/server.js#L13",
+          "source_uri": "repository-snapshot://0a023322-1bdb-5ef3-b4c4-49e49c7b35c9/node/server.js#L13",
           "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
           "file": "node/server.js",
           "line_start": 13,
@@ -36,10 +36,10 @@
           "excerpt": "const paymentIntent = await stripe.paymentIntents.create({"
         },
         {
-          "id": "8d97d632-b631-5894-8b26-0b8477c58824",
+          "id": "b59fbec5-5ede-50ef-9c5f-575e4360164e",
           "kind": "source",
           "visibility": "consumer_private",
-          "source_uri": "repository-snapshot://snap-consumer-1/node/server.js#L18",
+          "source_uri": "repository-snapshot://0a023322-1bdb-5ef3-b4c4-49e49c7b35c9/node/server.js#L18",
           "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
           "file": "node/server.js",
           "line_start": 18,
@@ -50,12 +50,12 @@
       ]
     },
     {
-      "id": "87d269dd-9cd2-5e8c-a153-588752177817",
-      "consumer_org_id": "org-consumer-1",
-      "enrollment_id": "enr-1",
-      "repository_snapshot_id": "snap-consumer-1",
+      "id": "36082f63-de25-55fd-b971-c3d6c63f9a4a",
+      "consumer_org_id": "2800ba56-2e1f-5492-bccb-6ffd4be3021d",
+      "enrollment_id": "ecd7fdc6-59fa-5f04-a1c0-5bf8dad12ac6",
+      "repository_snapshot_id": "0a023322-1bdb-5ef3-b4c4-49e49c7b35c9",
       "service_id": "stripe",
-      "endpoint_id": "ep-stripe-post-v1-payment-intents",
+      "endpoint_id": "ca854375-9019-5c1e-822e-c4a392ff6630",
       "language": "python",
       "field_path": "response.client_secret",
       "origin": {
@@ -71,10 +71,10 @@
       "confidence": "direct",
       "evidence": [
         {
-          "id": "bd5912b2-e4c5-5ad9-a3f7-733a332e275f",
+          "id": "6c3bc6d2-e05a-537f-becd-5194bb1bbed7",
           "kind": "source",
           "visibility": "consumer_private",
-          "source_uri": "repository-snapshot://snap-consumer-1/python/server.py#L19",
+          "source_uri": "repository-snapshot://0a023322-1bdb-5ef3-b4c4-49e49c7b35c9/python/server.py#L19",
           "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
           "file": "python/server.py",
           "line_start": 19,
@@ -83,10 +83,10 @@
           "excerpt": "intent = stripe.PaymentIntent.create("
         },
         {
-          "id": "dbc49457-81f6-5897-89fc-d8f590a66038",
+          "id": "2fca087e-8cb3-55c8-b9d6-95259cbfd7d3",
           "kind": "source",
           "visibility": "consumer_private",
-          "source_uri": "repository-snapshot://snap-consumer-1/python/server.py#L24",
+          "source_uri": "repository-snapshot://0a023322-1bdb-5ef3-b4c4-49e49c7b35c9/python/server.py#L24",
           "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
           "file": "python/server.py",
           "line_start": 24,

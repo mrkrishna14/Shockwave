@@ -9,7 +9,7 @@ import subprocess
 import pytest
 
 from conftest import (
-    COMMIT, CONSUMERS, DECOY_MERCHANT, DEMO_CHARGE, STRIPE_PI_CREATE, line_of, make_snapshot, write,
+    COMMIT, CONSUMER_ORG, CONSUMERS, DECOY_MERCHANT, DEMO_CHARGE, STRIPE_PI_CREATE, line_of, make_snapshot, tid, write,
 )
 from scanner.contracts import Dependency, ScanResult
 
@@ -44,7 +44,7 @@ def test_display_consumer_divide_dependency(scan, consumer, file, lang):
     labels_lines = [e.line_start for e in d.evidence]
     assert line_of(src, "fetch(" if lang == "typescript" else "requests.get(") in labels_lines
     assert all(e.revision == COMMIT and e.visibility == "consumer_private" for e in d.evidence)
-    assert d.repository_snapshot_id == "snap-consumer-1"
+    assert d.repository_snapshot_id == tid("snap-consumer-1")
 
 
 def test_negative_control_order_amount_not_attributed(scan):
@@ -227,8 +227,8 @@ def test_commonjs_and_named_imports(scan, tmp_path):
     result = scan(tmp_path, service_id="stripe")
     got = sorted((d.evidence[-1].file, d.endpoint_id, d.usage.operation) for d in result.dependencies)
     assert got == [
-        ("a.cjs", "ep-stripe-get-v1-payment-intents-intent", "divide"),
-        ("b.mjs", "ep-stripe-post-v1-payment-intents", "compare"),
+        ("a.cjs", tid("ep-stripe-get-v1-payment-intents-intent"), "divide"),
+        ("b.mjs", tid("ep-stripe-post-v1-payment-intents"), "compare"),
     ]
     # Unmapped SDK methods are reported, not guessed.
     assert any(p.startswith("unmapped_sdk_method: c.mjs") for p in result.coverage.unsupported_patterns)
@@ -336,10 +336,10 @@ def test_repeated_scans_are_stable(scan):
     b = scan(CONSUMERS).model_dump(mode="json")
     assert a == b
     # Same commit fetched into a new snapshot record: dependency identity is stable.
-    c = scan(CONSUMERS, snapshot=make_snapshot("snap-consumer-2"))
+    c = scan(CONSUMERS, snapshot=make_snapshot(tid("snap-consumer-2")))
     assert [d["id"] for d in a["dependencies"]] == [d.id for d in c.dependencies]
     # A different commit yields different identities.
-    d = scan(CONSUMERS, snapshot=make_snapshot("snap-consumer-3", commit="0" * 40))
+    d = scan(CONSUMERS, snapshot=make_snapshot(tid("snap-consumer-3"), commit="0" * 40))
     assert not set(x["id"] for x in a["dependencies"]) & set(x.id for x in d.dependencies)
 
 
@@ -376,6 +376,7 @@ def test_requires_consumer_org_and_matching_snapshot(tmp_path):
     snap = make_snapshot()
     req = make_request("demo-payments", snap)
     with pytest.raises(ValueError):
-        scan_repository(req.model_copy(update={"consumer_org_id": None}), snap, tmp_path)
+        scan_repository(req, snap, tmp_path)  # no consumer_org_id
     with pytest.raises(ValueError):
-        scan_repository(req.model_copy(update={"repository_snapshot_id": "other"}), snap, tmp_path)
+        scan_repository(req.model_copy(update={"repository_snapshot_id": tid("other")}), snap, tmp_path,
+                        consumer_org_id=CONSUMER_ORG)

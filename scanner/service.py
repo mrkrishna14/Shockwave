@@ -46,14 +46,22 @@ def _field_path(path: tuple) -> str:
     return "response" + "".join(f".{p}" for p in path)
 
 
-def scan_repository(request: ScanRequest, snapshot: RepositorySnapshot, repo_root: Path) -> ScanResult:
+def scan_repository(
+    request: ScanRequest,
+    snapshot: RepositorySnapshot,
+    repo_root: Path,
+    *,
+    consumer_org_id: str | None = None,
+) -> ScanResult:
     if request.repository_snapshot_id != snapshot.id:
         raise ValueError("request.repository_snapshot_id does not match snapshot.id")
-    consumer_org_id = getattr(request, "consumer_org_id", None)
+    # The canonical ScanRequest (shared.schemas) has no consumer_org_id; callers pass it as a
+    # keyword. A request carrying the proposed additive field still works.
+    consumer_org_id = consumer_org_id or getattr(request, "consumer_org_id", None)
     if not consumer_org_id:
         raise ValueError(
             "consumer_org_id is required to build Dependency records; "
-            "pass it on ScanRequest (proposed additive field, see scanner/HANDOFF.md)"
+            "pass consumer_org_id= to scan_repository (or the proposed additive ScanRequest field, see scanner/HANDOFF.md)"
         )
     base_urls = list(getattr(request, "base_urls", None) or KNOWN_BASE_URLS.get(request.service_id, []))
     wanted = {l.lower() for l in request.supported_languages} or set(SUPPORTED)

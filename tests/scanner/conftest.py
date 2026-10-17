@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sys
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -16,40 +17,49 @@ from scanner.contracts import Endpoint, RepositorySnapshot, ScanRequest  # noqa:
 CONSUMERS = REPO_ROOT / "examples" / "consumers"
 COMMIT = "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345"
 
+_TEST_NAMESPACE = uuid.UUID("2b0f6a52-7f1c-5d6e-9a3b-4c5d6e7f8091")
+
+
+def tid(name: str) -> str:
+    """Deterministic UUID for a test-double name (shared.schemas IDs are UUIDs)."""
+    return str(uuid.uuid5(_TEST_NAMESPACE, name))
+
+
+CONSUMER_ORG = tid("org-consumer-1")
+
 # Test-double catalog. Real endpoint/snapshot IDs are generated once by Ishan.
 DEMO_CHARGE = Endpoint(
-    id="ep-demo-payments-get-v1-charges-id", service_id="demo-payments", method="GET",
-    path="/v1/charges/{id}", snapshot_id="snap-demo-payments-old",
+    id=tid("ep-demo-payments-get-v1-charges-id"), service_id="demo-payments", method="GET",
+    path="/v1/charges/{id}", snapshot_id=tid("snap-demo-payments-old"), request_schema={}, response_schema={}, evidence=[], reconciliation="not_compared", confidence="direct",
 )
 STRIPE_PI_CREATE = Endpoint(
-    id="ep-stripe-post-v1-payment-intents", service_id="stripe", method="POST",
-    path="/v1/payment_intents", snapshot_id="snap-stripe-openapi",
+    id=tid("ep-stripe-post-v1-payment-intents"), service_id="stripe", method="POST",
+    path="/v1/payment_intents", snapshot_id=tid("snap-stripe-openapi"), request_schema={}, response_schema={}, evidence=[], reconciliation="not_compared", confidence="direct",
 )
 STRIPE_PI_RETRIEVE = Endpoint(
-    id="ep-stripe-get-v1-payment-intents-intent", service_id="stripe", method="GET",
-    path="/v1/payment_intents/{intent}", snapshot_id="snap-stripe-openapi",
+    id=tid("ep-stripe-get-v1-payment-intents-intent"), service_id="stripe", method="GET",
+    path="/v1/payment_intents/{intent}", snapshot_id=tid("snap-stripe-openapi"), request_schema={}, response_schema={}, evidence=[], reconciliation="not_compared", confidence="direct",
 )
 # Deliberately wrong decoy: a merchant route mislabeled as stripe. The scanner
 # must never map SDK calls to it.
 DECOY_MERCHANT = Endpoint(
-    id="ep-decoy-merchant-create-payment-intent", service_id="stripe", method="GET",
-    path="/create-payment-intent", snapshot_id="snap-stripe-openapi",
+    id=tid("ep-decoy-merchant-create-payment-intent"), service_id="stripe", method="GET",
+    path="/create-payment-intent", snapshot_id=tid("snap-stripe-openapi"), request_schema={}, response_schema={}, evidence=[], reconciliation="not_compared", confidence="direct",
 )
 CATALOG = [DEMO_CHARGE, STRIPE_PI_CREATE, STRIPE_PI_RETRIEVE, DECOY_MERCHANT]
 
 
-def make_snapshot(snapshot_id: str = "snap-consumer-1", commit: str = COMMIT) -> RepositorySnapshot:
+def make_snapshot(snapshot_id: str = tid("snap-consumer-1"), commit: str = COMMIT) -> RepositorySnapshot:
     return RepositorySnapshot(
-        id=snapshot_id, repository_connection_id="rc-consumer-1", commit_sha=commit,
+        id=snapshot_id, repository_connection_id=tid("rc-consumer-1"), commit_sha=commit,
         fetched_at=datetime(2026, 10, 17, 10, 0, tzinfo=timezone.utc), content_hash="sha256:test",
     )
 
 
 def make_request(service_id: str, snapshot: RepositorySnapshot, languages=None) -> ScanRequest:
     return ScanRequest(
-        repository_snapshot_id=snapshot.id, enrollment_id="enr-1", service_id=service_id,
+        repository_snapshot_id=snapshot.id, enrollment_id=tid("enr-1"), service_id=service_id,
         endpoint_catalog=CATALOG, supported_languages=languages or ["python", "javascript", "typescript"],
-        consumer_org_id="org-consumer-1",
     )
 
 
@@ -59,7 +69,7 @@ def scan():
 
     def _scan(root: Path, service_id: str = "demo-payments", snapshot=None, languages=None):
         snap = snapshot or make_snapshot()
-        return scan_repository(make_request(service_id, snap, languages), snap, Path(root))
+        return scan_repository(make_request(service_id, snap, languages), snap, Path(root), consumer_org_id=CONSUMER_ORG)
 
     return _scan
 
