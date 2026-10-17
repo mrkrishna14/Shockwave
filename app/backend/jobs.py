@@ -107,6 +107,9 @@ class JobQueue:
             message=('Stripe checkout dependencies are missing. Run `npm ci --ignore-scripts --prefix '
                      'demo/templates/checkout` from the repository root, then retry.'
                      if code=='NODE_DEPENDENCIES_MISSING' else
+                     'These results were already recorded differently, usually by an older version of Shockwave. '
+                     'Stop the website, delete app/shockwave.db and app/.shockwave-integrated, then start it again.'
+                     if code=='RESULT_ID_CONFLICT' else
                      'Operation failed. Check its prerequisites and retry if appropriate.')
             job.update(status='failed',stage='failed',updated_at=now(),error={
                 'code':code,'message':message,
