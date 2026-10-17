@@ -78,9 +78,14 @@ class RunnerService:
                 report = Path(temp) / 'report.xml'
                 kwargs = {'python': self.python} if self.python else {}
                 argv = command(plan.runner_profile, plan.test_files, report, **kwargs)
+                response = json.dumps(scenario.new_response if proposed else scenario.old_response)
+                # Noirit's consumer fixtures read the response from a file named by
+                # SHOCKWAVE_RESPONSE_FIXTURE; SW_RESPONSE carries the same JSON inline.
+                response_file = Path(temp) / 'response.json'
+                response_file.write_text(response)
                 env = {'PATH': os.defpath, 'HOME': temp, 'TMPDIR': temp,
                        'PYTHONDONTWRITEBYTECODE': '1', 'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1',
-                       'SW_RESPONSE': json.dumps(scenario.new_response if proposed else scenario.old_response)}
+                       'SW_RESPONSE': response, 'SHOCKWAVE_RESPONSE_FIXTURE': str(response_file)}
                 if staged:
                     env.update(staged.env)
                     if plan.runner_profile == 'trusted_python':
