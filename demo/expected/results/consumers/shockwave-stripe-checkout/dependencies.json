@@ -4,7 +4,7 @@
     "consumer_org_label": "fictional demo company (team-created; not a real organization; not a Stripe customer)",
     "consumer_org_name": "Larkspur Outfitters"
   },
-  "commit_sha": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
+  "commit_sha": "a6964c11d46004f3a3120cece33d34edee890d0f",
   "dependencies": [
     {
       "confidence": "direct",
@@ -13,73 +13,37 @@
       "enrollment_id": "d2cb2096-72c9-5f1d-b7a0-f14301f078a4",
       "evidence": [
         {
-          "excerpt": "import Stripe from 'stripe';",
-          "file": "src/stripeClient.ts",
-          "id": "7e356dae-c668-5659-8730-0dbb1f0ab460",
-          "json_pointer": null,
-          "kind": "source",
-          "line_end": 1,
-          "line_start": 1,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "visibility": "consumer_private"
-        },
-        {
-          "excerpt": "return new Stripe(apiKey, config);",
-          "file": "src/stripeClient.ts",
-          "id": "e6d32c49-346d-56e5-a65b-6e5cc8d65010",
-          "json_pointer": null,
-          "kind": "source",
-          "line_end": 34,
-          "line_start": 34,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "visibility": "consumer_private"
-        },
-        {
-          "excerpt": "stripe: Stripe = createStripeClient(),",
-          "file": "src/orderSummary.ts",
-          "id": "b94aca66-7150-570b-b36f-2b3fa541adfd",
-          "json_pointer": null,
-          "kind": "source",
-          "line_end": 18,
-          "line_start": 18,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "visibility": "consumer_private"
-        },
-        {
           "excerpt": "const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);",
           "file": "src/orderSummary.ts",
-          "id": "342893bd-40be-54aa-a32a-fb9f18028efd",
+          "id": "f572ec2c-ccef-5a52-ad9b-1b47a0ff7b5f",
           "json_pointer": null,
           "kind": "source",
           "line_end": 20,
           "line_start": 20,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
+          "revision": "a6964c11d46004f3a3120cece33d34edee890d0f",
+          "source_uri": "repository-snapshot://bd623f0f-1656-52f7-88ee-12499ea4fc93/src/orderSummary.ts#L20",
           "visibility": "consumer_private"
         },
         {
           "excerpt": "const totalDollars = paymentIntent.amount / 100;",
           "file": "src/orderSummary.ts",
-          "id": "b66935a5-9947-5488-8942-9fcd73defac4",
+          "id": "8107f90a-2111-5b52-829d-07989a20b407",
           "json_pointer": null,
           "kind": "source",
           "line_end": 22,
           "line_start": 22,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
+          "revision": "a6964c11d46004f3a3120cece33d34edee890d0f",
+          "source_uri": "repository-snapshot://bd623f0f-1656-52f7-88ee-12499ea4fc93/src/orderSummary.ts#L22",
           "visibility": "consumer_private"
         }
       ],
       "field_path": "response.amount",
-      "id": "a9db411a-8cc2-59bb-8bb6-954f9cbb4f3d",
+      "id": "c3bdbcbb-98a4-59b5-a6b7-f20f2caca19e",
       "language": "typescript",
       "origin": {
         "call": "stripe.paymentIntents.retrieve",
         "kind": "sdk_response",
-        "library": "stripe"
+        "library": "stripe-node"
       },
       "repository_snapshot_id": "bd623f0f-1656-52f7-88ee-12499ea4fc93",
       "service_id": "stripe",
@@ -96,80 +60,44 @@
       "enrollment_id": "d2cb2096-72c9-5f1d-b7a0-f14301f078a4",
       "evidence": [
         {
-          "excerpt": "import Stripe from 'stripe';",
-          "file": "src/stripeClient.ts",
-          "id": "7e356dae-c668-5659-8730-0dbb1f0ab460",
-          "json_pointer": null,
-          "kind": "source",
-          "line_end": 1,
-          "line_start": 1,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "visibility": "consumer_private"
-        },
-        {
-          "excerpt": "return new Stripe(apiKey, config);",
-          "file": "src/stripeClient.ts",
-          "id": "e6d32c49-346d-56e5-a65b-6e5cc8d65010",
-          "json_pointer": null,
-          "kind": "source",
-          "line_end": 34,
-          "line_start": 34,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "visibility": "consumer_private"
-        },
-        {
-          "excerpt": "stripe: Stripe = createStripeClient(),",
-          "file": "src/orderSummary.ts",
-          "id": "b94aca66-7150-570b-b36f-2b3fa541adfd",
-          "json_pointer": null,
-          "kind": "source",
-          "line_end": 18,
-          "line_start": 18,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "visibility": "consumer_private"
-        },
-        {
           "excerpt": "const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);",
           "file": "src/orderSummary.ts",
-          "id": "342893bd-40be-54aa-a32a-fb9f18028efd",
+          "id": "f572ec2c-ccef-5a52-ad9b-1b47a0ff7b5f",
           "json_pointer": null,
           "kind": "source",
           "line_end": 20,
           "line_start": 20,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
+          "revision": "a6964c11d46004f3a3120cece33d34edee890d0f",
+          "source_uri": "repository-snapshot://bd623f0f-1656-52f7-88ee-12499ea4fc93/src/orderSummary.ts#L20",
           "visibility": "consumer_private"
         },
         {
-          "excerpt": "status: paymentIntent.status,",
+          "excerpt": "paymentIntentId: paymentIntent.id,",
           "file": "src/orderSummary.ts",
-          "id": "161a2399-ca9e-5ec4-9d7d-265d4e149304",
+          "id": "e9d778df-801c-56af-9486-35595e8c945c",
           "json_pointer": null,
           "kind": "source",
-          "line_end": 25,
-          "line_start": 25,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
+          "line_end": 24,
+          "line_start": 24,
+          "revision": "a6964c11d46004f3a3120cece33d34edee890d0f",
+          "source_uri": "repository-snapshot://bd623f0f-1656-52f7-88ee-12499ea4fc93/src/orderSummary.ts#L24",
           "visibility": "consumer_private"
         }
       ],
-      "field_path": "response.status",
-      "id": "16aaf29f-3000-5736-812c-b5ff5d60374e",
+      "field_path": "response.id",
+      "id": "a954c8b3-9bc0-552e-98fc-77a1dbdeb4d4",
       "language": "typescript",
       "origin": {
         "call": "stripe.paymentIntents.retrieve",
         "kind": "sdk_response",
-        "library": "stripe"
+        "library": "stripe-node"
       },
       "repository_snapshot_id": "bd623f0f-1656-52f7-88ee-12499ea4fc93",
       "service_id": "stripe",
       "usage": {
-        "destination": null,
+        "destination": "paymentIntentId",
         "operand": null,
-        "operation": "read"
+        "operation": "pass_through"
       }
     },
     {
@@ -179,86 +107,50 @@
       "enrollment_id": "d2cb2096-72c9-5f1d-b7a0-f14301f078a4",
       "evidence": [
         {
-          "excerpt": "import Stripe from 'stripe';",
-          "file": "src/stripeClient.ts",
-          "id": "7e356dae-c668-5659-8730-0dbb1f0ab460",
-          "json_pointer": null,
-          "kind": "source",
-          "line_end": 1,
-          "line_start": 1,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "visibility": "consumer_private"
-        },
-        {
-          "excerpt": "return new Stripe(apiKey, config);",
-          "file": "src/stripeClient.ts",
-          "id": "e6d32c49-346d-56e5-a65b-6e5cc8d65010",
-          "json_pointer": null,
-          "kind": "source",
-          "line_end": 34,
-          "line_start": 34,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "visibility": "consumer_private"
-        },
-        {
-          "excerpt": "stripe: Stripe = createStripeClient(),",
-          "file": "src/orderSummary.ts",
-          "id": "b94aca66-7150-570b-b36f-2b3fa541adfd",
-          "json_pointer": null,
-          "kind": "source",
-          "line_end": 18,
-          "line_start": 18,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "visibility": "consumer_private"
-        },
-        {
           "excerpt": "const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);",
           "file": "src/orderSummary.ts",
-          "id": "342893bd-40be-54aa-a32a-fb9f18028efd",
+          "id": "f572ec2c-ccef-5a52-ad9b-1b47a0ff7b5f",
           "json_pointer": null,
           "kind": "source",
           "line_end": 20,
           "line_start": 20,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
+          "revision": "a6964c11d46004f3a3120cece33d34edee890d0f",
+          "source_uri": "repository-snapshot://bd623f0f-1656-52f7-88ee-12499ea4fc93/src/orderSummary.ts#L20",
           "visibility": "consumer_private"
         },
         {
-          "excerpt": "paymentIntentId: paymentIntent.id,",
+          "excerpt": "status: paymentIntent.status,",
           "file": "src/orderSummary.ts",
-          "id": "28a705ab-0e13-56e3-b614-07c40a12f9c7",
+          "id": "a2f60a59-77b7-56f3-b811-a3dc7099b27e",
           "json_pointer": null,
           "kind": "source",
-          "line_end": 24,
-          "line_start": 24,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
+          "line_end": 25,
+          "line_start": 25,
+          "revision": "a6964c11d46004f3a3120cece33d34edee890d0f",
+          "source_uri": "repository-snapshot://bd623f0f-1656-52f7-88ee-12499ea4fc93/src/orderSummary.ts#L25",
           "visibility": "consumer_private"
         }
       ],
-      "field_path": "response.id",
-      "id": "597712da-8245-598d-9a03-2a18beecc2eb",
+      "field_path": "response.status",
+      "id": "244ec54a-ecc5-548a-bfa2-f4413d3b5763",
       "language": "typescript",
       "origin": {
         "call": "stripe.paymentIntents.retrieve",
         "kind": "sdk_response",
-        "library": "stripe"
+        "library": "stripe-node"
       },
       "repository_snapshot_id": "bd623f0f-1656-52f7-88ee-12499ea4fc93",
       "service_id": "stripe",
       "usage": {
-        "destination": null,
+        "destination": "status",
         "operand": null,
-        "operation": "read"
+        "operation": "pass_through"
       }
     }
   ],
-  "fixture": "demo/expected/dependencies.fixture.json",
+  "fixture": null,
   "kind": "shockwave-demo.consumer-dependencies@1",
-  "label": "FIXTURE — contract-shaped expected scanner output prepared by Kanishk; NOT a completed scan. Replace with Noirit's scanner output when integrated. Noirit's scanner ran but missed 3 of 3 expected use sites, so this repository uses the fixture.",
+  "label": "Noirit's scanner (scanner.scan_repository): real scan; reproduced all 3 expected use sites",
   "negative_controls": [
     {
       "file": "src/tax.ts",
@@ -277,16 +169,16 @@
   ],
   "repository": "shockwave-stripe-checkout",
   "repository_snapshot_id": "bd623f0f-1656-52f7-88ee-12499ea4fc93",
-  "revision_binding": "15 source evidence items verified against commit 1a691698659ee7ac82186a4ef9dfdcc78c9cf08f (file, line, excerpt) and bound to it",
+  "revision_binding": "revisions as reported by the scanner (the prepared commit)",
   "scanner_comparison": {
     "scanner_extra": [],
-    "scanner_found": [],
-    "scanner_missed": [
+    "scanner_found": [
       "src/orderSummary.ts:22 response.amount",
       "src/orderSummary.ts:24 response.id",
       "src/orderSummary.ts:25 response.status"
-    ]
+    ],
+    "scanner_missed": []
   },
-  "source": "fixture (Noirit scanner not integrated)",
+  "source": "Noirit's scanner (scanner.scan_repository)",
   "visibility": "consumer_private"
 }

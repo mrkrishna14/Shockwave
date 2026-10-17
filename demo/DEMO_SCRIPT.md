@@ -36,9 +36,10 @@ hasn't proposed it, and Stripe isn't a customer."**
 - a reporting job that stores `amount` in a ledger."
 
 **Point at:**
-- `fraud ... real scan`: Noirit's scanner found the `> 500000` comparison itself.
-- For checkout and reporting, the scanner's misses are listed, and those apps use the labeled,
-  line-verified fixture.
+- `checkout ... real scan` and `fraud ... real scan`: Noirit's scanner found the `/ 100`
+  conversion and the `> 500000` comparison itself.
+- For reporting, the scanner's misses are listed (its `StripeClient(...).v1` style isn't mapped
+  yet), and that app uses the labeled, line-verified fixture.
 - The unrelated look-alikes (basis-points `/ 100`, local `.amount` fields) are confirmed **not**
   to be dependencies.
 

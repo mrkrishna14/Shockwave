@@ -66,7 +66,9 @@ SDK_CALLS = {
     "StripeClient.v1.payment_intents.retrieve": ".v1.payment_intents.retrieve(",
 }
 SDK_IMPORT = re.compile(r"^(?:import \w+ from 'stripe';|import stripe|from stripe import StripeClient)$")
-CLIENT_INITIALIZATION = re.compile(r"^(?:return new Stripe\(.*\);|return StripeClient\(|stripe\.api_key = \w+)$")
+CLIENT_INITIALIZATION = re.compile(
+    r"^(?:const stripe = new Stripe\(.*\);|return new Stripe\(.*\);|return StripeClient\(|stripe\.api_key = \w+)$"
+)
 CONTROL_FILE_STRIPE_IMPORT = re.compile(r"""from ['"]stripe['"]|^\s*import stripe\b|^\s*from stripe\b""", re.MULTILINE)
 
 # The amount usages the simulated units change reaches, and the usages it leaves alone.
@@ -240,8 +242,10 @@ def test_evidence_traces_import_client_call_and_usage(handle: str) -> None:
     record = RECORDS[handle]
     roles = ANNOTATIONS[handle]["evidence_roles"]
     assert roles[-1] == "usage", "the usage line comes last, as in the scanner's origin -> use-site chain"
-    assert {"sdk_call", "client", "client_initialization", "sdk_import"} <= set(roles)
+    assert {"sdk_call", "client_initialization", "sdk_import"} <= set(roles)
     items = evidence_by_role(handle)
+    # A client created inline (const stripe = new Stripe(...)) is its own initialization line.
+    client = items.get("client", items["client_initialization"])
     assert source_location(Dependency.model_validate(record)) == ANNOTATIONS[handle]["usage_site"]
     assert record["origin"] == {"kind": "sdk_response", "library": "stripe", "call": record["origin"]["call"]}
     assert SDK_CALLS[record["origin"]["call"]] in items["sdk_call"]["excerpt"]
@@ -249,8 +253,8 @@ def test_evidence_traces_import_client_call_and_usage(handle: str) -> None:
     assert CLIENT_INITIALIZATION.match(items["client_initialization"]["excerpt"]), items["client_initialization"]
     assert "GET /v1/payment_intents/{intent}" in ANNOTATIONS[handle]["sdk_operation"]
     # The SDK call, its client and the usage sit in one module, in that order.
-    assert items["usage"]["file"] == items["sdk_call"]["file"] == items["client"]["file"]
-    assert items["client"]["line_start"] < items["sdk_call"]["line_start"] < items["usage"]["line_start"]
+    assert items["usage"]["file"] == items["sdk_call"]["file"] == client["file"]
+    assert client["line_start"] < items["sdk_call"]["line_start"] < items["usage"]["line_start"]
     # The usage reads the field from the very variable the SDK call assigned.
     assigned = re.match(r"(?:const\s+)?(\w+)\s*=", items["sdk_call"]["excerpt"])
     assert assigned is not None
@@ -265,6 +269,10 @@ def test_evidence_traces_import_client_call_and_usage(handle: str) -> None:
         assert re.search(re.escape(f"{access} {symbol} {usage['operand']}") + r"(?![\w.])", line), (usage, line)
     elif usage["operation"] == "store":
         assert_store_destination(items, access, usage["destination"])
+    elif usage["operation"] == "pass_through":
+        # The value is passed on unchanged into the named field of the returned object.
+        assert usage["operand"] is None and usage["destination"], usage
+        assert re.fullmatch(re.escape(f"{usage['destination']}: {access},"), line), (usage, line)
     else:
         assert usage == {"operation": "read", "operand": None, "destination": None}
     assert ANNOTATIONS[handle]["confidence_basis"].startswith(f"{record['confidence']}:")

@@ -131,7 +131,9 @@ def test_all_prints_the_labels(demo_run: DemoRun) -> None:
         "LOCAL RUNNER DOUBLE — trusted local fixtures; plain subprocess, not a sandbox, not Sai's runner",
         "deterministic rules (analysis_mode=rules): no LLM",
         "Noirit's scanner per repository where it reproduces every expected use site; otherwise the labeled fixture",
+        "shockwave-stripe-checkout   real scan:",
         "shockwave-stripe-fraud      real scan:",
+        "shockwave-stripe-reporting  FIXTURE:",
         "provider source access: unavailable (Stripe's server implementation is not accessible",
         "schema diff alone: 0 changes; with the declaration: 1 change",
     ):

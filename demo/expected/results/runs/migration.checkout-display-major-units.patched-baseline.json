@@ -41,7 +41,7 @@
     ],
     "cwd": "$WORK_DIR/runs/migrate-checkout-display/checkout-baseline"
   },
-  "commit_sha": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
+  "commit_sha": "a6964c11d46004f3a3120cece33d34edee890d0f",
   "duration_ms": 0,
   "exit_code": 1,
   "fixture": {
@@ -57,7 +57,7 @@
     "applied_with": "git apply --check <patch>; git apply <patch> (in the run's copy only)",
     "migration_id": "checkout-display-major-units",
     "patch": "demo/migrations/checkout-display-major-units.patch",
-    "sha256": "e033273ac826962199de5a83d453fc5732d97247e17b3624a4f7dc5c9eb31295"
+    "sha256": "9f77932adf8fda4443b8924baf2d13b170e1f79f848e593f02aeacba401a7386"
   },
   "phase": "baseline",
   "plan_id": "ede0760e-814e-5fc2-9aa7-4c541999bc05",

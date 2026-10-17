@@ -1335,7 +1335,7 @@ NODE_GUARD_PROBE = """  const outcomes: string[] = [];
 def test_node_guard_allows_only_the_fixture_server(checkout_plan, repos, tmp_path) -> None:
     signature = "): Promise<OrderSummary> {\n"
     probe = _edit("src/orderSummary.ts", signature, signature + NODE_GUARD_PROBE)
-    imports = _edit("src/orderSummary.ts", "import type Stripe from 'stripe';\n", "import type Stripe from 'stripe';\n" + NODE_GUARD_IMPORTS)
+    imports = _edit("src/orderSummary.ts", "import Stripe from 'stripe';\n", "import Stripe from 'stripe';\n" + NODE_GUARD_IMPORTS)
 
     def both(checkout: Path) -> None:
         imports(checkout)

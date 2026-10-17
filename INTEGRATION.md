@@ -53,7 +53,7 @@ No merge produced a textual conflict.
 |---|---|
 | Scenario binding collision | Kanishk's Stripe checkout scenario and Sai's simulated scenario were both bound to `src/checkout.ts`, so Sai's plans resolved to Kanishk's scenario (`KeyError: 'response'` in Sai's runner). Kanishk's template file is now `src/orderSummary.ts`; the fixture, ids, migration, reference results and tests were updated. Sai's code is unchanged. |
 | Evidence order | Kanishk's dependency fixture listed the use site first; the scanner (and the rules) use origin → … → use site last. The fixture was reordered, ids recomputed per the documented derivation, and tests updated. |
-| Real scanner in the demo | `demo.py scan` called a guessed scanner interface. It now calls Noirit's real `scan_repository` per repository and uses its records when they reproduce every expected use site; otherwise it keeps the line-verified fixture and records the misses. Fraud is a real scan; checkout and reporting expose two scanner gaps (see `demo/HANDOFF.md`). |
+| Real scanner in the demo | `demo.py scan` called a guessed scanner interface. It now calls Noirit's real `scan_repository` per repository and uses its records when they reproduce every expected use site; otherwise it keeps the line-verified fixture and records the misses. Checkout and fraud are real scans; reporting uses the labeled fixture because `StripeClient(...).v1` is not mapped (see `demo/HANDOFF.md`). |
 | `fixture-server --max-requests` race | The threading server returned before counting the request and then blocked forever. Requests are now answered synchronously in that mode (the CLI test was flaky; three consecutive passes after the fix). |
 | Inferred-pointer policy | Kanishk's Stripe test still expected `inferred` to get no scenario; it now uses `unresolved`, consistent with the policy below. |
 | Contracts in the demo | `demo/scripts/demo.py` puts `app/` on the path, so the demo uses `shared.schemas` too. |
@@ -186,10 +186,11 @@ adapter chain directly (outside the API): verified_regression, then patch_valida
 1. **No live GitHub fetch or publication.** It needs the GitHub App to be created and installed
    (`demo/GITHUB_SETUP.md`) and Sai's transport configured. Publication stays disabled.
 2. **Scanner gaps (Noirit):**
+   - `StripeClient(...).v1.payment_intents.*` is not mapped. The demo uses the labeled fixture for
+     the reporting repository; checkout and fraud are real scans.
    - SDK clients injected through a parameter named `stripe` from a factory are not attributed.
-   - `StripeClient(...).v1.payment_intents.*` is not mapped.
-   - Both misses are silent: no coverage gap is reported.
-   The demo uses the labeled fixture for those two repositories.
+     The checkout template now creates its client inline, so the demo no longer depends on this.
+   - These misses are silent: no coverage gap is reported.
 3. **Stripe demo verification runs on the local runner double, not Sai's `RunnerService`.** The
    fraud threshold rescale also has no rule in Sai's migration generator yet.
 4. **`ScanRequest` fields.** `ScanRequest` lacks `consumer_org_id` / `base_urls`; Ishan decides.

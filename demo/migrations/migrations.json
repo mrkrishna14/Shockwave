@@ -76,7 +76,7 @@
       ],
       "business_assertion": {
         "file": "test/checkout.test.ts",
-        "line": 28,
+        "line": 39,
         "excerpt": "assert.equal(summary.displayTotal, '$10.00');",
         "test": "order summary shows the PaymentIntent total in dollars",
         "expectation": "pi_demo_10usd (USD $10.00) is displayed as $10.00"

@@ -3,8 +3,8 @@
   "label": "LOCAL snapshot: a deterministic local git commit of the team-created template (fixed identity and dates); not fetched from GitHub. fetched_at is the fixed commit date.",
   "records": [
     {
-      "commit_sha": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-      "content_hash": "sha256:fd99f53dd6d10db694a7d3c10972c23f089ccd1953e9150b1c490ff9259d3055",
+      "commit_sha": "a6964c11d46004f3a3120cece33d34edee890d0f",
+      "content_hash": "sha256:6d6e81dc45258ee080ce7d72799dbb19a93743b84b737d5e9e4bfba642db8d3e",
       "fetched_at": "2026-10-17T12:00:00Z",
       "id": "bd623f0f-1656-52f7-88ee-12499ea4fc93",
       "repository_connection_id": "42194b11-3fa5-5ed2-88dd-c9ff81db1fe1"
@@ -27,7 +27,7 @@
   "repositories": {
     "shockwave-stripe-checkout": {
       "branch": "main",
-      "commit_sha": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
+      "commit_sha": "a6964c11d46004f3a3120cece33d34edee890d0f",
       "consumer_org_id": "6f153b43-f6db-5768-9d25-632648e129d9",
       "consumer_org_name": "Larkspur Outfitters",
       "dependency": "stripe@23.0.0 (node_modules via npm ci; not committed)",
