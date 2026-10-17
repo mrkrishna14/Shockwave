@@ -488,13 +488,21 @@ def test_scenario_pointers_are_only_valid_on_conversion_risks(change, deps):
     assert any("not applicable" in problem for problem in validate_risk_evidence(copied, change, dependencies))
 
 
-def test_inferred_display_dependency_gets_no_scenario_pointer(change, deps):
+def test_inferred_display_dependency_at_the_bound_file_gets_a_scenario_pointer(change, deps):
+    # Running the bound scenario is what settles an inferred (call-following) link; the
+    # Risk itself stays inferred until a verification result says otherwise.
     inferred = deps["python_display"].model_copy(update={"confidence": "inferred"})
     result = analyze_impact(change, [inferred])
     risk = risk_with(result, inferred)
     assert (risk.severity, risk.confidence) == ("high", "inferred")
-    assert scenario_evidence(risk) == []
+    assert [item.source_uri for item in scenario_evidence(risk)] == [f"shockwave-scenario://{PYTHON_SCENARIO}"]
     assert validate_risk_evidence(result, change, [inferred]) == []
+
+
+def test_unresolved_display_dependency_gets_no_scenario_pointer(change, deps):
+    unresolved = deps["python_display"].model_copy(update={"confidence": "unresolved"})
+    result = analyze_impact(change, [unresolved])
+    assert all(scenario_evidence(risk) == [] for risk in result.risks)
 
 
 def test_reserved_scenario_scheme_in_change_evidence_never_reaches_a_risk(deps):

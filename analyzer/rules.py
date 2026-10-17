@@ -191,8 +191,12 @@ def compose_explanation(core: str, label: str, missing_evidence: Iterable[str] =
 
 
 def source_location(dependency: Dependency) -> str | None:
-    """``file:line`` (or ``file:start-end``) of the dependency's first located source evidence."""
-    for item in dependency.evidence:
+    """``file:line`` (or ``file:start-end``) of the dependency's use site.
+
+    Scanner evidence runs origin call -> ... -> use site, so the use site is the last located
+    source item (scanner/HANDOFF.md); a single-item chain is its own use site.
+    """
+    for item in reversed(dependency.evidence):
         if item.kind != "source" or not item.file:
             continue
         if item.line_start is None:

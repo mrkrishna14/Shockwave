@@ -197,6 +197,40 @@ SCENARIOS: dict[str, ScenarioSpec] = {
             trusted_profile="trusted_node",
             sandbox_profile="sandbox_node",
         ),
+        # Noirit's team-owned demo-payments consumers (examples/consumers), bound at the file
+        # holding the '/ 100' use site that the scanner reports.
+        _display_scenario(
+            scenario_id="demo-payments.charge-amount-units.display.python-display",
+            title="Noirit's Python display consumer survives the cents-to-dollars change",
+            binding=ConsumerBinding(
+                language="python",
+                consumer_file="demo_display/charges.py",
+                module="demo_display.charges",
+                function="fetch_charge_display",
+                args=("ch_demo",),
+                http_injection="python_requests_get",
+            ),
+            harness_asset="python_display_harness.py",
+            staged_test_name="test_shockwave_display_invariant.py",
+            trusted_profile="trusted_python",
+            sandbox_profile="sandbox_python",
+        ),
+        _display_scenario(
+            scenario_id="demo-payments.charge-amount-units.display.typescript-display",
+            title="Noirit's TypeScript display consumer survives the cents-to-dollars change",
+            binding=ConsumerBinding(
+                language="typescript",
+                consumer_file="src/charges.ts",
+                module="src/charges.ts",
+                function="fetchChargeDisplay",
+                args=("ch_demo",),
+                http_injection="js_global_fetch",
+            ),
+            harness_asset="node_display_harness.mjs",
+            staged_test_name="shockwave_display_invariant.test.mjs",
+            trusted_profile="trusted_node",
+            sandbox_profile="sandbox_node",
+        ),
     )
 }
 
@@ -289,7 +323,7 @@ def find_applicable_scenario(
             and (spec.method, spec.path) in endpoints
             and (old_unit, new_unit) == (spec.old_unit, spec.new_unit)
             and currency == spec.currency
-            and dependency.confidence == "direct"
+            and dependency.confidence in ("direct", "inferred")  # running the scenario settles an inferred link
             and dependency.language == spec.binding.language
             and dependency.usage.operation == spec.usage_operation
             and _operand_equals(dependency.usage.operand, spec.usage_operand)
