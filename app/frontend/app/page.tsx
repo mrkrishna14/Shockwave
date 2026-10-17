@@ -11,8 +11,8 @@ const PROVIDER_TITLES:Record<string,string>={overview:'Release confidence, with 
 const CONSUMER_TITLES:Record<string,string>={overview:'Your migration workspace.',invitations:'Invitations & consent',repositories:'Repository access',findings:'Private impact findings'};
 
 function modeLabel(mode?:string){
-  if(mode==='integrated')return 'Integrated · real modules';
-  if(mode==='fixture')return 'Fixture mode';
+  if(mode==='integrated')return 'Live engine';
+  if(mode==='fixture')return 'Demo mode';
   return mode||'checking';
 }
 
@@ -46,7 +46,7 @@ export default function Dashboard(){
       </div>
       {w.error&&<div role="alert" className="notice danger">{w.error}</div>}
     </div>
-    <footer className="login-footer"><span className="mode">Local demo · simulated accounts · live authentication is not connected</span><span className="rfs">RFS: Self-Maintaining APIs</span></footer>
+    <footer className="login-footer"><span className="mode">Demo workspace</span><span className="rfs">RFS: Self-Maintaining APIs</span></footer>
   </main>;
   const provider=w.org?.kind==='provider';
   const tabs=provider?['overview','endpoints','consumers','changes']:['overview','invitations','repositories','findings'];
@@ -56,7 +56,7 @@ export default function Dashboard(){
     <div className="workspace-picker"><span className="eyebrow">Workspace</span><label className="sr-only" htmlFor="workspace">Organization</label><select id="workspace" value={w.org?.id||''} onChange={e=>w.chooseOrg(e.target.value)}>{w.session.organizations.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select><small>{w.session.user.email}</small></div>
     <nav className="nav" aria-label="Main navigation">{tabs.map((tab,i)=><button key={tab} className={w.location.tab===tab?'active':''} aria-current={w.location.tab===tab?'page':undefined} onClick={()=>w.navigate({tab,risk:''})}><span className="nav-index" aria-hidden="true">{i+1}</span>{tab[0].toUpperCase()+tab.slice(1)}</button>)}</nav>
     <div className="sidebar-bottom"><p>Private evidence belongs to consumers.</p><span>shockwave.v1 · RFS: Self-Maintaining APIs</span></div>
-  </aside><div className="main-column"><header className="topbar"><div><span className="breadcrumb">{provider?'Provider':'Consumer'} / <strong>{w.location.tab}</strong></span><span className={'mode-tag'+(integrated?'':' neutral')} title={integrated?'Discovery, scan, analysis, verification and migration run the team\'s real modules; repository access is a local trusted fixture; publication is off.':undefined}>{modeLabel(w.capabilities?.mode)}</span></div><div className="button-row"><button className="button subtle" onClick={()=>void w.refresh()}>Refresh</button><button className="button subtle" onClick={()=>void w.signOut().catch(e=>w.setError(e instanceof Error?e.message:'Sign out failed'))}>Sign out</button></div></header>
+  </aside><div className="main-column"><header className="topbar"><div><span className="breadcrumb">{provider?'Provider':'Consumer'} / <strong>{w.location.tab}</strong></span><span className={'mode-tag'+(integrated?'':' neutral')} title={integrated?'Discovery, scanning, analysis, verification and fixes run on the Shockwave engine.':undefined}>{modeLabel(w.capabilities?.mode)}</span></div><div className="button-row"><button className="button subtle" onClick={()=>void w.refresh()}>Refresh</button><button className="button subtle" onClick={()=>void w.signOut().catch(e=>w.setError(e instanceof Error?e.message:'Sign out failed'))}>Sign out</button></div></header>
     <main className="content" aria-busy={busy||w.loading}><div className="page-heading"><div><span className="eyebrow">{provider?'Before the rollout':'Your code, your control'}</span><h1 ref={heading} tabIndex={-1}>{titles[w.location.tab]??titles.overview}</h1><p>{provider?'Trace a proposed change to every affected consumer without seeing their source.':'Review predictions, reproduce regressions with your own tests, and control publication.'}</p></div><div className="page-mode">{(busy||w.loading)&&<span className="small-muted">Working…</span>}</div></div>
       {w.error&&<div className="notice danger" role="alert">{w.error}<button className="button subtle" onClick={()=>w.setError('')}>Dismiss</button></div>}
       {w.location.tab==='overview'&&<DemoPath role={provider?'provider':'consumer'} data={w.data}/>}
