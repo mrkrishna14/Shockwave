@@ -1,6 +1,8 @@
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
-import {all,api,Capabilities,emptyData,PlatformData,Session,JobView,APIProject,Endpoint,Invitation,ConsumerRow,APIChange,ProviderImpactSummary,Enrollment,RepositoryConnection,SelectedRepo,RepoOption,DetailedRisk,Mail} from './api';
+import {all,api,Capabilities,emptyData,PlatformData,Session,JobView,APIProject,Endpoint,Invitation,ConsumerRow,APIChange,ProviderImpactSummary,Enrollment,RepositoryConnection,SelectedRepo,RepoOption,DetailedRisk,Mail,IncomingInvitation,Health} from './api';
+
+export type SignUp={email:string;password:string;account_type:'provider'|'consumer';organization_name:string};
 
 type LocationState={tab:string;org:string;project:string;enrollment:string;risk:string};
 const locationState=():LocationState=>{
@@ -12,6 +14,7 @@ const locationState=():LocationState=>{
 export function useWorkspace(){
   const [session,setSession]=useState<Session|null>(null);
   const [ready,setReady]=useState(false);
+  const [health,setHealth]=useState<Health|null>(null);
   const [capabilities,setCapabilities]=useState<Capabilities|null>(null);
   const [location,setLocation]=useState<LocationState>(locationState);
   const [data,setData]=useState<PlatformData>(emptyData);
@@ -35,6 +38,7 @@ export function useWorkspace(){
     const onPop=()=>setLocation(locationState());
     window.addEventListener('popstate',onPop);
     api<Session>('/session').then(setSession).catch(()=>setSession(null)).finally(()=>setReady(true));
+    api<Health>('/health').then(setHealth).catch(()=>setHealth(null));
     return()=>window.removeEventListener('popstate',onPop);
   },[]);
 
@@ -59,13 +63,14 @@ export function useWorkspace(){
           if(changes.length)next.impact=await all<ProviderImpactSummary>(`/api-projects/${id}/impact?change_id=${changes.at(-1)!.id}`,org.id,signal);
         }
       }else{
-        const [enrollments,repos,risks,mail,repoOptions]=await Promise.all([
+        const [enrollments,repos,risks,mail,repoOptions,incoming]=await Promise.all([
           all<Enrollment>('/enrollments',org.id,signal),
           all<RepositoryConnection>('/repository-connections',org.id,signal),
           all<DetailedRisk>('/consumer/risks',org.id,signal),
           capabilities?.email==='development_inbox'?all<Mail>('/demo/inbox',org.id,signal):Promise.resolve([]),
-          all<RepoOption>('/github/repositories',org.id,signal)]);
-        next={...next,enrollments,repos,risks,mail,repoOptions};
+          all<RepoOption>('/github/repositories',org.id,signal),
+          all<IncomingInvitation>('/invitations/incoming',org.id,signal)]);
+        next={...next,enrollments,repos,risks,mail,repoOptions,incoming};
         const id=enrollments.some(e=>e.id===enrollment)?enrollment:enrollments.find(e=>e.status==='active')?.id;
         if(id)next.selectedRepos=await all<SelectedRepo>(`/enrollments/${id}/repositories`,org.id,signal);
       }
@@ -79,15 +84,18 @@ export function useWorkspace(){
   const active=data.jobs.some(j=>j.status==='queued'||j.status==='running');
   useEffect(()=>{if(!active)return;const timer=window.setInterval(()=>{if(!loading)void refresh()},2500);return()=>window.clearInterval(timer)},[active,loading,refresh]);
 
-  async function signIn(persona:'provider'|'consumer'){
+  async function enter(start:()=>Promise<unknown>){
     abort.current?.abort();serial.current++;setData(emptyData());setError('');
-    await api('/demo/session',{method:'POST',body:{persona}});
+    await start();
     const signed=await api<Session>('/session');setSession(signed);navigate({org:signed.organizations[0]?.id||'',project:'',enrollment:'',risk:'',tab:'overview'},true);
   }
+  const demoSignIn=(persona:'provider'|'consumer')=>enter(()=>api('/demo/session',{method:'POST',body:{persona}}));
+  const logIn=(email:string,password:string)=>enter(()=>api('/auth/login',{method:'POST',body:{email,password}}));
+  const signUp=(body:SignUp)=>enter(()=>api('/auth/signup',{method:'POST',body}));
   async function signOut(){
     abort.current?.abort();serial.current++;await api('/session',{method:'DELETE'});
     setSession(null);setData(emptyData());setCapabilities(null);navigate({org:'',project:'',enrollment:'',risk:'',tab:'overview'},true);
   }
   function chooseOrg(id:string){abort.current?.abort();serial.current++;setData(emptyData());navigate({org:id,project:'',enrollment:'',risk:'',tab:'overview'})}
-  return {session,ready,capabilities,org,project,enrollment,location,data,loading,error,setError,navigate,refresh,signIn,signOut,chooseOrg};
+  return {session,ready,health,capabilities,org,project,enrollment,location,data,loading,error,setError,navigate,refresh,demoSignIn,logIn,signUp,signOut,chooseOrg};
 }

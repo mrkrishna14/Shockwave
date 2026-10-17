@@ -28,7 +28,7 @@ class Store:
         # preserve its rows and add worker coordination without resetting state.
         with self.tx() as db:
             version = db.execute('PRAGMA user_version').fetchone()[0]
-            if version > 4:
+            if version > 5:
                 raise RuntimeError(f'Unsupported Shockwave database version {version}')
             if version < 1:
                 db.executescript('''
@@ -86,6 +86,13 @@ class Store:
                 );
                 ''')
                 db.execute('PRAGMA user_version=4')
+            if version < 5:
+                # Password accounts. Seeded demo users keep a NULL hash and cannot sign in with a password.
+                columns={r['name'] for r in db.execute('PRAGMA table_info(users)')}
+                if 'password_hash' not in columns:
+                    db.execute('ALTER TABLE users ADD COLUMN password_hash TEXT')
+                    db.execute('ALTER TABLE users ADD COLUMN created_at TEXT')
+                db.execute('PRAGMA user_version=5')
             # Legacy jobs predate the lease table. They remain claimable after an
             # upgrade; an active lease from another worker is never discarded.
             for row in db.execute("SELECT id,payload FROM records WHERE kind='job'"):

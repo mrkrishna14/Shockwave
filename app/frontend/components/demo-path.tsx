@@ -6,8 +6,8 @@ function providerSteps(d:PlatformData):Step[]{
   return [
     {title:'Create the API project',hint:'Overview → Create API project',done:d.projects.length>0},
     {title:'Load its contract',hint:'Endpoints → Load contract',done:d.endpoints.length>0},
-    {title:'Invite a consumer',hint:'Consumers → Invite consumer',done:d.consumers.length>0},
-    {title:'Consumer joins and scans',hint:'Switch to the consumer workspace',done:d.consumers.some(c=>c.enrollment_status==='active')},
+    {title:'Invite a consumer',hint:'Consumers → Invite their email',done:d.consumers.length>0},
+    {title:'Consumer joins and scans',hint:'Consumer signs in and accepts',done:d.consumers.some(c=>c.enrollment_status==='active')},
     {title:'Assess the change',hint:'Changes → Assess change',done:d.changes.length>0},
     {title:'See verified impact',hint:'Consumer runs verification, then refresh',done:d.impact.some(i=>i.verified_regression_count>0)},
   ];

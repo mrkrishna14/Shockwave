@@ -113,7 +113,7 @@ The root `pytest.ini` puts `app/` on the path, and `app/pyproject.toml` now also
 | build_verification_plan | Kanishk `verification.scenarios.build_verification_plan` | **live** |
 | verify_regression | Sai `verification.runner.RunnerService` (stages Kanishk's harness) | **live** (trusted fixtures only; not a sandbox) |
 | generate_migration | Sai `migration.MigrationService` (rule-based patch) | **live** |
-| send_invitation | development inbox (`DemoAdapters`) | **fake, labeled** |
+| send_invitation | SMTP notification when `SHOCKWAVE_SMTP_*` is set, otherwise development inbox (`DemoAdapters`) | **live with SMTP**, otherwise fake, labeled |
 | publish_migration | disabled (`DemoAdapters` raises; no PR) | **not attempted** |
 
 Start the server in integrated mode with `SHOCKWAVE_ADAPTERS=integrated SHOCKWAVE_INLINE_JOBS=1
@@ -176,8 +176,8 @@ adapter chain directly (outside the API): verified_regression, then patch_valida
 - **Fake, all labeled:**
   - The Demo Payments provider is fictional.
   - Repository fetch is a local fixture copy, not GitHub.
-  - Email goes to the development inbox.
-  - Personas use the demo session.
+  - Without SMTP settings, email goes to the development inbox.
+  - The one-click demo personas use the demo session. Email/password accounts are real, but sign-up does not yet verify email ownership.
 - **Not attempted:** PR publication, live model calls and GitHub App installation. Execution is never
   sandboxed: only registered team fixtures run.
 

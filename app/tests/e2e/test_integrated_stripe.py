@@ -64,9 +64,9 @@ def test_stripe_provider_end_to_end_with_a_restart(tmp_path):
     endpoints = get(p, f"/api-projects/{project['id']}/endpoints?limit=100&filter=payment_intents").json()['items']
     assert any(e['method'] == 'GET' and e['path'] == '/v1/payment_intents/{intent}' for e in endpoints)
 
-    assert post(p, f"/api-projects/{project['id']}/invitations", {'recipient_email': 'consumer@example.test'}).status_code == 201
-    token = get(c, '/demo/inbox').json()['items'][-1]['acceptance_url'].split('=')[1]
-    enrollment = post(c, '/invitations/accept', {'token': token, 'consumer_org_id': stable('consumer'),
+    invite = post(p, f"/api-projects/{project['id']}/invitations", {'recipient_email': 'consumer@example.test'})
+    assert invite.status_code == 201, invite.text
+    enrollment = post(c, '/invitations/accept', {'invitation_id': invite.json()['id'], 'consumer_org_id': stable('consumer'),
                                                  'consent_version': CONSENT, 'share_summary': True}).json()
     c.get(post(c, '/github/connect', {'return_route': '/'}).json()['installation_url'])
     options = get(c, '/github/repositories').json()['items']

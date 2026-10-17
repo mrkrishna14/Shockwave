@@ -7,7 +7,7 @@ import {Empty,Status,Table} from './status';
 type Workspace=ReturnType<typeof useWorkspace>;
 export function Provider({w,run}:{w:Workspace;run:(fn:()=>Promise<unknown>)=>void}){
   const [projectName,setProjectName]=useState('Stripe');
-  const [email,setEmail]=useState('consumer@example.test');
+  const [email,setEmail]=useState('');
   const [search,setSearch]=useState('payment_intents');
   const [oldSemantics,setOldSemantics]=useState('GET /v1/payment_intents/{intent} amount: USD in cents (minor units). 1000 = $10.00');
   const [newSemantics,setNewSemantics]=useState('GET /v1/payment_intents/{intent} amount: USD in dollars (major units). 10 = $10.00');
@@ -38,8 +38,8 @@ export function Provider({w,run}:{w:Workspace;run:(fn:()=>Promise<unknown>)=>voi
       </Table>:<Empty title="No endpoints loaded">Load the contract to inspect its documented operations.</Empty>}
     </section>}
     {project&&(tab==='overview'||tab==='consumers')&&<section className="panel">
-      <div className="panel-header"><div><span className="eyebrow">PERMISSIONED ONBOARDING</span><h2>Consumers</h2></div><Status value={w.capabilities?.email==='development_inbox'?'in-app inbox':w.capabilities?.email??'unavailable'}/></div>
-      <p>Invited teams receive the invitation in their Shockwave inbox. Their repository details stay private to them.</p>
+      <div className="panel-header"><div><span className="eyebrow">PERMISSIONED ONBOARDING</span><h2>Consumers</h2></div><Status value={w.capabilities?.email==='development_inbox'?'dev inbox':w.capabilities?.email==='smtp'?'email':w.capabilities?.email??'unavailable'}/></div>
+      <p>Invited teams get an email notification, then sign in with that address to accept from their consumer workspace. Their repository details stay private to them.</p>
       <form className="inline-form" onSubmit={e=>{e.preventDefault();run(()=>api(`/api-projects/${project.id}/invitations`,{method:'POST',org:org.id,body:{recipient_email:email}}))}}>
         <label className="field">Recipient email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label><button className="button primary">Invite consumer</button>
       </form>

@@ -19,6 +19,8 @@ from backend.orchestration import Orchestrator
 from backend.readiness import evidence_state
 from backend.settings import Settings
 from backend.outbox import Outbox
+from backend.auth import hash_password, verify_password
+from backend.mailer import SMTPMailer
 
 CONSENT='2026-10-16.v1'
 def digest(s): return hashlib.sha256(s.encode()).hexdigest()
@@ -51,8 +53,11 @@ class Input(BaseModel): model_config=ConfigDict(extra='forbid')
 class Login(Input): persona: Literal['provider','consumer','other','unverified']
 class ProjectInput(Input): name: str = Field(min_length=1,max_length=120); service_id: str; base_urls: list[str]
 class InviteInput(Input): recipient_email: str = Field(min_length=3,max_length=254)
-class TokenInput(Input): token: str = Field(min_length=20,max_length=200)
-class AcceptInput(TokenInput): consumer_org_id: ID; consent_version: str; share_summary: bool
+class SignupInput(Input):
+    email: str = Field(min_length=3,max_length=254); password: str = Field(min_length=8,max_length=200)
+    account_type: Literal['provider','consumer']; organization_name: str = Field(min_length=1,max_length=120)
+class PasswordLogin(Input): email: str = Field(min_length=3,max_length=254); password: str = Field(min_length=1,max_length=200)
+class AcceptInput(Input): invitation_id: ID; consumer_org_id: ID; consent_version: str; share_summary: bool
 class ConnectInput(Input): return_route: str = '/'
 class RepoInput(Input): github_repository_id: str; enrollment_id: ID; scan_consent: bool; allow_model_processing: bool=False; allow_pr_write: bool=False
 class ScanInput(Input): enrollment_id: ID; ref: str=COMMIT
@@ -76,7 +81,7 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
     api.state.settings=settings
     queue=JobQueue(store)
     orchestrator=Orchestrator(store,queue,adapters_factory,demo)
-    outbox=Outbox(store,adapters_factory,demo)
+    outbox=Outbox(store,adapters_factory,demo,SMTPMailer(settings) if settings.smtp_configured else None)
     api.state.queue=queue
     api.state.orchestrator=orchestrator
     api.state.outbox=outbox
@@ -85,9 +90,9 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             for kind,name in [('provider','Demo API team'),('consumer','Acme storefront'),('other','Other consumer')]:
                 org=stable(kind); user=stable(kind+'-user')
                 db.execute('INSERT OR IGNORE INTO organizations VALUES(?,?,?)',(org,name,'provider' if kind=='provider' else 'consumer'))
-                db.execute('INSERT OR IGNORE INTO users VALUES(?,?,?)',(user,kind+'@example.test',1))
+                db.execute('INSERT OR IGNORE INTO users(id,email,verified) VALUES(?,?,?)',(user,kind+'@example.test',1))
                 db.execute('INSERT OR IGNORE INTO memberships VALUES(?,?,?)',(user,org,'admin'))
-            db.execute('INSERT OR IGNORE INTO users VALUES(?,?,?)',(stable('unverified-user'),'unverified@example.test',0))
+            db.execute('INSERT OR IGNORE INTO users(id,email,verified) VALUES(?,?,?)',(stable('unverified-user'),'unverified@example.test',0))
             db.execute('INSERT OR IGNORE INTO memberships VALUES(?,?,?)',(stable('unverified-user'),stable('consumer'),'admin'))
 
     @api.exception_handler(Problem)
@@ -111,7 +116,7 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
 
     def identity(db,request):
         token=request.cookies.get('shockwave_session','')
-        row=db.execute('SELECT users.* FROM sessions JOIN users ON users.id=sessions.user_id WHERE token_hash=? AND expires>?',(digest(token),now())).fetchone()
+        row=db.execute('SELECT users.id,users.email,users.verified FROM sessions JOIN users ON users.id=sessions.user_id WHERE token_hash=? AND expires>?',(digest(token),now())).fetchone()
         if not row: fail(401,'UNAUTHENTICATED','Sign in first')
         return dict(row)
     def context(db,request,kind=None,admin=False):
@@ -156,12 +161,23 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             if json.loads(row['payload'])['invitation_id']==invitation_id:
                 return row['status']=='needs_reconciliation'
         return False
-    def find_token(db,token):
-        h=digest(token)
-        found=next((x for x in store.list(db,'invitation') if secrets.compare_digest(x['token_hash'],h)),None)
+    def addressed(user,inv): return bool(user['verified']) and user['email'].lower()==inv['recipient_email']
+    def incoming(db,user,id):
+        found=store.get(db,id,'invitation')
         if not found: fail(404,'INVITATION_INVALID','Invitation not found')
+        if not addressed(user,found): fail(403,'RECIPIENT_MISMATCH','Authenticate with the verified invited email')
         if found['status']!='pending' or found['expires_at']<=now(): fail(409,'INVITATION_UNAVAILABLE','Invitation expired, revoked, or already accepted')
         return found
+    def normalized_email(value):
+        email=value.strip().lower()
+        if '@' not in email or any(c.isspace() for c in email): fail(422,'INVALID_EMAIL','Enter a valid email')
+        return email
+    def start_session(db,user_id,body,status=200):
+        token=secrets.token_urlsafe(32)
+        db.execute('INSERT INTO sessions VALUES(?,?,?)',(digest(token),user_id,later(8)))
+        response=JSONResponse(body,status_code=status)
+        response.set_cookie('shockwave_session',token,httponly=True,samesite='strict',max_age=8*3600,secure=settings.secure_cookie)
+        return response
     def limited(db,bucket):
         row=db.execute('SELECT * FROM rate_limits WHERE bucket=?',(bucket,)).fetchone()
         if row and row['window']>now() and row['count']>=30: fail(429,'RATE_LIMIT','Too many attempts; try again later',True)
@@ -170,7 +186,7 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
         db.execute('INSERT OR REPLACE INTO rate_limits VALUES(?,?,?)',(bucket,count,expiry))
 
     @api.get('/api/v1/health')
-    def health(): return {'status':'ok','integration_mode':('integrated' if integrated else 'fixture') if demo else 'unconfigured','production_auth':False}
+    def health(): return {'status':'ok','integration_mode':('integrated' if integrated else 'fixture') if demo else 'unconfigured','production_auth':False,'password_auth':True,'demo_sessions':demo}
     @api.get('/api/v1/capabilities')
     def capabilities(request:Request):
         with store.read() as db: identity(db,request)
@@ -184,18 +200,36 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
                 'scanner':'fixture' if demo else 'unavailable',
                 'verification':'trusted_fixture' if demo else 'unavailable',
                 'migration':'fixture' if demo else 'unavailable',
-                'email':'development_inbox' if demo else 'unavailable',
+                'email':'smtp' if outbox.mailer else 'development_inbox' if demo else 'unavailable',
                 'publication':'unavailable',
                 'reasons':{'publication':'Live GitHub publication adapter and fresh remote revision checks are not configured.'}}
     @api.post('/api/v1/demo/session')
     def login(body:Login,request:Request):
         if not demo: fail(404,'NOT_FOUND','Demo sessions disabled')
         with store.tx() as db:
-            token=secrets.token_urlsafe(32)
-            db.execute('INSERT INTO sessions VALUES(?,?,?)',(digest(token),stable(body.persona+'-user'),later(8)))
-        response=JSONResponse({'mode':'local_demo','verified_email_simulated':True})
-        response.set_cookie('shockwave_session',token,httponly=True,samesite='strict',max_age=8*3600,secure=settings.secure_cookie)
-        return response
+            return start_session(db,stable(body.persona+'-user'),{'mode':'local_demo','verified_email_simulated':True})
+    @api.post('/api/v1/auth/signup',status_code=201)
+    def signup(body:SignupInput,request:Request):
+        email=normalized_email(body.email); name=body.organization_name.strip()
+        if not name: fail(422,'INVALID_ORGANIZATION','Enter an organization name')
+        with store.tx() as db: limited(db,'signup:'+request.client.host)
+        password_hash=hash_password(body.password)
+        with store.tx() as db:
+            if db.execute('SELECT 1 FROM users WHERE email=?',(email,)).fetchone(): fail(409,'EMAIL_TAKEN','An account with this email already exists; sign in instead')
+            user,org=uid(),uid()
+            # Email ownership is not proven by a verification message yet; see README.
+            db.execute('INSERT INTO users(id,email,verified,password_hash,created_at) VALUES(?,?,?,?,?)',(user,email,1,password_hash,now()))
+            db.execute('INSERT INTO organizations VALUES(?,?,?)',(org,name,body.account_type))
+            db.execute('INSERT INTO memberships VALUES(?,?,?)',(user,org,'admin'))
+            return start_session(db,user,{'user':{'id':user,'email':email,'verified':1},'organization_id':org},201)
+    @api.post('/api/v1/auth/login')
+    def password_login(body:PasswordLogin,request:Request):
+        email=body.email.strip().lower()
+        with store.tx() as db: limited(db,'login:'+request.client.host)
+        with store.read() as db: row=db.execute('SELECT id,password_hash FROM users WHERE email=?',(email,)).fetchone()
+        # verify_password runs even for unknown emails so timing does not reveal which accounts exist.
+        if not verify_password(body.password,row['password_hash'] if row else None): fail(401,'INVALID_CREDENTIALS','Email or password is incorrect')
+        with store.tx() as db: return start_session(db,row['id'],{'signed_in':True})
     @api.delete('/api/v1/session')
     def logout(request:Request):
         with store.tx() as db: db.execute('DELETE FROM sessions WHERE token_hash=?',(digest(request.cookies.get('shockwave_session','')),))
@@ -217,8 +251,7 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             _,org=context(db,request,'provider'); return page(store.list(db,'project',org['id']),request)
     @api.post('/api/v1/api-projects/{id}/invitations',status_code=201)
     def invite(id:str,body:InviteInput,request:Request):
-        email=body.recipient_email.strip().lower()
-        if '@' not in email or any(c.isspace() for c in email): fail(422,'INVALID_EMAIL','Enter a valid email')
+        email=normalized_email(body.recipient_email)
         operation_id=None
         with store.tx() as db:
             project,_,org=owned(db,request,id,'project','provider',True)
@@ -226,16 +259,17 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             if previous: return sanitized_invitation(previous)
             inv=next((x for x in store.list(db,'invitation',org['id'],id) if x['recipient_email']==email and x['status']=='pending' and x['expires_at']>now()),None)
             if not inv or inv['delivery_status']=='failed':
-                token=secrets.token_urlsafe(32)
                 if inv:
-                    inv.update(token_hash=digest(token),expires_at=later(),delivery_status='pending')
+                    inv.update(expires_at=later(),delivery_status='pending')
                     store.update(db,inv)
                 else:
-                    inv=dump(Invitation(id=uid(),api_project_id=id,recipient_email=email,token_hash=digest(token),expires_at=later(),status='pending',delivery_status='pending'))
+                    inv=dump(Invitation(id=uid(),api_project_id=id,recipient_email=email,expires_at=later(),status='pending',delivery_status='pending'))
                     store.put(db,'invitation',org['id'],inv,id)
                 # The transport runs after this transaction commits. This record is
-                # durable if the process exits before dispatch.
-                if demo: operation_id=outbox.queue_invitation(db,inv,'/?invite='+token,'invitation:'+inv['id']+':'+digest(token))
+                # durable if the process exits before dispatch. The email is a notice
+                # only: the recipient accepts after signing in with this address.
+                notice={'provider_name':org['name'],'api_name':project['name'],'recipient_email':email,'app_url':settings.app_url or settings.origin}
+                if outbox.available: operation_id=outbox.queue_invitation(db,inv,notice,'invitation:'+inv['id']+':'+uid())
                 else:
                     inv['delivery_status']='failed';store.update(db,inv)
             remember(db,scope,key,fp,inv['id'])
@@ -277,21 +311,24 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
         with store.read() as db:
             user=identity(db,request)
             return page([x for x in store.list(db,'mail') if x['recipient_email']==user['email']],request)
-    @api.post('/api/v1/invitations/preview')
-    def preview(body:TokenInput,request:Request):
-        # Rate-limit commits even when the token validation fails.
-        with store.tx() as db: limited(db,'preview:'+request.client.host)
-        with store.tx() as db:
-            inv=find_token(db,body.token); project=required(store.get(db,inv['api_project_id'],'project'))
-            org=db.execute('SELECT name FROM organizations WHERE id=?',(project['provider_org_id'],)).fetchone()
-            return {'provider_name':org['name'],'api_name':project['name'],'consent_version':CONSENT,'expires_at':inv['expires_at'],'processing':'Shockwave centrally processes selected source. Providers receive opted-in summaries only. Model processing is optional and separately consented.'}
+    @api.get('/api/v1/invitations/incoming')
+    def incoming_invitations(request:Request):
+        # Pending invitations addressed to the signed-in verified email; emails carry no acceptance link.
+        with store.read() as db:
+            user,_=context(db,request,'consumer')
+            items=[]
+            for inv in store.list(db,'invitation'):
+                if inv['status']!='pending' or inv['expires_at']<=now() or not addressed(user,inv): continue
+                project=required(store.get(db,inv['api_project_id'],'project'))
+                org=db.execute('SELECT name FROM organizations WHERE id=?',(project['provider_org_id'],)).fetchone()
+                items.append({'invitation_id':inv['id'],'provider_name':org['name'],'api_name':project['name'],'consent_version':CONSENT,'expires_at':inv['expires_at'],'processing':'Shockwave centrally processes selected source. Providers receive opted-in summaries only. Model processing is optional and separately consented.'})
+            return page(items,request)
     @api.post('/api/v1/invitations/accept')
     def accept(body:AcceptInput,request:Request):
         with store.tx() as db:
             user,org=context(db,request,'consumer',True)
             if org['id']!=body.consumer_org_id: fail(403,'FORBIDDEN','You must administer the selected consumer organization')
-            inv=find_token(db,body.token)
-            if not user['verified'] or user['email'].lower()!=inv['recipient_email']: fail(403,'RECIPIENT_MISMATCH','Authenticate with the verified invited email')
+            inv=incoming(db,user,body.invitation_id)
             if body.consent_version!=CONSENT: fail(409,'CONSENT_VERSION','Review the current consent terms')
             existing=next((x for x in store.list(db,'enrollment',org['id']) if x['api_project_id']==inv['api_project_id'] and x['status']=='active'),None)
             if existing: fail(409,'ALREADY_ENROLLED','Organization is already enrolled')

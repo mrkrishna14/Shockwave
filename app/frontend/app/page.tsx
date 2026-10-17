@@ -4,7 +4,8 @@ import {useWorkspace} from '../lib/use-workspace';
 import {Provider} from '../components/provider';
 import {Consumer} from '../components/consumer';
 import {JobCenter} from '../components/job-center';
-import {Brand,Logo} from '../components/brand';
+import {Brand} from '../components/brand';
+import {AuthScreen} from '../components/auth';
 import {DemoPath} from '../components/demo-path';
 
 const PROVIDER_TITLES:Record<string,string>={overview:'Release confidence, with evidence.',endpoints:'Endpoint inventory',consumers:'Consumer onboarding',changes:'Change assessment'};
@@ -27,27 +28,7 @@ export default function Dashboard(){
   }
   const run=(fn:()=>Promise<unknown>)=>{void action(fn)};
   if(!w.ready)return <main className="login-screen" aria-busy="true"><div className="login-card"><Brand size={40} tagline/><h1 style={{marginTop:40}}>Loading your workspace</h1><p>Checking your session and permissions…</p></div></main>;
-  if(!w.session)return <main className="login-screen">
-    <div className="login-card">
-      <div className="hero-brand"><Logo size={124} title="Shockwave logo"/><span className="wordmark">shockwave</span></div>
-      <p className="hero-tagline">Know your API&apos;s downstream impact.</p>
-      <p className="hero-sub">See what changes in your customers&apos; code before you ship.</p>
-      <div className="persona-grid" role="group" aria-label="Choose a workspace">
-        <button className="persona" disabled={busy} onClick={()=>run(()=>w.signIn('provider'))}>
-          <span className="eyebrow">I publish an API</span><h2>Provider workspace</h2>
-          <p>Load your API contract, invite the teams that depend on it, and assess a proposed change. You see impact counts only, never their code.</p>
-          <span className="go">Enter as provider →</span>
-        </button>
-        <button className="persona" disabled={busy} onClick={()=>run(()=>w.signIn('consumer'))}>
-          <span className="eyebrow">I depend on an API</span><h2>Consumer workspace</h2>
-          <p>Accept an invitation, choose which repositories may be scanned, see where your code breaks, prove it with your tests, and review a validated fix.</p>
-          <span className="go">Enter as consumer →</span>
-        </button>
-      </div>
-      {w.error&&<div role="alert" className="notice danger">{w.error}</div>}
-    </div>
-    <footer className="login-footer"><span className="mode">Demo workspace</span><span className="rfs">RFS: Self-Maintaining APIs</span></footer>
-  </main>;
+  if(!w.session)return <AuthScreen w={w} busy={busy} run={run}/>;
   const provider=w.org?.kind==='provider';
   const tabs=provider?['overview','endpoints','consumers','changes']:['overview','invitations','repositories','findings'];
   const titles=provider?PROVIDER_TITLES:CONSUMER_TITLES;

@@ -1687,10 +1687,6 @@
         "title": "Recipient Email",
         "type": "string"
       },
-      "token_hash": {
-        "title": "Token Hash",
-        "type": "string"
-      },
       "expires_at": {
         "format": "date-time",
         "title": "Expires At",
@@ -1747,7 +1743,6 @@
       "id",
       "api_project_id",
       "recipient_email",
-      "token_hash",
       "expires_at",
       "status",
       "delivery_status"

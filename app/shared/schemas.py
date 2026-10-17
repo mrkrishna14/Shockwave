@@ -36,7 +36,6 @@ class Invitation(Model):
     id: ID
     api_project_id: ID
     recipient_email: str
-    token_hash: str
     expires_at: datetime
     status: Literal['pending', 'accepted', 'revoked', 'expired']
     delivery_status: Literal['pending', 'sent', 'failed', 'development_inbox']

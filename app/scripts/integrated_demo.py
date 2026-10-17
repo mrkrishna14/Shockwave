@@ -41,9 +41,8 @@ def main() -> int:
 
     project = post(p, '/api-projects', {'name': 'Demo Payments', 'service_id': 'demo-payments',
                                         'base_urls': ['http://demo-payments.test']}).json()
-    post(p, f"/api-projects/{project['id']}/invitations", {'recipient_email': 'consumer@example.test'})
-    token = c.get('/api/v1/demo/inbox').json()['items'][-1]['acceptance_url'].split('=')[1]
-    enrollment = post(c, '/invitations/accept', {'token': token, 'consumer_org_id': stable('consumer'),
+    invite = post(p, f"/api-projects/{project['id']}/invitations", {'recipient_email': 'consumer@example.test'}).json()
+    enrollment = post(c, '/invitations/accept', {'invitation_id': invite['id'], 'consumer_org_id': stable('consumer'),
                                                  'consent_version': CONSENT, 'share_summary': True}).json()
     c.get(post(c, '/github/connect', {'return_route': '/'}).json()['installation_url'])
     repository_id = c.get('/api/v1/github/repositories').json()['items'][0]['github_repository_id']
