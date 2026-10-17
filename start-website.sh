@@ -27,9 +27,12 @@ fi
 export SHOCKWAVE_DEMO=1
 export SHOCKWAVE_ADAPTERS="${SHOCKWAVE_ADAPTERS:-integrated}"
 if [ "$SHOCKWAVE_ADAPTERS" = integrated ] && [ ! -f "$ROOT/demo/templates/checkout/node_modules/stripe/package.json" ]; then
-  echo "Integrated Stripe checkout dependencies are missing. Install them with:" >&2
-  echo "  cd \"$ROOT\" && PATH=\"$VENV:\$PATH\" npm ci --ignore-scripts --prefix demo/templates/checkout" >&2
-  exit 1
+  echo "Installing the Stripe checkout's dependencies (one time; needs network)..."
+  if ! npm ci --ignore-scripts --prefix "$ROOT/demo/templates/checkout" --no-audit --no-fund; then
+    echo "Could not install them. Retry with:" >&2
+    echo "  cd \"$ROOT\" && PATH=\"$VENV:\$PATH\" npm ci --ignore-scripts --prefix demo/templates/checkout" >&2
+    exit 1
+  fi
 fi
 export SHOCKWAVE_INLINE_JOBS=1            # keep integrated state in the API process
 export SHOCKWAVE_DB="${SHOCKWAVE_DB:-$ROOT/app/shockwave.db}"

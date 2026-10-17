@@ -1,6 +1,6 @@
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
-import {all,api,Capabilities,emptyData,PlatformData,Session,JobView,APIProject,Endpoint,Invitation,ConsumerRow,APIChange,ProviderImpactSummary,Enrollment,RepositoryConnection,SelectedRepo,RepoOption,DetailedRisk,Mail,IncomingInvitation,Health} from './api';
+import {all,api,ApiError,Capabilities,emptyData,PlatformData,Session,JobView,APIProject,Endpoint,Invitation,ConsumerRow,APIChange,ProviderImpactSummary,Enrollment,RepositoryConnection,SelectedRepo,RepoOption,DetailedRisk,Mail,IncomingInvitation,Health} from './api';
 
 export type SignUp={email:string;password:string;account_type:'provider'|'consumer';organization_name:string};
 
@@ -79,6 +79,21 @@ export function useWorkspace(){
     finally{if(current===serial.current)setLoading(false)}
   },[session,org?.id,org?.kind,project,enrollment,capabilities?.email]);
 
+  // One browser shares one session cookie: signing in elsewhere in another tab changes who this tab is.
+  // Follow that change when the tab comes back instead of failing with membership errors.
+  useEffect(()=>{
+    if(!session)return;
+    const check=()=>{
+      if(document.visibilityState!=='visible')return;
+      api<Session>('/session').then(current=>{
+        if(current.user.id===session.user.id)return;
+        abort.current?.abort();serial.current++;setData(emptyData());setSession(current);
+        navigate({org:current.organizations[0]?.id||'',project:'',enrollment:'',risk:'',tab:'overview'},true);
+      }).catch(e=>{if(e instanceof ApiError&&e.status===401){abort.current?.abort();serial.current++;setSession(null);setData(emptyData())}});
+    };
+    window.addEventListener('focus',check);document.addEventListener('visibilitychange',check);
+    return()=>{window.removeEventListener('focus',check);document.removeEventListener('visibilitychange',check)};
+  },[session?.user.id,navigate]);
   useEffect(()=>{if(session){api<Capabilities>('/capabilities').then(setCapabilities).catch(()=>setCapabilities(null))}},[session]);
   useEffect(()=>{void refresh();return()=>abort.current?.abort()},[refresh]);
   const active=data.jobs.some(j=>j.status==='queued'||j.status==='running');
