@@ -9,7 +9,7 @@ import subprocess
 import pytest
 
 from conftest import (
-    COMMIT, CONSUMER_ORG, CONSUMERS, DECOY_MERCHANT, DEMO_CHARGE, STRIPE_PI_CREATE, line_of, make_snapshot, tid, write,
+    COMMIT, CONSUMER_ORG, CONSUMERS, DECOY_MERCHANT, DEMO_CHARGE, STRIPE_PI_CREATE, line_of, make_request, make_snapshot, tid, write,
 )
 from scanner.contracts import Dependency, ScanResult
 
@@ -370,7 +370,6 @@ def test_scan_is_offline_and_executes_nothing(scan, monkeypatch):
 
 
 def test_requires_consumer_org_and_matching_snapshot(tmp_path):
-    from conftest import make_request
     from scanner import scan_repository
 
     snap = make_snapshot()
