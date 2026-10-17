@@ -131,7 +131,11 @@ def test_restart_and_no_production_demo_login(env,tmp_path):
         j=app.state.store.get(db,job['id']);j['status']='running';app.state.store.update(db,j)
     restarted=create_app(app.state.store.path,demo=True)
     c2=TestClient(restarted);c2.cookies.update(c.cookies)
-    assert get(c2,'/jobs/'+job['id']).json()['error']['code']=='WORKER_INTERRUPTED'
+    assert get(c2,'/jobs/'+job['id']).json()['status']=='running'
+    claim=restarted.state.queue.claim(job['id'])
+    assert claim is not None
+    restarted.state.orchestrator.run(claim)
+    assert get(c2,'/jobs/'+job['id']).json()['status']=='succeeded'
     assert len(get(c2,'/repository-connections').json()['items'])==1
     prod=TestClient(create_app(tmp_path/'prod.db',demo=False));assert post(prod,'/demo/session',{'persona':'provider'}).status_code==404
     assert get(prod,'/session').status_code==401
@@ -193,3 +197,65 @@ def test_delivery_retry_does_not_duplicate_invitation(env,monkeypatch):
     b=post(p,f"/api-projects/{pr['id']}/invitations",{'recipient_email':'consumer@example.test'},'retry')
     assert b.json()['delivery_status']=='development_inbox' and a.json()['id']==b.json()['id']
     assert len(get(c,'/demo/inbox').json()['items'])==1
+
+def test_rescan_invalidates_previous_readiness(env):
+    app,cs=env;p,c=cs['provider'],cs['consumer'];pr,e,r,risks=assessed(env)
+    risk=risks[0]
+    run(c,f"/risks/{risk['id']}/verifications")
+    run(c,f"/risks/{risk['id']}/migrations",{'mode':'preview'})
+    before=get(c,'/consumer/risks').json()['items']
+    assert next(x for x in before if x['id']==risk['id'])['evidence_state']['validated']
+    run(c,f"/repository-connections/{r['id']}/scans",{'enrollment_id':e['id']})
+    after=get(c,'/consumer/risks').json()['items']
+    assert not next(x for x in after if x['id']==risk['id'])['evidence_state']['current']
+    change=get(p,f"/api-projects/{pr['id']}/changes").json()['items'][-1]
+    summary=get(p,f"/api-projects/{pr['id']}/impact?change_id={change['id']}").json()['items'][0]
+    assert summary['verified_regression_count']==0 and summary['validated_fix_count']==0
+
+def test_repository_permissions_are_per_enrollment(env):
+    app,cs=env;p,c=cs['provider'],cs['consumer'];first,e,repo,_=onboard(env,write=True)
+    second=project(p);inv,token=invitation(p,c,second['id'])
+    accepted=post(c,'/invitations/accept',{'token':token,'consumer_org_id':stable('consumer'),
+        'consent_version':CONSENT,'share_summary':True}).json()
+    selected=post(c,'/repository-connections',{'github_repository_id':'fixture-'+stable('consumer'),
+        'enrollment_id':accepted['id'],'scan_consent':True,'allow_pr_write':False}).json()
+    assert selected['id']==repo['id']
+    assert not selected['enrollment_permissions']['allow_pr_write']
+    first_selection=get(c,f"/enrollments/{e['id']}/repositories").json()['items'][0]
+    second_selection=get(c,f"/enrollments/{accepted['id']}/repositories").json()['items'][0]
+    assert first_selection['enrollment_permissions']['allow_pr_write']
+    assert not second_selection['enrollment_permissions']['allow_pr_write']
+
+def test_pagination_and_capabilities_are_scoped(env):
+    app,cs=env;p,c=cs['provider'],cs['consumer']
+    for _ in range(3):project(p)
+    first=p.get('/api/v1/api-projects?limit=2').json()
+    second=p.get('/api/v1/api-projects?limit=2&cursor='+first['next_cursor']).json()
+    assert len(first['items'])==2 and len(second['items'])==1
+    assert len({x['id'] for x in first['items']+second['items']})==3
+    assert p.get('/api/v1/api-projects?limit=999').status_code==422
+    assert get(c,'/capabilities').json()['publication']=='unavailable'
+    assert get(p,'/consumer/risks').status_code==403
+
+def test_slow_adapter_does_not_block_api(tmp_path,monkeypatch):
+    from threading import Event
+    from backend.demo import DemoAdapters
+    entered=Event();release=Event()
+    class SlowAdapters(DemoAdapters):
+        def discover_endpoints(self,*args):
+            entered.set();assert release.wait(5)
+            return super().discover_endpoints(*args)
+    monkeypatch.setenv('SHOCKWAVE_INLINE_JOBS','0')
+    app=create_app(tmp_path/'slow.db',demo=True,adapters_factory=SlowAdapters)
+    p=TestClient(app);post(p,'/demo/session',{'persona':'provider'})
+    pr=project(p)
+    response=post(p,f"/api-projects/{pr['id']}/discoveries",{})
+    assert response.status_code==202
+    job_id=response.json()['id'];claim=app.state.queue.claim(job_id)
+    with ThreadPoolExecutor(1) as pool:
+        future=pool.submit(app.state.orchestrator.run,claim)
+        assert entered.wait(5)
+        assert get(p,'/jobs/'+job_id).json()['status']=='running'
+        assert get(p,'/api-projects').status_code==200
+        release.set();future.result(timeout=5)
+    assert get(p,'/jobs/'+job_id).json()['status']=='succeeded'

@@ -1,64 +1,69 @@
-# Shockwave platform preview
+# Shockwave platform
 
-A runnable local implementation of Ishan's platform scope: canonical contracts, persisted authorization/onboarding, job orchestration, provider summaries, and private consumer dashboards. This is **not a completed live Shockwave product**. Teammate-owned discovery/scanner/GitHub/email/runner/migration modules were not supplied. Clearly labeled platform doubles exercise their boundaries, with real Python and JavaScript fixture assertions.
+The platform is a permissioned, local fixture demonstration of API change impact. It stores provider projects, invitations, consumer enrollment and repository consent, jobs, private evidence, and provider summaries. Python and JavaScript assertions really run against embedded trusted fixture code. It does **not** scan arbitrary repositories, send live email, connect GitHub, publish a PR, import Stripe, or provide production authentication.
 
 ## Install
 
-Requires Python 3.12+ and Node 20.9+. Tested with Python 3.13.5 and Node 20.17.0.
+From `/Users/ishanmysore/Shockwave/app`:
 
 ```sh
-cd /Users/ishanmysore/Documents/Ishan/Berkeley/shockwave/app
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.lock
 npm ci --prefix frontend
 ```
 
-Alternatively use `uv venv .venv` and `uv pip sync requirements.lock`. Dependency versions are pinned in the Python lock and frontend package lock.
+Requires Python 3.12+ and Node 20.9+. Python and frontend versions are pinned in `requirements.lock` and `frontend/package-lock.json`.
 
-## Start (two terminals)
+## Start locally
 
-From this `app/` directory:
+Use three terminals in this directory. The API and worker must share `SHOCKWAVE_DB` and `SHOCKWAVE_DEMO` settings.
 
 ```sh
 ./scripts/start-backend.sh
 ```
 
 ```sh
+./scripts/start-worker.sh
+```
+
+```sh
 npm run dev --prefix frontend
 ```
 
-Open http://127.0.0.1:3000. Backend documentation: http://127.0.0.1:8000/docs.
-Keep this local demo on loopback. The persona switcher deliberately simulates identity and verified email. It grants no real GitHub access. With `SHOCKWAVE_DEMO` unset, demo sign-in is disabled; real authentication remains an integration prerequisite.
+Open `http://127.0.0.1:3000`; API documentation is at `http://127.0.0.1:8000/docs`. Both servers bind loopback. `start-backend.sh` sets `SHOCKWAVE_INLINE_JOBS=0`, so queued jobs are claimed by the worker. If using only the API for a quick fixture check, set `SHOCKWAVE_INLINE_JOBS=1`; that runs bounded demo work in FastAPI background tasks. `SHOCKWAVE_API_URL` controls the frontend proxy when the API uses a different local port. See `.env.example` for other settings. Do not expose the demo persona switcher publicly.
 
-## Rehearse
+The worker uses SQLite leases and fencing. A second worker may run against the same database. A healthy lease is not reclaimed; an abandoned lease can be reclaimed up to three attempts. Job completion, cancellation, and consent checks happen in short transactions. Adapter calls run outside those transactions. A new worker may repeat local computation after a crash, so external effects require their own idempotency and reconciliation.
 
-1. Choose Provider workspace. Create Demo Payments; load fixture inventory.
-2. Open Consumers; invite `consumer@example.test`. Delivery is development inbox, not email.
-3. Switch to Consumer. Review invitation; accept the processing/sharing terms.
-4. Connect the demo installation, explicitly consent to repository processing, and select the fixture repository. Scan.
-5. Switch to Provider → Changes; assess the fictional cents-to-dollars change.
-6. Switch to Consumer → Findings; inspect either language. Run verification: old pass / proposed fail.
-7. Generate the fixture patch, review the diff and passing tests. Deployment remains unknown. Publication requests are blocked by the absent live adapter; they never fabricate a PR URL.
+## Fixture walkthrough
 
-The isolated CLI demo does not modify the browser's database or contact external services:
+1. Sign in as Provider. Create Demo Payments and load its fixture endpoint.
+2. Invite `consumer@example.test`. Delivery appears in the simulated recipient's development inbox.
+3. Sign out and use Consumer. Review the invitation and grant enrollment consent.
+4. Connect the fixture installation, select a repository, and grant its separate processing permission. Scan it.
+5. Return to Provider and assess the fictional cents-to-dollars change. It is **not** a Stripe change.
+6. Return to Consumer. Inspect a finding, run old/new verification, and generate a patch. Old tests pass, proposed tests fail on `$0.10`, and the validated patch passes two fixture tests.
+7. Publication remains disabled; no PR or deployment is claimed.
+
+The browser uses the server's capability report to label unavailable actions. Repo permissions are stored per enrollment. A rescan makes evidence from an older snapshot stale.
+
+## Checks
+
+```sh
+.venv/bin/python -m pytest -q -p no:cacheprovider
+npm run typecheck --prefix frontend
+npm run build --prefix frontend
+```
+
+The isolated command line demo remains available:
 
 ```sh
 PYTHONPATH=. .venv/bin/python scripts/demo.py
 ```
 
-It writes `docs/sample-demo-output.json`. Both language fixtures should report baseline exit 0, proposed exit 1, validation exit 0, and 2 validation tests.
+It writes `docs/sample-demo-output.json`; use a copy if you need to keep that tracked sample unchanged. The demo uses a temporary SQLite database and no external transport.
 
-## Checks
+## Integration boundaries
 
-```sh
-.venv/bin/python -m pytest -q
-PYTHONPATH=. .venv/bin/python scripts/generate_contracts.py
-npm run typecheck --prefix frontend
-npm run build --prefix frontend
-```
+The API lives in `backend/main.py`, storage and additive migrations in `backend/store.py`, durable claims in `backend/jobs.py`, adapter execution in `backend/orchestration.py`, invitation delivery state in `backend/outbox.py`, and current-result policy in `backend/readiness.py`. Pydantic contracts in `shared/schemas.py` remain canonical; `frontend/contracts.ts` and the JSON schema are generated.
 
-Production build uses Next.js's supported webpack option because Turbopack's compiler subprocess could not bind its local IPC port in the managed build environment. Dev uses Turbopack. No framework versions were downgraded.
-
-## Integration
-
-Read `docs/HANDOFF-platform.md` and `docs/INTEGRATION.md`. Canonical Python types are in `shared/schemas.py`; `frontend/contracts.ts` and JSON schemas are generated. Do not fork model definitions in teammate modules. External sending, PR creation, pushes, merges, and deployment were not performed.
+Real scanner, provider discovery/analysis, signed GitHub installation and snapshots, email, sandbox execution, migration publication, and production identity integration are still needed. The application fails closed when demo mode is disabled. See `docs/INTEGRATION.md` and `docs/HANDOFF-platform.md` for exact seams and limitations.

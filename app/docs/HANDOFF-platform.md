@@ -1,151 +1,44 @@
-# Platform handoff — October 16, 2026
+# Platform handoff — October 17, 2026
 
-## Repository checkpoint
+## Checkpoint
 
-App: `/Users/ishanmysore/Documents/Ishan/Berkeley/shockwave/app`.
-Branch: `codex/platform-dashboards`.
-Implementation commit: `1fb461c1393f4e8155b469a755b8c710d889296a`.
-Use `git rev-parse HEAD` for the current documentation checkpoint. This is a separate local repository inside the handoff folder. No remote is configured; nothing was pushed, sent externally, merged, or deployed. Planning documents and the parent repository were preserved.
+Repository: `/Users/ishanmysore/Shockwave`, branch `Ishan`. This upgrade remains **uncommitted** for review. `plan/` is local planning material and was not changed. No push, PR, email, merge, or deployment was performed. The older implementation handoff described a separate nested repository; this file now describes the outer Shockwave repository.
 
-## Delivered scope
+## Implemented in this upgrade
 
-- Canonical Pydantic contracts in `shared/schemas.py`, generated JSON Schema/TypeScript, and stable demo endpoint/snapshot identities.
-- SQLite identities, memberships, sessions, scoped records, enrollment/repository mappings, idempotency, jobs, results, and interruption recovery.
-- Provider and consumer authorization; hashed expiring invitation tokens; transactional recipient-bound acceptance; transport retry without duplicate active invitations; separate repository consent.
-- Single-use account-bound simulated installation flow and server-selected fixture repository list.
-- Persisted orchestration for discovery, scan, assessment, verification, migration preview, and publication requests.
-- Private artifact authorization, revocation, queued cancellation, immediate scoped artifact-content purge, and explicit provider summary serialization.
-- Next.js/TypeScript/Tailwind dashboards with inventory, invitations, consent, repositories, risk evidence, old/new verification, patch preview, and publication/revocation controls. Shared tables, statuses, and activity components.
-- Typed integration protocols and clearly labeled local doubles. Actual native Python and JavaScript assertions run against embedded trusted fixture code; no arbitrary repository code is executed.
-- Dependency lockfiles, environment placeholders, startup helper, isolated demo script, and integration notes.
+- Additive SQLite migrations through schema version 4. Existing records and demo data are retained. Read-only routes no longer reserve the writer slot.
+- Durable queued jobs with atomic claims, lease ownership, monotonically increasing fencing generation, heartbeat, capped attempts, persisted attempt history, cancellation, explicit retry, and a separate worker entry point. Adapter computation runs outside write transactions; a stale or cancelled worker cannot commit a result.
+- Invitation outbox dispatch after transaction commit, with a stable operation key. An exception after possible delivery or an abandoned dispatch becomes `needs_reconciliation`; no blind resend occurs. Provider onboarding exposes that attention state.
+- Enrollment-specific repository model and PR write grants, validated at publication request time. Reusing a connection does not transfer another enrollment's write grant.
+- Typed adapter output checks for service, organization, enrollment, repository, and pinned snapshot consistency. Live adapter modules remain unavailable. Fixture context is supplied at adapter construction rather than mutated during a job.
+- Current evidence policy: only the latest selected scan snapshot, its latest verified regression, and a patch validated against that verification can contribute to readiness. Rescans and newer failures make old results stale.
+- Capability, enrollment repository, consumer onboarding, and risk snapshot endpoints. Bounded list pagination and explicit record order. Job attempts/cancel/retry APIs.
+- A modular provider/consumer dashboard with explicit organization, project, enrollment, and repository selection; URL-backed navigation; scoped fetch cancellation; active-job polling; private finding history; server-derived publication revision; and responsive layouts.
+- Updated API, worker, frontend startup instructions and integration boundaries.
 
-## Checks actually run
+## Verification completed
 
-All commands below ran from the app root unless otherwise noted.
-
-| Command | Observed result |
+| Check | Result |
 |---|---|
-| `.venv/bin/python -m pytest -q` | **16 passed in 2.06s**, one dependency deprecation warning about TestClient/httpx |
-| `PYTHONPATH=. .venv/bin/python scripts/generate_contracts.py` | **34 canonical contract types generated** |
-| `npm run typecheck --prefix frontend` | **Passed**, exit 0 |
-| `npm run build --prefix frontend` | **Passed**, Next.js 16.4.2 webpack production build; `/` and `/_not-found` prerendered |
-| `.venv/bin/python -m compileall -q backend shared scripts` | **Passed**, exit 0 |
-| `PYTHONPATH=. .venv/bin/python scripts/demo.py` | **Passed**; both languages: old exit 0, proposed exit 1, validated patch exit 0, 2 validation tests |
+| `.venv/bin/python -m pytest -q -p no:cacheprovider` | 27 passed; one Starlette TestClient/httpx deprecation warning |
+| `npm run typecheck --prefix frontend` | Passed |
+| `npm run build --prefix frontend` | Passed, Next.js 16.4.2 webpack build |
+| Browser flow at isolated `127.0.0.1:3001` / API `127.0.0.1:8001` | Provider project + fixture inventory + invitation; consumer acceptance + repository selection + scan; provider assessment; consumer regression verification and validated patch |
+| Responsive inspection | Default viewport and 390px mobile viewport; fixed a measured 48px horizontal overflow; document width became 390px |
+| Browser navigation | Back navigation restored selected private finding and its current result |
 
-Initial Turbopack production builds failed because the compiler's local IPC bind was blocked in the managed environment, including an elevated attempt. The production build now uses the supported `next build --webpack` option and passes. Development used Turbopack successfully. The framework-generated frontend AGENTS.md is committed; its relevant bundled guidance was inspected.
+The browser test used a separate temporary demo database, not the existing local server's database. It displayed one documented fixture endpoint, two predicted risks, baseline exit 0, proposed exit 1, two validation tests with exit 0, publication unavailable, and deployment unknown. Console error/warning check returned none. Existing screenshots in `docs/` are from the earlier implementation; no new screenshot file was written by this upgrade.
 
-### Automated coverage
+## Runtime settings
 
-The suite exercises:
+`SHOCKWAVE_DEMO=1` enables local simulated identities and fixture capabilities. `SHOCKWAVE_DB` selects the SQLite file. `SHOCKWAVE_ORIGIN` controls accepted browser mutation origin. `SHOCKWAVE_SECURE_COOKIE=1` sets the cookie Secure flag. `SHOCKWAVE_INLINE_JOBS=0` leaves work for the standalone worker. The frontend uses `SHOCKWAVE_API_URL` to override the proxy target when needed. No credential values belong in these files.
 
-- Invitation → acceptance → selected repo → scan → assessment → actual fixture regression → validated patch.
-- Concurrent invitation acceptance: exactly one success and one replay rejection.
-- Wrong recipient, unverified identity, forged consumer organization, expired and revoked invitations.
-- Idempotent invitations/jobs/publication attempts; transport failure/retry without another invitation.
-- Forged installation/repository IDs, callback state replay, and account binding.
-- Cross-tenant access to artifacts, migrations, and jobs; provider summary private-field exclusion.
-- Revoked processing/publication, queued cancellation, artifact purge, and hidden revoked findings.
-- Exclusion of nonsharing enrollments, latest-scan deduplication, and restart persistence/interruption recovery.
-- Cross-origin mutations, invalid input, and refusal to accept arbitrary fetch URLs.
-- Baseline failure, zero tests, timeout, infrastructure failure, and failed patch readiness.
-- Unconfigured publication remains failed, returns no fake PR URL, and cannot imply deployment.
+Run `./scripts/start-backend.sh`, `./scripts/start-worker.sh`, and `npm run dev --prefix frontend` in separate terminals from the app root. The API and worker must share settings and database path. The frontend starts on port 3000 by default.
 
-### Browser inspection
+## Limits and next actions
 
-The following were exercised in the Codex in-app browser at `http://127.0.0.1:3000`:
+This remains a local fixture implementation. No real Stripe inventory, provider source scan, arbitrary consumer repository scan, signed GitHub connection, email delivery, isolated execution of user code, runtime model call, or PR publication is implemented. `discovery.service` is absent in the current teammate-owned package. The demo subprocess uses a timeout and stripped environment, which is not general sandbox isolation.
 
-1. Provider project creation, fixture inventory, and development invitation.
-2. Consumer recipient-only inbox, consent acceptance, simulated installation, repository selection, and scan.
-3. Provider change assessment with two predicted risks and partial coverage.
-4. Consumer private Python finding, old-pass/new-fail execution, validated patch with two passing tests, and displayed patch diff.
+The worker prevents stale local result writes. It cannot undo an external effect already accepted by a remote service. The invitation outbox marks uncertain delivery for reconciliation; live publication needs its own durable outbox, remote SHA freshness verification, reconciliation policy, and explicit authorization before being enabled. List pagination uses offset cursors; high-volume concurrent writes need keyset pagination. The generic records table still relies on platform checks for several semantic relationships. Structured findings become inaccessible after revocation but remain stored; define physical retention/deletion policy before processing real source.
 
-Screenshot: `docs/consumer-validation.png`. Browser test data persists in the ignored local SQLite database. Automated tests and CLI demo use temporary databases.
-
-Not manually exercised in browser: expired/revoked/wrong-recipient error states, failed scan/retry, failed patch rendering, publication failure, disconnect/revocation, all keyboard paths, all viewport widths, and JavaScript finding details. Several have API coverage above; this is not a complete visual/accessibility audit. Inspection used the supplied narrow browser viewport, not a full device matrix.
-
-## Focused review and corrections
-
-Reviewed invitation replay, verified-recipient binding, installation ownership, tenant query scoping, provider redaction, revocation, and readiness truthfulness. Corrections made during implementation:
-
-- JavaScript evidence, execution, and patch diff now use the same exact fixture source.
-- Invitation tokens survive demo sign-in; repository consent resets after invitation acceptance so it is separately selected.
-- Baseline timeout/infrastructure error cannot verify a regression even if exit code is zero.
-- A previously validated patch is not counted when the latest verification no longer establishes the regression.
-- Failed invitation delivery retries the same invitation identity with a new hashed token and no duplicate active invitation.
-
-Affected backend and frontend checks passed. This review applies to the restricted local fixture implementation, not production security certification.
-
-## Reproducible sample
-
-`docs/sample-demo-output.json` contains the executed demo output. Each language reports:
-
-```json
-{"verification":"verified_regression","baseline_exit":0,"proposed_exit":1,"migration":"patch_validated","validation_exit":0,"tests_run":2,"pr_url":null}
-```
-
-Provider sample: two predicted, two verified, two validated, partial coverage, and deployment unknown. No private repository fields appear in that summary.
-
-## Startup
-
-Installed/tested: Python 3.13.5, Node 20.17.0, Python virtual environment at `.venv`, frontend dependencies in `frontend/node_modules`.
-
-Fresh checkout setup:
-
-```sh
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.lock
-npm ci --prefix frontend
-```
-
-Two terminals from the app root:
-
-```sh
-./scripts/start-backend.sh
-```
-
-```sh
-npm run dev --prefix frontend
-```
-
-Open `http://127.0.0.1:3000`; API docs are at `http://127.0.0.1:8000/docs`.
-The startup script explicitly enables local demo identities and binds loopback. `.env.example` documents DB path, allowed origin, and cookie configuration without secrets. Demo sign-in is disabled when `SHOCKWAVE_DEMO` is unset. Real authentication is an unimplemented integration boundary.
-
-Credential-free isolated demo:
-
-```sh
-PYTHONPATH=. .venv/bin/python scripts/demo.py
-```
-
-This does not send email, access GitHub, or modify the browser database.
-
-## Live versus demo and remaining requirements
-
-**The entire PROMPT.md assignment is not complete.** A tested local platform vertical slice is implemented; teammate modules and live prerequisites remain absent.
-
-- Kanishk's real Stripe OpenAPI parser, provider-source discovery, analysis, and verification scenarios are not supplied. Inventory currently contains one explicit fixture endpoint, not a real Stripe inventory or discovered implementation-only route.
-- Noirit's actual repository scanner is not supplied. Python/JavaScript dependencies are fixture-shaped; general repository/TypeScript analysis is not delivered here.
-- Sai's live email/GitHub/snapshot/runner/migration/publication adapters are not supplied. No live email, installation, checkout, webhook processing, sandbox execution, or PR is claimed.
-- Production identity integration must verify issuer/audience/email and provision memberships. Local selectable personas must never authorize real private-source processing.
-- Runtime inference and credentials are absent. Consent flags are stored, but no model calls occur.
-- Public URL fetching and arbitrary repository execution fail closed. Enabling these requires bounded SSRF-safe fetches, archive/patch path checks, secret-free resource isolation, and live repository freshness checks.
-- The worker serializes bounded local work in SQLite transactions. Running demo work finishes before a competing revocation transaction commits. Live external effects require durable outbox/lease design and cancellation boundaries; interrupted jobs currently fail explicitly on restart.
-- Revocation purges artifact contents. Structured findings remain stored but inaccessible. Agree a physical finding-retention/deletion policy before handling real source.
-- Lists return all records with `next_cursor=null`; pagination and a full multi-organization UI selector are deferred. Backend organization headers still require membership.
-- Approval/merge/deployment are separate stored states, but live update/reporting workflows are not wired. Deployment remains unknown.
-- Native fixture execution uses timeout and a stripped environment, which is not sandbox isolation. Only trusted embedded fixture code can reach this runner.
-
-Only Ishan-owned paths and bootstrap tooling were created. No teammate-owned implementation directories were added. HTTP additions and interface details are recorded in `docs/INTEGRATION.md`; no existing teammate schema was rewritten.
-
-## Next integration action
-
-Freeze `shared/schemas.py` and `shared/demo-identities.json` with the team. Receive actual discovery/scanner/I/O adapters, supply trusted checkout and authenticated installation resolvers, and replace the explicit fixture gating. Rerun the permission and vertical-slice tests before enabling any live action. Do not treat inserting credentials or disabling demo mode as sufficient integration.
-
-## Interrupted command
-
-After implementation checks, the backend was stopped for a final-code restart. Automatic approval review then failed due to an account usage limit; the restart did not execute and the documentation command queued after it did not run. This report was subsequently written as unaffected local work. Server processes are transient; verify listener state or use the startup commands above rather than assuming they remain running.
-
-### Restart completed on follow-up
-
-The normal approval-path retry succeeded. Uvicorn reported application startup complete and listened on `127.0.0.1:8000`; the Next.js server was also confirmed listening on `127.0.0.1:3000`. Reloading the browser restored the consumer session and persisted data: one connected repository, two predicted risks, and one browser-generated validated patch. Python verification and migration jobs remained succeeded. The isolated CLI demo separately validates both languages, so its two validated patches are not expected to match this browser database's one. Screenshot: `docs/restarted-dashboard.png`.
-
-No application code changed during this follow-up. Prior passing tests/build remain the implementation validation; they were not redundantly rerun for documentation and process restart. The initial approval-review failure is resolved for this restart.
+Next integration action: receive the discovery, scanner, authenticated repository/transport, isolated runner, and migration adapters from their owners; wire them through explicit factories and trusted paths; add tests for real external effect boundaries. Keep provider response redaction, consumer consent, and current-result policy as release gates.

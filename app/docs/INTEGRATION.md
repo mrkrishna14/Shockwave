@@ -1,38 +1,37 @@
-# Integration boundary and recorded contract additions
+# Platform integration boundary
 
-## Ownership
+## Current modes
 
-Only `shared/`, `backend/`, `frontend/`, `tests/e2e/`, root config, `scripts/` bootstrap tooling, and `docs/` were created. No `scanner/`, `discovery/`, `analyzer/`, `integrations/`, `migration/`, or teammate fixture modules were implemented. The platform-owned `backend/demo.py` contains labeled doubles and embedded trusted fixtures, not a general scanner/runner.
+`SHOCKWAVE_DEMO=1` enables an explicitly labeled local fixture. Demo accounts, repositories, discovery, scanning, analysis, test code, and patches are embedded. The fixture's native Python and Node assertions execute only trusted embedded code. `SHOCKWAVE_DEMO=0` disables demo sign-in and cannot process live source until real identity and adapters are configured. `GET /api/v1/capabilities` reports actual availability; it never advertises PR publication.
 
-Canonical schemas match the proposed `shockwave.v1` names and fields. `PublicationAuthorization` concretizes the requested internal fields as user_id, consumer_org_id, repository_connection_id, expected_commit, consent_timestamp. `DeliveryResult` follows CONTRACTS.md. Python Protocols in `backend/adapters.py` preserve the named module call signatures. Demo scanner organization context is supplied only inside the server-owned double, never a client field.
+The repository-root `discovery/` package currently lacks its `service` entry point. Scanner, analyzer, GitHub/email, runner, and migration modules are not wired as live implementations. The platform must not infer availability from an importable package name alone. Do not replace an owner's module with a competing implementation in this platform tree.
 
-Additive platform REST routes (recorded here, not proposed renames):
-- GET `/health`, `/api-projects`, `/jobs`, `/enrollments`, `/repository-connections`, `/api-projects/{id}/changes`.
-- DELETE `/session`, `/enrollments/{id}`.
-- Demo-only POST `/demo/session`, GET `/demo/inbox`.
-All use the `/api/v1` prefix. Listing returns `{items,next_cursor:null}`; pagination is not implemented yet.
+## Typed seams
 
-The local discovery HTTP input accepts only `spec_reference=demo-fixture`; it does **not** fetch URLs. The structured assessment HTTP input accepts canonical demo old/new IDs and optional canonical declared changes. These are deliberately restricted HTTP boundaries, not unrestricted discovery commands.
+`shared/schemas.py` defines `shockwave.v1`. `backend/adapters.py` records discovery, scanner, analysis, and I/O protocols. `backend/orchestration.py` validates typed adapter outputs, service identity, enrollment/organization, and pinned snapshot IDs before persistence. The demo adapter receives its trusted organization context at construction; live adapters need an explicit factory and a server-resolved checkout root. `Path('.')` is only passed in fixture mode and must never be interpreted as a selected user repository.
+
+The backend currently restricts discovery HTTP input to `demo-fixture`; it does not fetch arbitrary URLs. Assessment is restricted to canonical demo snapshots. The fictional `demo-payments` cents-to-dollars change is separate from any Stripe inventory. The provider only receives `ProviderImpactSummary` and sanitized onboarding status. Private risk evidence, paths, logs, patch diff, and PR URLs remain consumer-scoped.
+
+Extra platform routes under `/api/v1` include `GET /capabilities`, `GET /jobs`, `DELETE /jobs/{id}`, `POST /jobs/{id}/retry`, `GET /enrollments/{id}/repositories`, `GET /risks/{id}/snapshot`, and `GET /api-projects/{id}/consumers`. List routes return `{items,next_cursor}` and accept a cursor and limit from 1 to 100. Cursors encode an offset over deterministic row order; concurrent insertions can shift pages, so replace with keyset cursors for high-volume use.
+
+## Persistence and jobs
+
+SQLite `user_version` migrations add the lease table, attempt history, outbox, and enrollment-specific repository grants without dropping old records. A migration copies legacy connection grants into existing enrollment mappings. `Store.read()` does not reserve a writer; `Store.tx()` is for short mutations. Each claim gets a random owner and increasing generation. Heartbeats extend its lease. Completion checks owner, generation, expiry, cancellation, and job state in the same write transaction as result persistence. A stale worker cannot commit a successful result. Queued jobs survive an app restart; expired running jobs are claimable up to three attempts, with abandoned attempts recorded. Job retries create a new job only for retryable failures and require an idempotency key.
+
+The API can run inline fixture work for single-process development. `SHOCKWAVE_INLINE_JOBS=0` leaves jobs for `scripts/start-worker.sh`, which also dispatches pending invitation outbox records. The worker may repeat computation after a crash. Invitation delivery uses a stable operation key. A transport exception after possible delivery, or a dispatch abandoned for five minutes, marks `needs_reconciliation` and is not automatically resent. Provider onboarding shows this attention state. Live publication is unavailable; no outbox implementation should imply an actual PR or exactly-once external effect.
+
+Consent revocation cancels queued/running jobs and clears scoped artifact contents. A running fixture computation may finish locally, but its fenced result write is blocked after cancellation. Structured findings remain in SQLite and become inaccessible to the revoked enrollment. Physical finding deletion and retention periods require a policy before live source processing.
+
+## Readiness policy
+
+`backend/readiness.py` counts a risk as current only when it belongs to the latest selected scan snapshot for its repository. Verification must target that snapshot; validation must target the same snapshot and latest verified result, exit successfully without timeout/infrastructure failure, and run tests. A rescan or newer failed verification invalidates prior green counts. Approval, merge, and deployment are separate states; deployment remains unknown in the fixture.
 
 ## Next owner actions
 
-1. **Ishan + team:** agree on these canonical types and `shared/demo-identities.json`, then replace adapters with owners' typed implementations. Current app is intentionally gated to fixture operation; `demo=False` fails closed instead of silently invoking demo pipelines.
-2. **Sai:** GitHub App account/installation verification and repository listing; pinned checkout resolution; email delivery; signed and deduplicated webhook processing; sandbox runner; migration generation/validation; publication with fresh remote SHA and repository write grant. Backend adapters are currently synchronous.
-3. **Noirit:** scanner using `ScanRequest`, `RepositorySnapshot`, trusted repo root. Current fake claims partial fixture coverage and emits Python/JavaScript dependency shapes only.
-4. **Kanishk:** real pinned Stripe OpenAPI parsing, authorized provider-source discovery, change detection, analysis, and plan construction. Real source/spec discovery was not implemented in someone else's module. Stripe is never conflated with the fictional units scenario.
-5. **Ishan:** replace local sessions with an OIDC/session integration that verifies issuer/audience/email; handle real organization membership provisioning. Do not enable live private-source access behind the persona switcher.
-6. Before live I/O: add durable email/publication outbox leases, authenticated install callback helpers, bounded SSRF-safe fetches, archive/patch path hardening, real cache retention cleanup, and resource-isolated test execution. The demo never reads or executes user-selected code, so these paths fail closed today.
+1. **Identity/platform:** provide issuer/audience/email verification and real membership provisioning before private-source access. Keep demo identities isolated.
+2. **Discovery/analysis owner:** finish `discovery.service`, parser/source reconciliation, change analysis, and scenario construction; agree on canonical identities and bounded fetched inputs.
+3. **Scanner owner:** provide normalized Python and JavaScript/TypeScript dependencies over a trusted pinned checkout.
+4. **Transport/runner owner:** supply signed GitHub installation callbacks and webhooks, server-verified repository lists, pinned checkout and freshness checks, email delivery reconciliation, isolated test execution, targeted patch generation, and consumer-authorized PR publication.
+5. **Integration owner:** wire those implementations through explicit factories, add live-mode tests around the effect boundaries, and retain provider redaction and stale-result policy.
 
-## Storage and jobs
-
-SQLite transactions enforce foreign keys for organizations, memberships, records, mappings, and idempotency. Parent record ownership is checked in backend queries; the generic records table does not enforce every semantic relationship in SQL. Bodies are validated by Pydantic and explicit ownership checks. User and organization are resolved from the session/membership, not trusted JSON. Tokens are random and hashed for invitation/session lookup; only the transport inbox contains the acceptance URL. The development inbox is recipient-scoped.
-
-`BackgroundTasks` dispatches local jobs. Each job uses independent DB sessions and atomically changes queued → running → terminal. SQLite serializes execution; a worker transaction spans bounded local adapter work. This favors simple revocation ordering over concurrent read performance. Queued jobs are cancelled on revocation; running local work finishes before a competing revocation transaction commits. New work checks consent. On restart, interrupted queued/running jobs are explicitly failed with retry instructions; they are not silently replayed. Long-running live integrations need a durable outbox/lease design before production use.
-
-Consent revocation clears scoped artifact contents immediately. The double creates no persistent source checkouts; temporary fixture directories are automatically removed. Structured evidence/findings remain in SQLite but become inaccessible after revocation. Define retention and full finding deletion policy before onboarding real source.
-
-## Truthfulness
-
-Discovery, dependency extraction, assessment, and patch selection are fixture-driven. Python unittest and Node's native test runner really execute the embedded scenario. Validation tests the exact displayed source transformation plus an unrelated conversion check. It is not validation against a real consumer repository or its existing suite. Subprocess timeouts and stripped environment are **not** sandbox isolation; arbitrary repository execution remains unavailable. No runtime model calls exist. Passing results cover only these fixture assertions.
-
-No live publication returns success. PR, merge, approval, and deployment state never derive from job success. Provider serialization uses an explicit `ProviderImpactSummary` allowlist and never includes private risk details or artifact URLs.
+For live external I/O, add operation-specific outbox processing, remote reconciliation, non-retryable effect policy, bounded URL/archive/patch checks, and resource isolation. A timeout and stripped environment around trusted fixtures is not a sandbox.
