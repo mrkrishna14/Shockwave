@@ -1,0 +1,177 @@
+{
+  "audience": {
+    "consumer_org_id": "58503483-d79b-5647-ab0f-790cafe54de5",
+    "consumer_org_label": "fictional demo company (team-created; not a real organization; not a Stripe customer)",
+    "consumer_org_name": "Basalt Risk Desk"
+  },
+  "commit_sha": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+  "dependencies": [
+    {
+      "confidence": "direct",
+      "consumer_org_id": "58503483-d79b-5647-ab0f-790cafe54de5",
+      "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+      "enrollment_id": "2b26426c-d191-5021-8a14-e972e71931a8",
+      "evidence": [
+        {
+          "excerpt": "payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)",
+          "file": "fraud_service/review.py",
+          "id": "aa64f4e8-b540-5e99-a2bf-3096614f68ed",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 22,
+          "line_start": 22,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repository-snapshot://6b6552c2-7344-547b-a011-0293f1556875/fraud_service/review.py#L22",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "if payment_intent.amount > 500000:",
+          "file": "fraud_service/review.py",
+          "id": "f81e363a-6652-5519-8e76-298c424f1b87",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 24,
+          "line_start": 24,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repository-snapshot://6b6552c2-7344-547b-a011-0293f1556875/fraud_service/review.py#L24",
+          "visibility": "consumer_private"
+        }
+      ],
+      "field_path": "response.amount",
+      "id": "692edafd-6661-5a1d-8edb-dd7d9f81c8c2",
+      "language": "python",
+      "origin": {
+        "call": "stripe.PaymentIntent.retrieve",
+        "kind": "sdk_response",
+        "library": "stripe-python"
+      },
+      "repository_snapshot_id": "6b6552c2-7344-547b-a011-0293f1556875",
+      "service_id": "stripe",
+      "usage": {
+        "destination": null,
+        "operand": 500000.0,
+        "operation": "compare"
+      }
+    },
+    {
+      "confidence": "direct",
+      "consumer_org_id": "58503483-d79b-5647-ab0f-790cafe54de5",
+      "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+      "enrollment_id": "2b26426c-d191-5021-8a14-e972e71931a8",
+      "evidence": [
+        {
+          "excerpt": "payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)",
+          "file": "fraud_service/review.py",
+          "id": "aa64f4e8-b540-5e99-a2bf-3096614f68ed",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 22,
+          "line_start": 22,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repository-snapshot://6b6552c2-7344-547b-a011-0293f1556875/fraud_service/review.py#L22",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "return ReviewDecision(payment_intent.id, True, \"amount above $5,000.00\")",
+          "file": "fraud_service/review.py",
+          "id": "4fc7155a-030b-5f6f-b13a-933e1bb35198",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 25,
+          "line_start": 25,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repository-snapshot://6b6552c2-7344-547b-a011-0293f1556875/fraud_service/review.py#L25",
+          "visibility": "consumer_private"
+        }
+      ],
+      "field_path": "response.id",
+      "id": "32ddc2cb-c29f-540a-ab50-2463d5007ab2",
+      "language": "python",
+      "origin": {
+        "call": "stripe.PaymentIntent.retrieve",
+        "kind": "sdk_response",
+        "library": "stripe-python"
+      },
+      "repository_snapshot_id": "6b6552c2-7344-547b-a011-0293f1556875",
+      "service_id": "stripe",
+      "usage": {
+        "destination": "ReviewDecision",
+        "operand": null,
+        "operation": "pass_through"
+      }
+    },
+    {
+      "confidence": "direct",
+      "consumer_org_id": "58503483-d79b-5647-ab0f-790cafe54de5",
+      "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+      "enrollment_id": "2b26426c-d191-5021-8a14-e972e71931a8",
+      "evidence": [
+        {
+          "excerpt": "payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)",
+          "file": "fraud_service/review.py",
+          "id": "aa64f4e8-b540-5e99-a2bf-3096614f68ed",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 22,
+          "line_start": 22,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repository-snapshot://6b6552c2-7344-547b-a011-0293f1556875/fraud_service/review.py#L22",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "return ReviewDecision(payment_intent.id, False, \"within automatic approval limit\")",
+          "file": "fraud_service/review.py",
+          "id": "4598ffd9-e900-5874-882e-28c6faee8046",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 26,
+          "line_start": 26,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repository-snapshot://6b6552c2-7344-547b-a011-0293f1556875/fraud_service/review.py#L26",
+          "visibility": "consumer_private"
+        }
+      ],
+      "field_path": "response.id",
+      "id": "6cbebd07-7c37-5bf7-98e0-590ac80e9fd5",
+      "language": "python",
+      "origin": {
+        "call": "stripe.PaymentIntent.retrieve",
+        "kind": "sdk_response",
+        "library": "stripe-python"
+      },
+      "repository_snapshot_id": "6b6552c2-7344-547b-a011-0293f1556875",
+      "service_id": "stripe",
+      "usage": {
+        "destination": "ReviewDecision",
+        "operand": null,
+        "operation": "pass_through"
+      }
+    }
+  ],
+  "fixture": null,
+  "kind": "shockwave-demo.consumer-dependencies@1",
+  "label": "Noirit's scanner (scanner.scan_repository): real scan; reproduced all 3 expected use sites",
+  "negative_controls": [
+    {
+      "file": "fraud_service/velocity.py",
+      "id": "fraud_velocity_limit_amount",
+      "line": 18,
+      "reason": "A local VelocityLimit whose amount is a count of payments per window (not money); it is compared like a threshold but has no Stripe SDK response origin, so it is not a dependency and must stay unchanged.",
+      "symbol": "VelocityLimit.amount"
+    }
+  ],
+  "repository": "shockwave-stripe-fraud",
+  "repository_snapshot_id": "6b6552c2-7344-547b-a011-0293f1556875",
+  "revision_binding": "revisions as reported by the scanner (the prepared commit)",
+  "scanner_comparison": {
+    "scanner_extra": [],
+    "scanner_found": [
+      "fraud_service/review.py:24 response.amount",
+      "fraud_service/review.py:25 response.id",
+      "fraud_service/review.py:26 response.id"
+    ],
+    "scanner_missed": []
+  },
+  "source": "Noirit's scanner (scanner.scan_repository)",
+  "visibility": "consumer_private"
+}

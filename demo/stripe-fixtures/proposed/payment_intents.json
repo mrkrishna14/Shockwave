@@ -1,0 +1,69 @@
+{
+  "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.proposed",
+  "provider": "Stripe",
+  "variant": "proposed",
+  "label": "SIMULATED proposed variant (hypothetical, not announced by Stripe): USD amounts in major units (whole dollars); non-USD amounts unchanged. Not recorded from Stripe.",
+  "api_version": "2026-09-30.endive",
+  "operation": {
+    "method": "GET",
+    "path": "/v1/payment_intents/{intent}",
+    "operation_id": "GetPaymentIntentsIntent"
+  },
+  "responses": {
+    "pi_demo_10usd": {
+      "id": "pi_demo_10usd",
+      "object": "payment_intent",
+      "amount": 10,
+      "currency": "usd",
+      "status": "succeeded",
+      "created": 1760000000,
+      "livemode": false,
+      "capture_method": "automatic",
+      "metadata": {}
+    },
+    "pi_demo_4000usd": {
+      "id": "pi_demo_4000usd",
+      "object": "payment_intent",
+      "amount": 4000,
+      "currency": "usd",
+      "status": "succeeded",
+      "created": 1760000100,
+      "livemode": false,
+      "capture_method": "automatic",
+      "metadata": {}
+    },
+    "pi_demo_5000usd": {
+      "id": "pi_demo_5000usd",
+      "object": "payment_intent",
+      "amount": 5000,
+      "currency": "usd",
+      "status": "processing",
+      "created": 1760000200,
+      "livemode": false,
+      "capture_method": "automatic",
+      "metadata": {}
+    },
+    "pi_demo_6000usd": {
+      "id": "pi_demo_6000usd",
+      "object": "payment_intent",
+      "amount": 6000,
+      "currency": "usd",
+      "status": "succeeded",
+      "created": 1760000300,
+      "livemode": false,
+      "capture_method": "automatic",
+      "metadata": {}
+    },
+    "pi_demo_25eur": {
+      "id": "pi_demo_25eur",
+      "object": "payment_intent",
+      "amount": 2500,
+      "currency": "eur",
+      "status": "requires_capture",
+      "created": 1760000400,
+      "livemode": false,
+      "capture_method": "automatic",
+      "metadata": {}
+    }
+  }
+}

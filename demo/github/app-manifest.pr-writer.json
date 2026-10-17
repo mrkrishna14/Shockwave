@@ -1,0 +1,20 @@
+{
+  "name": "Shockwave Demo PR Writer",
+  "url": "https://shockwave.example.invalid/",
+  "description": "Shockwave hackathon demo (team-created). Opens migration pull requests on new branches, only in repositories where the installer explicitly authorized migration PRs. Never merges and never pushes to the default branch.",
+  "hook_attributes": {
+    "url": "https://shockwave.example.invalid/github/webhooks/pr-writer",
+    "active": true
+  },
+  "redirect_url": "https://shockwave.example.invalid/github/apps/manifest-callback/pr-writer",
+  "setup_url": "https://shockwave.example.invalid/github/apps/pr-writer/setup",
+  "setup_on_update": true,
+  "public": false,
+  "default_events": [],
+  "default_permissions": {
+    "metadata": "read",
+    "contents": "write",
+    "pull_requests": "write"
+  },
+  "request_oauth_on_install": false
+}

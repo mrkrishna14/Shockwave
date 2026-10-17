@@ -17,7 +17,10 @@ refused), optionally applies ``patch`` to the copy (simulating Sai's migration),
 the scenario, runs exactly the argv ``staging.runner_argv_hint`` documents (with this
 machine's interpreter) with cwd = checkout, and returns the ExecutionResult plus the raw
 report bytes (bounded), exactly what the real runner hands to
-``verification.scenarios.interpret``.
+``verification.scenarios.interpret``, and the bounded output tail (logs only).
+``run_control_phase_locally`` does the same for a control scenario and one fixture
+variant (``work_dir/checkout-control-<variant>``, ``staging.stage_control`` and
+``staging.control_argv_hint``); controls have no VerificationPlan.
 """
 
 from __future__ import annotations
@@ -36,16 +39,21 @@ from pathlib import Path
 from typing import cast
 
 from discovery.contracts import ExecutionResult, VerificationPlan
+from verification.scenarios.catalog import UnknownScenario, get_control
 from verification.scenarios.interpret import PhaseRun
 from verification.scenarios.staging import (
+    CONTROL_VARIANTS,
     MAX_REPORT_BYTES,
     NODE_PROFILES,
     PHASES,
     PYTHON_PROFILES,
+    ControlVariant,
     Phase,
     StagedRun,
     clip_text,
+    control_argv_hint,
     runner_argv_hint,
+    stage_control,
     stage_scenario,
 )
 
@@ -72,24 +80,82 @@ def run_phase_locally(
     """Execute one phase of ``plan`` against a copy of a trusted local consumer repository."""
     if phase not in PHASES:
         raise ValueError(f"phase must be one of {', '.join(PHASES)}; got {phase!r}")
+    return _run_locally(
+        profile=plan.runner_profile,
+        consumer_repo=consumer_repo,
+        checkout_name=f"checkout-{phase}",
+        work_dir=work_dir,
+        stage=lambda checkout, work: stage_scenario(plan, checkout, cast(Phase, phase), work),
+        argv_hint=lambda: runner_argv_hint(plan),
+        timeout=plan.timeout_seconds if timeout_seconds is None else timeout_seconds,
+        node_executable=node_executable,
+        patch=patch,
+    )
+
+
+def run_control_phase_locally(
+    scenario_id: str,
+    consumer_repo: Path,
+    variant: str,
+    *,
+    work_dir: Path,
+    node_executable: str | None = None,
+    timeout_seconds: int | None = None,
+    patch: Callable[[Path], None] | None = None,
+) -> PhaseRun:
+    """Execute a control scenario against one fixture ``variant`` (baseline or proposed) on a trusted local copy.
+
+    Uses the control's trusted profile: this double only runs trusted local fixtures.
+    """
+    if variant not in CONTROL_VARIANTS:
+        raise ValueError(f"variant must be one of {', '.join(CONTROL_VARIANTS)}; got {variant!r}")
+    try:
+        spec = get_control(scenario_id)
+    except UnknownScenario:
+        raise ValueError(f"not a control scenario: {clip_text(scenario_id, 120)!r}") from None
+    return _run_locally(
+        profile=spec.trusted_profile,
+        consumer_repo=consumer_repo,
+        checkout_name=f"checkout-control-{variant}",
+        work_dir=work_dir,
+        stage=lambda checkout, work: stage_control(scenario_id, checkout, cast(ControlVariant, variant), work),
+        argv_hint=lambda: control_argv_hint(scenario_id),
+        timeout=spec.timeout_seconds if timeout_seconds is None else timeout_seconds,
+        node_executable=node_executable,
+        patch=patch,
+    )
+
+
+def _run_locally(
+    *,
+    profile: str,
+    consumer_repo: Path,
+    checkout_name: str,
+    work_dir: Path,
+    stage: Callable[[Path, Path], StagedRun],
+    argv_hint: Callable[[], list[str]],
+    timeout: int,
+    node_executable: str | None,
+    patch: Callable[[Path], None] | None,
+) -> PhaseRun:
     source = Path(consumer_repo).resolve()
     if not source.is_dir():
         raise ValueError(f"consumer_repo must be an existing directory: {source}")
     work = Path(work_dir).resolve()
     if _within(work, source):
         raise ValueError("work_dir must be outside the consumer repository")
-    checkout = work / f"checkout-{phase}"
+    checkout = work / checkout_name
     if not checkout.is_symlink() and _within(source, checkout):  # a symlink there is unlinked, never followed
         raise ValueError(
-            f"consumer_repo must not be work_dir/checkout-{phase} or inside it: every run replaces that directory"
+            f"consumer_repo must not be work_dir/{checkout_name} or inside it: every run replaces that directory"
         )
-    if plan.runner_profile not in TRUSTED_PROFILES:
+    if profile not in TRUSTED_PROFILES:
         return _infrastructure_error(
-            f"{plan.runner_profile} requires a sandbox; the development runner double executes only "
+            f"{profile} requires a sandbox; the development runner double executes only "
             "trusted local fixtures and refuses to run it"
         )
 
-    interpreter = _interpreter(plan.runner_profile, node_executable)
+    interpreter = _interpreter(profile, node_executable)
     if interpreter is None:
         return _infrastructure_error("node executable not found; cannot run the node scenario")
 
@@ -98,12 +164,11 @@ def run_phase_locally(
     if patch is not None:
         patch(checkout)
     try:
-        staged = stage_scenario(plan, checkout, cast(Phase, phase), work)
+        staged = stage(checkout, work)
     except ValueError as exc:
         return _infrastructure_error(f"staging refused: {clip_text(exc, 300)}")
 
-    argv = [interpreter, *runner_argv_hint(plan)[1:]]  # the documented argv, as Sai's runner runs it
-    timeout = plan.timeout_seconds if timeout_seconds is None else timeout_seconds
+    argv = [interpreter, *argv_hint()[1:]]  # the documented argv, as Sai's runner runs it
     exit_code, timed_out, duration_ms, output, start_error = _execute(
         argv, checkout, _minimal_env(work, argv[0], staged), timeout
     )
@@ -116,17 +181,23 @@ def run_phase_locally(
             infrastructure_error=None,
             artifact_ids=[],
             duration_ms=duration_ms,
-            tests_run=_tests_run(plan.runner_profile, output),
+            tests_run=_tests_run(profile, output),
         ),
         report=_read_report(staged.report_path),
+        output_tail=output,
     )
 
 
 def _interpreter(profile: str, node_executable: str | None) -> str | None:
-    """The profile's interpreter (this Python, or node); None when node is missing."""
+    """The profile's interpreter (this Python, or node) as an absolute path; None when node is missing.
+
+    Absolute, because the run's cwd is the checkout: a relative ``--node .venv/bin/node``
+    would otherwise be resolved against the checkout and fail to start.
+    """
     if profile in PYTHON_PROFILES:
         return sys.executable
-    return shutil.which(node_executable or "node")
+    found = shutil.which(node_executable or "node")
+    return None if found is None else os.path.abspath(found)
 
 
 def _within(path: Path, directory: Path) -> bool:

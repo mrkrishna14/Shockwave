@@ -1,0 +1,71 @@
+{
+  "kind": "shockwave-demo.prepare@1",
+  "label": "LOCAL snapshot: a deterministic local git commit of the team-created template (fixed identity and dates); not fetched from GitHub. fetched_at is the fixed commit date.",
+  "repositories": {
+    "shockwave-stripe-checkout": {
+      "commit_sha": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
+      "dependency": "stripe@23.0.0 (node_modules via npm ci; not committed)",
+      "files_committed": 10,
+      "node_modules_committed": false,
+      "own_suite": {
+        "command": "npm test (node --test \"test/**/*.test.ts\")",
+        "exit_code": 0,
+        "fixture": {
+          "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.baseline",
+          "path": "test/fixtures/payment_intents.json",
+          "sha256": "f10738d11285948ca52b39db28de382f747b1467d26137aa91937a9e4a4b41ea",
+          "source": "the consumer's bundled fixture data"
+        },
+        "outcome": "passed",
+        "run_id": "prepare.shockwave-stripe-checkout.own-suite",
+        "tests_failed": 0,
+        "tests_passed": 4,
+        "tests_run": 4
+      }
+    },
+    "shockwave-stripe-fraud": {
+      "commit_sha": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+      "dependency": "stripe==16.0.0 (this Python)",
+      "files_committed": 11,
+      "node_modules_committed": false,
+      "own_suite": {
+        "command": "python -m pytest",
+        "exit_code": 0,
+        "fixture": {
+          "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.baseline",
+          "path": "tests/fixtures/payment_intents.json",
+          "sha256": "f10738d11285948ca52b39db28de382f747b1467d26137aa91937a9e4a4b41ea",
+          "source": "the consumer's bundled fixture data"
+        },
+        "outcome": "passed",
+        "run_id": "prepare.shockwave-stripe-fraud.own-suite",
+        "tests_failed": 0,
+        "tests_passed": 5,
+        "tests_run": 5
+      }
+    },
+    "shockwave-stripe-reporting": {
+      "commit_sha": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+      "dependency": "stripe==16.0.0 (this Python)",
+      "files_committed": 12,
+      "node_modules_committed": false,
+      "own_suite": {
+        "command": "python -m pytest",
+        "exit_code": 0,
+        "fixture": {
+          "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.baseline",
+          "path": "tests/fixtures/payment_intents.json",
+          "sha256": "f10738d11285948ca52b39db28de382f747b1467d26137aa91937a9e4a4b41ea",
+          "source": "the consumer's bundled fixture data"
+        },
+        "outcome": "passed",
+        "run_id": "prepare.shockwave-stripe-reporting.own-suite",
+        "tests_failed": 0,
+        "tests_passed": 3,
+        "tests_run": 3
+      }
+    }
+  },
+  "runner": "the consumer's own test command, run locally as a plain subprocess on a copy of the prepared repository (trusted local fixtures; not a sandbox, not Sai's runner)",
+  "timing": "duration_ms is normalized to 0 in results/ (measured durations vary between runs and interpretation never reads them); measured durations are kept in reports/runs/ only"
+}

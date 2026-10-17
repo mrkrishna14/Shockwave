@@ -1,0 +1,79 @@
+Shockwave prepared migration artifact (Kanishk); Sai's migration generator not integrated.
+
+Repository: shockwave-stripe-checkout (team-created demo consumer; not a Stripe customer application)
+Scenario:   stripe.payment-intent-amount-units.checkout-display.typescript
+Change:     SIMULATED, not announced by Stripe: GET /v1/payment_intents/{intent} response.amount
+           for USD moves from minor units (cents) to major units (dollars); schema unchanged.
+Touches:    src/orderSummary.ts (the affected line `paymentIntent.amount / 100` and its comment) and
+           test/fixtures/payment_intents.json (the consumer's bundled fixture data, replaced by the
+           proposed variant). No test assertion changes; src/tax.ts and src/rewards.ts are untouched.
+Apply:      git apply <this file> at the consumer repository root.
+Caveat:     The patch is pinned to the proposed contract: it is not backward compatible with current-contract responses unless made version-aware, so its deployment must be coordinated with the provider's cutover.
+
+diff --git a/src/orderSummary.ts b/src/orderSummary.ts
+index 8116ca681e045ccaf6699f127bb5a12c8a267f7a..e4a98465ddb7cacb96eb6f785efa1d12a94eb49d 100644
+--- a/src/orderSummary.ts
++++ b/src/orderSummary.ts
+@@ -18,8 +18,8 @@ export async function getOrderSummary(
+   stripe: Stripe = createStripeClient(),
+ ): Promise<OrderSummary> {
+   const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+-  // Stripe reports USD amounts in cents.
+-  const totalDollars = paymentIntent.amount / 100;
++  // Pinned to the simulated proposed contract: USD amounts are in dollars.
++  const totalDollars = paymentIntent.amount;
+   return {
+     paymentIntentId: paymentIntent.id,
+     status: paymentIntent.status,
+diff --git a/test/fixtures/payment_intents.json b/test/fixtures/payment_intents.json
+index 8f4c0149a14c271e5bf193d4c47710015e9a46d8..693093340b3d84ee050d7fbb87c904c33e8aebb9 100644
+--- a/test/fixtures/payment_intents.json
++++ b/test/fixtures/payment_intents.json
+@@ -1,8 +1,8 @@
+ {
+-  "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.baseline",
++  "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.proposed",
+   "provider": "Stripe",
+-  "variant": "baseline",
+-  "label": "Baseline: synthetic responses shaped by Stripe's published PaymentIntent schema (pinned API 2026-09-30.endive); amounts in the smallest currency unit as Stripe documents. Not recorded from Stripe.",
++  "variant": "proposed",
++  "label": "SIMULATED proposed variant (hypothetical, not announced by Stripe): USD amounts in major units (whole dollars); non-USD amounts unchanged. Not recorded from Stripe.",
+   "api_version": "2026-09-30.endive",
+   "operation": {
+     "method": "GET",
+@@ -13,7 +13,7 @@
+     "pi_demo_10usd": {
+       "id": "pi_demo_10usd",
+       "object": "payment_intent",
+-      "amount": 1000,
++      "amount": 10,
+       "currency": "usd",
+       "status": "succeeded",
+       "created": 1760000000,
+@@ -24,7 +24,7 @@
+     "pi_demo_4000usd": {
+       "id": "pi_demo_4000usd",
+       "object": "payment_intent",
+-      "amount": 400000,
++      "amount": 4000,
+       "currency": "usd",
+       "status": "succeeded",
+       "created": 1760000100,
+@@ -35,7 +35,7 @@
+     "pi_demo_5000usd": {
+       "id": "pi_demo_5000usd",
+       "object": "payment_intent",
+-      "amount": 500000,
++      "amount": 5000,
+       "currency": "usd",
+       "status": "processing",
+       "created": 1760000200,
+@@ -46,7 +46,7 @@
+     "pi_demo_6000usd": {
+       "id": "pi_demo_6000usd",
+       "object": "payment_intent",
+-      "amount": 600000,
++      "amount": 6000,
+       "currency": "usd",
+       "status": "succeeded",
+       "created": 1760000300,

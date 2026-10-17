@@ -1,0 +1,13 @@
+[project]
+name = "shockwave-stripe-fraud"
+version = "1.0.0"
+description = "Team-created Shockwave demo consumer: a small Python fraud-review service that retrieves Stripe PaymentIntents. Not a Stripe customer application."
+requires-python = ">=3.11"
+dependencies = ["stripe==16.0.0"]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

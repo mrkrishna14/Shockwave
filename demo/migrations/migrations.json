@@ -1,0 +1,208 @@
+{
+  "schema": "shockwave-demo.migrations@1",
+  "label": "prepared migration artifact (Kanishk); Sai's migration generator not integrated",
+  "simulated_change": {
+    "manifest": "demo/scenarios/stripe-payment-intent-amount-usd-major-units.manifest.json",
+    "manifest_id": "sim-stripe-pi-amount-usd-major-units",
+    "status": "SIMULATED: hypothetical, not announced by Stripe. Stripe is not a Shockwave customer and has not endorsed Shockwave.",
+    "endpoint": "GET /v1/payment_intents/{intent}",
+    "field_path": "response.amount",
+    "currency_scope": [
+      "usd"
+    ]
+  },
+  "apply": "git apply --check <patch>, then git apply <patch>, at the consumer repository root (git-style a/ b/ repository-relative paths). The text before the first 'diff --git' line is a description that git apply ignores.",
+  "scope_rule": "Each patch changes only (a) the affected source line and its explanatory comment and (b) the consumer's own bundled test fixture data, replaced by the proposed variant byte for byte, because a migration pinned to the proposed contract must be tested against proposed responses. Test assertions and business expectations are never changed, and unrelated conversions and negative controls stay untouched.",
+  "deployment_caveat": "The patch is pinned to the proposed contract: it is not backward compatible with current-contract responses unless made version-aware, so its deployment must be coordinated with the provider's cutover.",
+  "deployment_caveat_source": "verification.scenarios.interpret.PINNED_PATCH_CAVEAT",
+  "deployment_assumption": "A migration validated against proposed responses is not automatically safe to deploy before the provider change: against baseline (current-contract) responses the migrated code fails the same unchanged business assertion. That run is recorded as deployment-assumption evidence, never as a regression.",
+  "validation_runner": "Local test runs in tests/demo/test_migrations.py with the LOCAL RUNNER DOUBLE's standing: trusted local fixtures; plain subprocess; not a sandbox; not Sai's runner. Each run uses a temporary git-initialized copy of the template and the consumer's own test command.",
+  "validation_scope": "Validated within the tested scope only: the consumer's own suite with its bundled USD whole-dollar fixtures (baseline and proposed variants). This does not establish correctness for other amounts, currencies or code paths.",
+  "migrations": [
+    {
+      "id": "checkout-display-major-units",
+      "label": "prepared migration artifact (Kanishk); Sai's migration generator not integrated",
+      "repository": "shockwave-stripe-checkout",
+      "template": "demo/templates/checkout",
+      "scenario_id": "stripe.payment-intent-amount-units.checkout-display.typescript",
+      "patch": "demo/migrations/checkout-display-major-units.patch",
+      "addresses_dependency": {
+        "fixture": "demo/expected/dependencies.fixture.json",
+        "handle": "checkout_amount_divide",
+        "id": "a9db411a-8cc2-59bb-8bb6-954f9cbb4f3d"
+      },
+      "files_touched": [
+        {
+          "path": "src/orderSummary.ts",
+          "kind": "source",
+          "change": "the affected line and its comment only"
+        },
+        {
+          "path": "test/fixtures/payment_intents.json",
+          "kind": "consumer_fixture_data",
+          "change": "the consumer's bundled fixture data, replaced by the proposed (simulated) variant",
+          "becomes": "demo/stripe-fixtures/proposed/payment_intents.json"
+        }
+      ],
+      "edits": [
+        {
+          "file": "src/orderSummary.ts",
+          "line": 21,
+          "role": "comment",
+          "before": "// Stripe reports USD amounts in cents.",
+          "after": "// Pinned to the simulated proposed contract: USD amounts are in dollars."
+        },
+        {
+          "file": "src/orderSummary.ts",
+          "line": 22,
+          "role": "affected_line",
+          "before": "const totalDollars = paymentIntent.amount / 100;",
+          "after": "const totalDollars = paymentIntent.amount;"
+        }
+      ],
+      "unchanged": [
+        {
+          "path": "src/tax.ts",
+          "why": "basis points / 100: unrelated conversion that must be preserved"
+        },
+        {
+          "path": "src/rewards.ts",
+          "why": "local loyalty reward cents / 100: negative control"
+        },
+        {
+          "path": "test/checkout.test.ts",
+          "why": "assertions and business expectations ($10.00 display)"
+        }
+      ],
+      "business_assertion": {
+        "file": "test/checkout.test.ts",
+        "line": 28,
+        "excerpt": "assert.equal(summary.displayTotal, '$10.00');",
+        "test": "order summary shows the PaymentIntent total in dollars",
+        "expectation": "pi_demo_10usd (USD $10.00) is displayed as $10.00"
+      },
+      "consumer_suite_expectations": {
+        "original_on_baseline": {
+          "outcome": "pass"
+        },
+        "original_on_proposed": {
+          "outcome": "fail",
+          "failing_tests": [
+            "order summary shows the PaymentIntent total in dollars"
+          ],
+          "actual": "$0.10",
+          "meaning": "the failure this migration addresses"
+        },
+        "migrated_on_proposed": {
+          "outcome": "pass"
+        },
+        "migrated_on_baseline": {
+          "outcome": "fail",
+          "failing_tests": [
+            "order summary shows the PaymentIntent total in dollars"
+          ],
+          "actual": "$1000.00",
+          "meaning": "deployment-assumption evidence (the migration is pinned to the proposed contract); never a regression"
+        }
+      },
+      "deployment_caveat": "The patch is pinned to the proposed contract: it is not backward compatible with current-contract responses unless made version-aware, so its deployment must be coordinated with the provider's cutover.",
+      "validated_by": "tests/demo/test_migrations.py (temporary template copies; the consumer's own node --test suite)"
+    },
+    {
+      "id": "fraud-threshold-major-units",
+      "label": "prepared migration artifact (Kanishk); Sai's migration generator not integrated",
+      "repository": "shockwave-stripe-fraud",
+      "template": "demo/templates/fraud",
+      "scenario_id": "stripe.payment-intent-amount-units.fraud-threshold.python",
+      "patch": "demo/migrations/fraud-threshold-major-units.patch",
+      "addresses_dependency": {
+        "fixture": "demo/expected/dependencies.fixture.json",
+        "handle": "fraud_amount_compare",
+        "id": "6b5c1e8e-76c3-5378-b90d-c1ecf4cbf73e"
+      },
+      "files_touched": [
+        {
+          "path": "fraud_service/review.py",
+          "kind": "source",
+          "change": "the affected line and its comment only"
+        },
+        {
+          "path": "tests/fixtures/payment_intents.json",
+          "kind": "consumer_fixture_data",
+          "change": "the consumer's bundled fixture data, replaced by the proposed (simulated) variant",
+          "becomes": "demo/stripe-fixtures/proposed/payment_intents.json"
+        }
+      ],
+      "edits": [
+        {
+          "file": "fraud_service/review.py",
+          "line": 23,
+          "role": "comment",
+          "before": "# Stripe reports USD amounts in cents: 500000 is $5,000.00.",
+          "after": "# Pinned to the simulated proposed contract: USD amounts are in dollars, 5000 is $5,000.00."
+        },
+        {
+          "file": "fraud_service/review.py",
+          "line": 24,
+          "role": "affected_line",
+          "before": "if payment_intent.amount > 500000:",
+          "after": "if payment_intent.amount > 5000:"
+        }
+      ],
+      "unchanged": [
+        {
+          "path": "fraud_service/velocity.py",
+          "why": "local VelocityLimit.amount payment count: negative control"
+        },
+        {
+          "path": "tests/test_review.py",
+          "why": "assertions and business expectations (review above $5,000)"
+        }
+      ],
+      "business_assertion": {
+        "file": "tests/test_review.py",
+        "line": 33,
+        "excerpt": "assert decision.needs_manual_review is needs_review",
+        "cases": {
+          "below_threshold_not_flagged": "tests/test_review.py::test_payments_above_5000_dollars_need_review[pi_demo_4000usd-False]",
+          "at_threshold_not_flagged": "tests/test_review.py::test_payments_above_5000_dollars_need_review[pi_demo_5000usd-False]",
+          "above_threshold_flagged": "tests/test_review.py::test_payments_above_5000_dollars_need_review[pi_demo_6000usd-True]"
+        },
+        "expectation": "payments above USD $5,000.00 need manual review; $4,000.00 and exactly $5,000.00 do not"
+      },
+      "consumer_suite_expectations": {
+        "original_on_baseline": {
+          "outcome": "pass"
+        },
+        "original_on_proposed": {
+          "outcome": "fail",
+          "failing_tests": [
+            "tests/test_review.py::test_payments_above_5000_dollars_need_review[pi_demo_6000usd-True]"
+          ],
+          "actual": "needs_manual_review False for USD $6,000.00",
+          "meaning": "the failure this migration addresses"
+        },
+        "migrated_on_proposed": {
+          "outcome": "pass"
+        },
+        "migrated_on_baseline": {
+          "outcome": "fail",
+          "failing_tests": [
+            "tests/test_review.py::test_payments_above_5000_dollars_need_review[pi_demo_4000usd-False]",
+            "tests/test_review.py::test_payments_above_5000_dollars_need_review[pi_demo_5000usd-False]"
+          ],
+          "actual": "needs_manual_review True for USD $4,000.00 and $5,000.00",
+          "meaning": "deployment-assumption evidence (the migration is pinned to the proposed contract); never a regression"
+        }
+      },
+      "deployment_caveat": "The patch is pinned to the proposed contract: it is not backward compatible with current-contract responses unless made version-aware, so its deployment must be coordinated with the provider's cutover.",
+      "validated_by": "tests/demo/test_migrations.py (temporary template copies; the consumer's own pytest suite)"
+    }
+  ],
+  "not_prepared": [
+    {
+      "repository": "shockwave-stripe-reporting",
+      "reason": "No migration artifact. The currency/status summary is unaffected (the control scenario passes against both variants), and the ledger's amount storage is a potential risk only: no executable scenario demonstrates a storage regression, and a fix depends on the destination's units, its historical rows and a backfill or unit-marker plan, which a code patch alone cannot settle."
+    }
+  ]
+}

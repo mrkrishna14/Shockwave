@@ -1,0 +1,16 @@
+{
+  "name": "shockwave-stripe-checkout",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Team-created Shockwave demo consumer: a small TypeScript checkout that retrieves Stripe PaymentIntents. Not a Stripe customer application.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.ts\""
+  },
+  "dependencies": {
+    "stripe": "23.0.0"
+  }
+}

@@ -1,0 +1,233 @@
+{
+  "controls": [
+    {
+      "cases": [
+        {
+          "actual": {
+            "eur": {
+              "requires_capture": 1
+            },
+            "usd": {
+              "processing": 1,
+              "succeeded": 3
+            }
+          },
+          "case_id": "summary_counts_by_currency_and_status",
+          "detail": "expected {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}, actual {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}",
+          "expected": {
+            "eur": {
+              "requires_capture": 1
+            },
+            "usd": {
+              "processing": 1,
+              "succeeded": 3
+            }
+          },
+          "requests": [
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_10usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_4000usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_5000usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_6000usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_25eur",
+              "stripe_version": "2026-09-30.endive"
+            }
+          ],
+          "role": "control",
+          "status": "passed"
+        }
+      ],
+      "commit_sha": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+      "execution": {
+        "artifact_ids": [],
+        "duration_ms": 0,
+        "exit_code": 0,
+        "infrastructure_error": null,
+        "tests_run": 1,
+        "timed_out": false
+      },
+      "fixture_id": "stripe.payment_intents.usd-whole-dollars.baseline",
+      "fixture_sha256": "f10738d11285948ca52b39db28de382f747b1467d26137aa91937a9e4a4b41ea",
+      "kind": "shockwave.control_result.v1",
+      "note": "Control scenario: not tied to any risk; no Risk, VerificationPlan or VerificationResult is recorded for it. A pass shows the tested path is unaffected within the tested scope only.",
+      "reason": "Control passed against the baseline fixture stripe.payment_intents.usd-whole-dollars.baseline: all 1 case(s) passed (summary_counts_by_currency_and_status: expected {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}, actual {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}). Control scenario: not tied to any risk; no Risk, VerificationPlan or VerificationResult is recorded for it. A pass shows the tested path is unaffected within the tested scope only.",
+      "repository": "shockwave-stripe-reporting",
+      "requests": [
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_10usd",
+          "stripe_version": "2026-09-30.endive"
+        },
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_4000usd",
+          "stripe_version": "2026-09-30.endive"
+        },
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_5000usd",
+          "stripe_version": "2026-09-30.endive"
+        },
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_6000usd",
+          "stripe_version": "2026-09-30.endive"
+        },
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_25eur",
+          "stripe_version": "2026-09-30.endive"
+        }
+      ],
+      "run_id": "control.reporting-summary.baseline",
+      "scenario_id": "stripe.payment-intent.reporting-summary.control.python",
+      "status": "passed",
+      "tests_run": 1,
+      "unattributed_requests": [],
+      "variant": "baseline"
+    },
+    {
+      "cases": [
+        {
+          "actual": {
+            "eur": {
+              "requires_capture": 1
+            },
+            "usd": {
+              "processing": 1,
+              "succeeded": 3
+            }
+          },
+          "case_id": "summary_counts_by_currency_and_status",
+          "detail": "expected {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}, actual {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}",
+          "expected": {
+            "eur": {
+              "requires_capture": 1
+            },
+            "usd": {
+              "processing": 1,
+              "succeeded": 3
+            }
+          },
+          "requests": [
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_10usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_4000usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_5000usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_6000usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_25eur",
+              "stripe_version": "2026-09-30.endive"
+            }
+          ],
+          "role": "control",
+          "status": "passed"
+        }
+      ],
+      "commit_sha": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+      "execution": {
+        "artifact_ids": [],
+        "duration_ms": 0,
+        "exit_code": 0,
+        "infrastructure_error": null,
+        "tests_run": 1,
+        "timed_out": false
+      },
+      "fixture_id": "stripe.payment_intents.usd-whole-dollars.proposed",
+      "fixture_sha256": "ad9c29b9aa71e3379c2c3799032a7a5f1b9d6dcf1a019819a1d2b8e9e7731a42",
+      "kind": "shockwave.control_result.v1",
+      "note": "Control scenario: not tied to any risk; no Risk, VerificationPlan or VerificationResult is recorded for it. A pass shows the tested path is unaffected within the tested scope only.",
+      "reason": "Control passed against the proposed fixture stripe.payment_intents.usd-whole-dollars.proposed: all 1 case(s) passed (summary_counts_by_currency_and_status: expected {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}, actual {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}). Control scenario: not tied to any risk; no Risk, VerificationPlan or VerificationResult is recorded for it. A pass shows the tested path is unaffected within the tested scope only.",
+      "repository": "shockwave-stripe-reporting",
+      "requests": [
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_10usd",
+          "stripe_version": "2026-09-30.endive"
+        },
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_4000usd",
+          "stripe_version": "2026-09-30.endive"
+        },
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_5000usd",
+          "stripe_version": "2026-09-30.endive"
+        },
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_6000usd",
+          "stripe_version": "2026-09-30.endive"
+        },
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_25eur",
+          "stripe_version": "2026-09-30.endive"
+        }
+      ],
+      "run_id": "control.reporting-summary.proposed",
+      "scenario_id": "stripe.payment-intent.reporting-summary.control.python",
+      "status": "passed",
+      "tests_run": 1,
+      "unattributed_requests": [],
+      "variant": "proposed"
+    }
+  ],
+  "kind": "shockwave-demo.controls@1",
+  "runner": "LOCAL RUNNER DOUBLE — trusted local fixtures; plain subprocess, not a sandbox, not Sai's runner",
+  "timing": "duration_ms is normalized to 0 in results/ (measured durations vary between runs and interpretation never reads them); measured durations are kept in reports/runs/ only"
+}

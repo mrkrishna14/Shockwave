@@ -1,0 +1,440 @@
+{
+  "schema": "shockwave-demo.github-docs-verified@1",
+  "checked_at": "2026-10-17",
+  "method": "Each page was fetched on 2026-10-17 with a web-fetch tool that converts the page to text and answers questions about it; quoted wording is as returned by that tool. Nothing was executed against GitHub: no app was registered, no repository was created, no token was minted. Entries with verified=false were looked for and NOT confirmed on the fetched pages; the setup does not rely on them.",
+  "entries": [
+    {
+      "id": "manifest-flow",
+      "topic": "Registering a GitHub App from a manifest: browser form POST",
+      "url": "https://docs.github.com/en/apps/sharing-github-apps/registering-a-github-app-from-a-manifest",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Send a POST to https://github.com/settings/apps/new (personal account) or https://github.com/organizations/ORGANIZATION/settings/apps/new (organization) with the manifest as a JSON-encoded string in a form field named 'manifest'; an optional 'state' query parameter is 'An unguessable random string. It is used to protect against cross-site request forgery attacks.' After 'Create GitHub App', GitHub redirects to redirect_url with a temporary 'code' (and the state).",
+      "used_for": ["demo/github/register-app.html", "demo/scripts/publish_consumer_repos.py manual steps", "demo/GITHUB_SETUP.md"]
+    },
+    {
+      "id": "manifest-parameters",
+      "topic": "GitHub App manifest parameters",
+      "url": "https://docs.github.com/en/apps/sharing-github-apps/registering-a-github-app-from-a-manifest",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Documented manifest keys: name, url (required, homepage), hook_attributes {url (required), active (default true)}, redirect_url, callback_urls (up to 10), setup_url, description, public (true = public; false = only the owner can access it), default_events, default_permissions (permission name -> access type), request_oauth_on_install, setup_on_update.",
+      "used_for": ["demo/github/app-manifest.json", "demo/github/app-manifest.pr-writer.json"]
+    },
+    {
+      "id": "manifest-code-exchange",
+      "topic": "Temporary code -> app credentials",
+      "url": "https://docs.github.com/en/apps/sharing-github-apps/registering-a-github-app-from-a-manifest",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Exchange the temporary code with POST /app-manifests/{code}/conversions to retrieve the app's id, pem (private key) and webhook_secret. 'You must complete all three steps in the GitHub App Manifest flow within one hour.' The conversion endpoint is rate limited.",
+      "used_for": ["demo/GITHUB_SETUP.md", "demo/github/onboarding-flow.json#setup_prerequisites"]
+    },
+    {
+      "id": "manifest-conversion-response",
+      "topic": "REST: Create a GitHub App from a manifest",
+      "url": "https://docs.github.com/en/rest/apps/apps#create-a-github-app-from-a-manifest",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "POST /app-manifests/{code}/conversions returns 201 with the app object (id, slug, client_id, permissions, events, ...) plus client_id, client_secret, webhook_secret and pem. The page shows no token in the example request; the temporary code is the only input. Errors: 404, 422.",
+      "used_for": ["demo/GITHUB_SETUP.md"]
+    },
+    {
+      "id": "minimum-permissions",
+      "topic": "Choosing permissions for a GitHub App",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/choosing-permissions-for-a-github-app",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "'You should select the minimum permissions required for the app.' 'GitHub Apps don't have any permissions by default.' For HTTP-based Git access the app needs the 'Contents' repository permission; editing .github/workflows files requires the 'Workflows' repository permission. A user access token's success depends on both the user's and the app's permissions.",
+      "used_for": ["demo/github/app-manifest.json", "demo/github/app-manifest.pr-writer.json"]
+    },
+    {
+      "id": "permission-keys",
+      "topic": "Permission names and levels (installation token 'permissions' object)",
+      "url": "https://docs.github.com/en/rest/apps/apps#create-an-installation-access-token-for-an-app",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Permission keys include contents (read|write: 'repository contents, commits, branches, downloads, releases, and merges'), metadata (read|write: 'search repositories, list collaborators, and access repository metadata'), pull_requests (read|write: 'pull requests and related comments, assignees, labels, milestones, and merges'), administration (read|write: 'repository creation, deletion, settings, teams, and collaborators creation') and workflows (write only).",
+      "used_for": ["demo/github/app-manifest.json", "demo/github/app-manifest.pr-writer.json", "demo/github/onboarding-flow.json"]
+    },
+    {
+      "id": "permissions-required-github-apps",
+      "topic": "Endpoints per GitHub App permission",
+      "url": "https://docs.github.com/en/rest/authentication/permissions-required-for-github-apps",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Metadata read: GET /repos/{owner}/{repo}. Contents read: GET /repos/{owner}/{repo}/tarball/{ref}, GET /repos/{owner}/{repo}/zipball/{ref}, GET /repos/{owner}/{repo}/commits/{ref}. Contents write: POST /repos/{owner}/{repo}/git/refs, POST /repos/{owner}/{repo}/git/commits. Pull requests write: POST /repos/{owner}/{repo}/pulls. All usable with user access tokens (UAT) and installation access tokens (IAT). POST /user/repos and POST /orgs/{org}/repos are listed under 'Administration' write and 'Repository creation' write.",
+      "used_for": ["demo/github/app-manifest.json", "demo/github/app-manifest.pr-writer.json", "demo/github/onboarding-flow.json"]
+    },
+    {
+      "id": "permissions-required-fine-grained-pat",
+      "topic": "Fine-grained personal access token permissions for repository creation",
+      "url": "https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "POST /user/repos and POST /orgs/{org}/repos are listed under repository permissions 'Administration' (write) and 'Repository creation' (write); GET /repos/{owner}/{repo} under 'Metadata' (read); POST /repos/{owner}/{repo}/git/refs under 'Contents' (write).",
+      "used_for": ["demo/scripts/publish_consumer_repos.py", "demo/GITHUB_SETUP.md"]
+    },
+    {
+      "id": "permission-change-approval",
+      "topic": "Changing an app's permissions requires each installer's approval",
+      "url": "https://docs.github.com/en/apps/maintaining-github-apps/modifying-a-github-app-registration",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "When repository or organization permissions are added, 'each account where the app is installed will need to approve the new permissions'; GitHub emails each organization owner or user; 'Updated permissions won't take effect on an installation or user authorization until the new permissions are approved.' Removing permissions or webhooks takes effect immediately. The installation webhook reports acceptance (action new_permissions_accepted). 'Public apps cannot be made private if they're installed on other accounts.'",
+      "used_for": ["demo/GITHUB_SETUP.md#why-two-github-apps", "demo/github/onboarding-flow.json#apps"]
+    },
+    {
+      "id": "approve-updated-permissions",
+      "topic": "Installer side of a permission upgrade",
+      "url": "https://docs.github.com/en/apps/using-github-apps/approving-updated-permissions-for-a-github-app",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "'You can choose whether to accept the additional permissions.' 'If you do not approve the additional permissions, the GitHub App will still retain its current permissions.'",
+      "used_for": ["demo/GITHUB_SETUP.md#why-two-github-apps"]
+    },
+    {
+      "id": "install-selected-repositories",
+      "topic": "Installing a GitHub App on selected repositories",
+      "url": "https://docs.github.com/en/apps/using-github-apps/installing-a-github-app-from-a-third-party",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "The installer selects 'All repositories' or 'Only select repositories' and then picks repositories. Install URL form: https://github.com/apps/APP-NAME/installations/new. Organization owners can install; repository admins can install for repositories they administer only if the app requests no organization permissions or the 'Repository administration' permission; other members only send a request to the owner. 'The app will always have at least read-only access to all public repositories on GitHub.' Apps that create repositories are automatically granted access to them.",
+      "used_for": ["demo/scripts/publish_consumer_repos.py manual steps", "demo/GITHUB_SETUP.md", "demo/github/onboarding-flow.json"]
+    },
+    {
+      "id": "setup-url-spoofing",
+      "topic": "Setup URL and installation_id verification",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/about-the-setup-url",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "After installation GitHub redirects to the setup URL with an installation_id query parameter. 'Bad actors can hit this URL with a spoofed installation_id', so 'you should not rely on the validity of the installation_id parameter'; instead 'generate a user access token for the user who installed the GitHub App' and 'check that the installation is associated with that user.'",
+      "used_for": ["demo/github/onboarding-flow.json#github_app_installation"]
+    },
+    {
+      "id": "registration-options",
+      "topic": "Registration options (setup URL vs OAuth during installation, names, webhook secret)",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Setup URL: 'If you selected user authorization during installation, you can't enter a URL here.' Redirect on update: 'An update includes adding or removing a repository for an installation.' Expire user authorization tokens: 'GitHub strongly recommends that you leave this option selected.' Name: 'The name cannot be longer than 34 characters.' and 'The name must be unique across GitHub.' Webhook: 'GitHub highly recommends that you set a webhook secret.' Up to 10 callback URLs.",
+      "used_for": ["demo/github/app-manifest.json", "demo/github/app-manifest.pr-writer.json"]
+    },
+    {
+      "id": "private-vs-public-app",
+      "topic": "Private (owner-only) vs public GitHub Apps",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/making-a-github-app-public-or-private",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "A private app 'can only be installed on the account that owns the app' and 'Only members of the organization that owns it can authorize it.' A public app: 'any user on GitHub can install it and authorize it.'",
+      "used_for": ["demo/GITHUB_SETUP.md#limits", "demo/github/onboarding-flow.json#labels"]
+    },
+    {
+      "id": "user-access-token-web-flow",
+      "topic": "User access tokens (sign-in) and 'request user authorization during installation'",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Web application flow: redirect to https://github.com/login/oauth/authorize with client_id (required), redirect_uri, state ('a random string to protect against forgery attacks'), login, allow_signup, prompt, code_challenge + code_challenge_method ('Must be S256'); exchange the code by POST https://github.com/login/oauth/access_token with client_id, client_secret, code, redirect_uri, code_verifier (and optional repository_id). A mismatched state means the flow 'should be aborted'. User tokens expire after 8 hours by default; refresh tokens after 6 months. 'A GitHub App user access token only has permissions that both the user and the app have.' With 'Request user authorization (OAuth) during installation', 'GitHub will start the web application flow immediately after a user installs your app.'",
+      "used_for": ["demo/github/onboarding-flow.json#authorizations.sign_in", "demo/GITHUB_SETUP.md"]
+    },
+    {
+      "id": "on-behalf-of-user",
+      "topic": "Authenticating on behalf of a user",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-with-a-github-app-on-behalf-of-a-user",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "'API requests made by an app on behalf of a user will be attributed to that user.' The app 'can only access resources in an account where it is installed' and only resources the user can access.",
+      "used_for": ["demo/github/onboarding-flow.json#authorizations.sign_in"]
+    },
+    {
+      "id": "login-with-github-tutorial",
+      "topic": "Using a GitHub App user access token to identify the signed-in user",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/writing-code-for-a-github-app/building-a-login-with-github-button-with-a-github-app",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "The tutorial uses the user access token to call the /user REST endpoint (GET /user) to get information about the authenticated user. 'You should never publicize your app's client secret.' 'If you choose to store the user access token or refresh token, you must store it securely.' Unless expiration was opted out, the user access token expires after eight hours.",
+      "used_for": ["demo/github/onboarding-flow.json#authenticated_consumer_acceptance"]
+    },
+    {
+      "id": "installation-access-token",
+      "topic": "Installation access tokens: JWT, narrowing, expiry",
+      "url": "https://docs.github.com/en/rest/apps/apps#create-an-installation-access-token-for-an-app",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "POST /app/installations/{installation_id}/access_tokens: 'You must use a JWT to access this endpoint.' Body: repositories (names), repository_ids (integers) - 'Up to 500 repositories can be listed in this manner' - and permissions; without permissions the token gets the installation's permissions; 'The installation access token cannot be granted permissions that the app was not granted.' 'Installation tokens expire one hour from the time you create them.' A staged rollout of a new token format warns against assuming tokens are exactly 40 characters long.",
+      "used_for": ["demo/github/onboarding-flow.json#pinned_snapshot_fetch", "demo/GITHUB_SETUP.md#coordination-notes-for-sai"]
+    },
+    {
+      "id": "installation-token-generation",
+      "topic": "Generating an installation access token",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-an-installation-access-token-for-a-github-app",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Generate a JWT, find the installation ID (webhook payload, GET /app/installations, GET /repos/{owner}/{repo}/installation), then POST /app/installations/INSTALLATION_ID/access_tokens with 'Authorization: Bearer JWT'; narrow with repositories or repository_ids and permissions; 'The installation access token will expire after 1 hour.' Examples use 'X-GitHub-Api-Version: 2026-03-10'.",
+      "used_for": ["demo/GITHUB_SETUP.md#coordination-notes-for-sai"]
+    },
+    {
+      "id": "installation-token-git-https",
+      "topic": "Installation token for Git over HTTPS",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Use the installation token as the HTTP password, e.g. git clone https://x-access-token:TOKEN@github.com/owner/repo.git; 'Your app must have the \"Contents\" repository permission.' 'The installation access token cannot be granted access to repositories that the installation was not granted access to.' 'API requests made by an app installation are attributed to the app.'",
+      "used_for": ["demo/github/onboarding-flow.json#pinned_snapshot_fetch", "demo/GITHUB_SETUP.md#coordination-notes-for-sai"]
+    },
+    {
+      "id": "app-jwt",
+      "topic": "JWT for authenticating as the app",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-json-web-token-jwt-for-a-github-app",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "iat: 'we recommend that you set this 60 seconds in the past'; exp: 'no more than 10 minutes into the future'; iss: 'The client ID or application ID of your GitHub App' ('Use of the client ID is recommended'); signed with RS256; sent as 'Authorization: Bearer'.",
+      "used_for": ["demo/GITHUB_SETUP.md#coordination-notes-for-sai"]
+    },
+    {
+      "id": "installations-rest",
+      "topic": "Installation listing and repository membership endpoints",
+      "url": "https://docs.github.com/en/rest/apps/installations",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "GET /installation/repositories lists repositories an app installation can access (total_count, repositories, repository_selection). GET /user/installations lists installations of your GitHub App the authenticated user has explicit permission to access. GET /user/installations/{installation_id}/repositories lists repositories the user can access for an installation, with the user's access under 'permissions'. PUT/DELETE /user/installations/{installation_id}/repositories/{repository_id} require admin access to the repository; DELETE requires repository_selection 'selected'. DELETE /installation/token revokes the token used to call it ('the token is invalidated and cannot be used').",
+      "used_for": ["demo/github/onboarding-flow.json#explicit_private_repository_selection", "demo/GITHUB_SETUP.md#coordination-notes-for-sai"]
+    },
+    {
+      "id": "installation-delete-suspend",
+      "topic": "App-side uninstall and suspend",
+      "url": "https://docs.github.com/en/rest/apps/apps#delete-an-installation-for-the-authenticated-app",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "DELETE /app/installations/{installation_id} 'Uninstalls a GitHub App on a user, organization, or enterprise account' (JWT; 202 Accepted); PUT /app/installations/{installation_id}/suspended suspends it (JWT; 204). The page recommends suspending if access should only be paused.",
+      "used_for": ["demo/GITHUB_SETUP.md#testing-revocation"]
+    },
+    {
+      "id": "webhook-installation",
+      "topic": "installation webhook",
+      "url": "https://docs.github.com/en/webhooks/webhook-events-and-payloads#installation",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "'This event occurs when there is activity relating to a GitHub App installation.' Actions: created, deleted, new_permissions_accepted, suspend, unsuspend. 'All GitHub Apps receive this event by default. You cannot manually subscribe to this event.'",
+      "used_for": ["demo/github/onboarding-flow.json#revocation_events"]
+    },
+    {
+      "id": "webhook-installation-repositories",
+      "topic": "installation_repositories webhook",
+      "url": "https://docs.github.com/en/webhooks/webhook-events-and-payloads#installation_repositories",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "'This event occurs when there is activity relating to which repositories a GitHub App installation can access.' Actions: added, removed. Delivered to all GitHub Apps by default; cannot be manually subscribed. Payload: repositories_added, repositories_removed ('When repository_selection changes from all to selected, this array is empty.'), repository_selection, requester, sender.",
+      "used_for": ["demo/github/onboarding-flow.json#revocation_events"]
+    },
+    {
+      "id": "webhook-github-app-authorization",
+      "topic": "github_app_authorization webhook",
+      "url": "https://docs.github.com/en/webhooks/webhook-events-and-payloads#github_app_authorization",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "'This event occurs when a user revokes their authorization of a GitHub App.' Example description: 'Someone revoked their authorization of a GitHub App.' 'A GitHub App receives this webhook by default and cannot unsubscribe from this event.'",
+      "used_for": ["demo/github/onboarding-flow.json#revocation_events"]
+    },
+    {
+      "id": "webhook-repository",
+      "topic": "repository webhook",
+      "url": "https://docs.github.com/en/webhooks/webhook-events-and-payloads#repository",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "'This event occurs when there is activity relating to repositories.' Actions: archived, created, deleted, edited, privatized, publicized, renamed, transferred, unarchived. 'To subscribe to this event, a GitHub App must have at least read-level access for the \"Metadata\" repository permission.'",
+      "used_for": ["demo/github/app-manifest.json#default_events", "demo/github/onboarding-flow.json#revocation_events"]
+    },
+    {
+      "id": "webhook-signature",
+      "topic": "Validating webhook deliveries",
+      "url": "https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "The signature is in the X-Hub-Signature-256 header: an HMAC hex digest (SHA-256) of the payload using the webhook secret, always prefixed 'sha256='. 'Never use a plain == operator'; use a constant-time comparison. X-Hub-Signature (SHA-1) is legacy only.",
+      "used_for": ["demo/GITHUB_SETUP.md#coordination-notes-for-ishan"]
+    },
+    {
+      "id": "webhook-delivery-headers",
+      "topic": "Webhook delivery headers",
+      "url": "https://docs.github.com/en/webhooks/webhook-events-and-payloads",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Deliveries carry X-GitHub-Event (event name), X-GitHub-Delivery (a GUID identifying the delivery) and X-GitHub-Hook-Installation-Target-ID (the resource where the webhook was created).",
+      "used_for": ["demo/GITHUB_SETUP.md#coordination-notes-for-ishan"]
+    },
+    {
+      "id": "tarball-snapshot",
+      "topic": "Downloading a repository archive (pinned snapshot)",
+      "url": "https://docs.github.com/en/rest/repos/contents#download-a-repository-archive-tar",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "GET /repos/{owner}/{repo}/tarball/{ref} 'Gets a redirect URL to download a tar archive for a repository' (302); clients must follow redirects; 'For private repositories, these links are temporary and expire after five minutes.' 'If you omit :ref, the repository's default branch (usually main) will be used.'",
+      "used_for": ["demo/github/onboarding-flow.json#pinned_snapshot_fetch"]
+    },
+    {
+      "id": "get-commit-ref",
+      "topic": "Resolving a ref to a commit SHA",
+      "url": "https://docs.github.com/en/rest/commits/commits#get-a-commit",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "GET /repos/{owner}/{repo}/commits/{ref}: 'The commit reference. Can be a commit SHA, branch name (heads/BRANCH_NAME), or tag name (tags/TAG_NAME).' Status codes 200, 404, 409, 422, 429, 500, 503.",
+      "used_for": ["demo/github/onboarding-flow.json#pinned_snapshot_fetch", "demo/scripts/publish_consumer_repos.py (post-push verification)"]
+    },
+    {
+      "id": "create-repository-user",
+      "topic": "Create a private repository for the authenticated user",
+      "url": "https://docs.github.com/en/rest/repos/repos#create-a-repository-for-the-authenticated-user",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "POST /user/repos 'Creates a new repository for the authenticated user.' Body: name (required), description, private (boolean, default false), auto_init (default false), ... OAuth app tokens and classic personal access tokens need the 'repo' scope to create a private repository. Responses: 201, 304, 400, 401, 403, 404, 422, 451.",
+      "used_for": ["demo/scripts/publish_consumer_repos.py"]
+    },
+    {
+      "id": "create-repository-org",
+      "topic": "Create a private organization repository",
+      "url": "https://docs.github.com/en/rest/repos/repos#create-an-organization-repository",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "POST /orgs/{org}/repos 'Creates a new repository in the specified organization. The authenticated user must be a member of the organization.' Body includes private (boolean, default false) and visibility (listed values public, private). Classic tokens need the 'repo' scope for a private repository. Responses: 201, 403, 422, 451.",
+      "used_for": ["demo/scripts/publish_consumer_repos.py"]
+    },
+    {
+      "id": "get-repository",
+      "topic": "Existence check before creation",
+      "url": "https://docs.github.com/en/rest/repos/repos#get-a-repository",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "GET /repos/{owner}/{repo} responds 200, 301 ('Moved permanently'), 403 or 404 ('Resource not found').",
+      "used_for": ["demo/scripts/publish_consumer_repos.py"]
+    },
+    {
+      "id": "create-pull-request",
+      "topic": "Opening a migration pull request",
+      "url": "https://docs.github.com/en/rest/pulls/pulls#create-a-pull-request",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "POST /repos/{owner}/{repo}/pulls with title, head (branch with the changes), base (existing branch to merge into), body, draft. Draft pull requests in private repositories depend on the plan (GitHub Team / Enterprise Cloud). Responses 201, 403, 422.",
+      "used_for": ["demo/github/onboarding-flow.json#optional_pr_branch", "demo/GITHUB_SETUP.md#coordination-notes-for-sai"]
+    },
+    {
+      "id": "rest-api-version",
+      "topic": "Current REST API version header",
+      "url": "https://docs.github.com/en/rest/about-the-rest-api/api-versions",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "'You should use the X-GitHub-Api-Version header to specify an API version.' Supported versions: 2026-03-10 (end of support not yet scheduled) and 2022-11-28 (end of support March 10, 2028). 'Requests without the X-GitHub-Api-Version header will default to use the 2022-11-28 version.'",
+      "value": "2026-03-10",
+      "used_for": ["demo/scripts/publish_consumer_repos.py API_VERSION", "demo/github/onboarding-flow.json#github_api_version"]
+    },
+    {
+      "id": "rest-breaking-changes-2026-03-10",
+      "topic": "Breaking changes in 2026-03-10 relevant to this flow",
+      "url": "https://docs.github.com/en/rest/about-the-rest-api/breaking-changes",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Relevant 2026-03-10 changes: create repository returns 451 instead of 422 when blocked by trade controls (POST /user/repos, POST /orgs/{org}/repos); deleting an installation returns 202 instead of 204; pull request responses no longer include merge_commit_sha and the singular assignee; has_downloads and use_squash_pr_title_as_default are removed from repository objects; submodules in contents listings have type 'submodule'. No change is listed for the tarball endpoint. 2022-11-28 has no breaking changes.",
+      "used_for": ["demo/scripts/publish_consumer_repos.py", "demo/GITHUB_SETUP.md#coordination-notes-for-sai"]
+    },
+    {
+      "id": "rest-request-basics",
+      "topic": "Request headers",
+      "url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Pass 'Accept: application/vnd.github+json'. 'All API requests must include a valid User-Agent header.' 'Requests with no User-Agent header will be rejected.' Tokens can be sent as 'Authorization: Bearer' (JWTs must use Bearer).",
+      "used_for": ["demo/scripts/publish_consumer_repos.py"]
+    },
+    {
+      "id": "installed-app-management",
+      "topic": "Reviewing, changing, suspending and uninstalling an installation (installer UI)",
+      "url": "https://docs.github.com/en/apps/using-github-apps/reviewing-and-modifying-installed-github-apps",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Personal account: Settings > Applications > Installed GitHub Apps > Configure. Organization: Your organizations > Settings > Third-party Access > GitHub Apps > Configure. There: Repository access ('All repositories' or 'Only select repositories', then Save); Suspend 'temporarily block[s] it from accessing resources owned by your account' and does not affect your authorization; Uninstall blocks access to resources in that account; to stop it acting on your behalf you must also de-authorize it under Authorized GitHub Apps.",
+      "used_for": ["demo/GITHUB_SETUP.md#testing-revocation", "demo/scripts/publish_consumer_repos.py manual steps"]
+    },
+    {
+      "id": "revoke-user-authorization",
+      "topic": "Revoking a user's authorization of a GitHub App",
+      "url": "https://docs.github.com/en/apps/using-github-apps/reviewing-and-revoking-authorization-of-github-apps",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "Settings > Applications > Authorized GitHub Apps > Revoke. 'The authorization can only be revoked by the person who authorized the GitHub App.' Uninstalling is a separate action.",
+      "used_for": ["demo/GITHUB_SETUP.md#testing-revocation"]
+    },
+    {
+      "id": "git-credential-helper-reset",
+      "topic": "Git credential helpers (used to push without placing a token on the command line)",
+      "url": "https://git-scm.com/docs/gitcredentials",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "'If credential.helper is configured to the empty string, this resets the helper list to empty'. 'If the helper string begins with \"!\", it is considered a shell snippet'. Helpers receive get, store or erase; 'For a store or erase operation, the helper's output is ignored.'",
+      "used_for": ["demo/scripts/publish_consumer_repos.py push command"]
+    },
+    {
+      "id": "git-environment",
+      "topic": "Git environment and -c precedence",
+      "url": "https://git-scm.com/docs/git",
+      "checked_at": "2026-10-17",
+      "verified": true,
+      "fact": "GIT_TERMINAL_PROMPT=false: 'git will not prompt on the terminal'. GIT_CONFIG_NOSYSTEM skips the system config; GIT_CONFIG_GLOBAL can be set to /dev/null to skip the global config. '-c <name>=<value>': 'The value given will override values from configuration files.'",
+      "used_for": ["demo/scripts/publish_consumer_repos.py push command"]
+    },
+    {
+      "id": "metadata-permission-default",
+      "topic": "Whether Metadata read is granted automatically / mandatory",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/choosing-permissions-for-a-github-app",
+      "checked_at": "2026-10-17",
+      "verified": false,
+      "fact": "Not confirmed: the fetched choosing-permissions, registering and permissions-required pages do not describe Metadata as automatic or mandatory (a search-result summary claimed it, but no fetched page stated it). Both manifests therefore request metadata: read explicitly.",
+      "reason": "not stated on any fetched page"
+    },
+    {
+      "id": "setup-url-setup-action",
+      "topic": "setup_action query parameter on the setup URL",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/about-the-setup-url",
+      "checked_at": "2026-10-17",
+      "verified": false,
+      "fact": "Only installation_id is documented on the fetched page. Shockwave must not rely on any other setup URL parameter, and must not trust installation_id either (see setup-url-spoofing).",
+      "reason": "not documented on the fetched page"
+    },
+    {
+      "id": "webhook-repository-object-fields",
+      "topic": "Fields of repository objects in installation_repositories payloads",
+      "url": "https://docs.github.com/en/webhooks/webhook-events-and-payloads#installation_repositories",
+      "checked_at": "2026-10-17",
+      "verified": false,
+      "fact": "The fetched page describes repositories_added/repositories_removed only as arrays of repository objects; their fields (id, full_name, private) were not confirmed. Handlers must reconcile by re-listing GET /installation/repositories instead of trusting the delta (required anyway: repositories_removed is empty when selection changes from all to selected).",
+      "reason": "payload object fields not described on the fetched page"
+    },
+    {
+      "id": "default-events-auto-delivered",
+      "topic": "Listing default-delivered events in a manifest's default_events",
+      "url": "https://docs.github.com/en/apps/sharing-github-apps/registering-a-github-app-from-a-manifest",
+      "checked_at": "2026-10-17",
+      "verified": false,
+      "fact": "Not documented whether default_events may name installation, installation_repositories or github_app_authorization. Because these are delivered by default and 'cannot be manually subscribed', the manifests do not list them.",
+      "reason": "not documented on the fetched page"
+    },
+    {
+      "id": "tarball-ref-commit-sha",
+      "topic": "Whether the tarball ref may be a full commit SHA",
+      "url": "https://docs.github.com/en/rest/repos/contents#download-a-repository-archive-tar",
+      "checked_at": "2026-10-17",
+      "verified": false,
+      "fact": "The fetched page leaves the ref description blank. The flow resolves the ref to a commit SHA first (get-commit-ref, verified) and Sai's transport must check that the fetched archive corresponds to that SHA, or fetch the SHA with git over HTTPS (installation-token-git-https).",
+      "reason": "ref parameter description is blank on the fetched page"
+    },
+    {
+      "id": "default-branch-protection",
+      "topic": "Preventing an app with contents:write from pushing to the default branch",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/choosing-permissions-for-a-github-app",
+      "checked_at": "2026-10-17",
+      "verified": false,
+      "fact": "Contents write covers branches and merges (permission-keys); the fetched pages do not describe restricting an app to non-default branches. Shockwave policy: the PR writer only creates new branches and never pushes to the default branch; consumers may additionally protect their default branch (branch protection or rulesets were not verified in this session).",
+      "reason": "branch protection / rulesets pages not fetched"
+    }
+  ]
+}

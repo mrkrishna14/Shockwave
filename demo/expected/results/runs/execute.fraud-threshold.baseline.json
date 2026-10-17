@@ -1,0 +1,94 @@
+{
+  "assertions": [
+    {
+      "actual": false,
+      "case_id": "below_threshold_not_flagged",
+      "detail": "expected needs_manual_review=False, actual False",
+      "expected": false,
+      "requests": [
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_4000usd",
+          "stripe_version": "2026-09-30.endive"
+        }
+      ],
+      "role": "guard",
+      "status": "passed"
+    },
+    {
+      "actual": false,
+      "case_id": "at_threshold_not_flagged",
+      "detail": "expected needs_manual_review=False, actual False",
+      "expected": false,
+      "requests": [
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_5000usd",
+          "stripe_version": "2026-09-30.endive"
+        }
+      ],
+      "role": "guard",
+      "status": "passed"
+    },
+    {
+      "actual": true,
+      "case_id": "above_threshold_flagged",
+      "detail": "expected needs_manual_review=True, actual True",
+      "expected": true,
+      "requests": [
+        {
+          "authorization": "test_mode_bearer",
+          "method": "GET",
+          "path": "/v1/payment_intents/pi_demo_6000usd",
+          "stripe_version": "2026-09-30.endive"
+        }
+      ],
+      "role": "relevant",
+      "status": "passed"
+    }
+  ],
+  "command": {
+    "argv": [
+      "python",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "--noconftest",
+      "-c",
+      ".shockwave/scenarios/stripe.payment-intent-amount-units.fraud-threshold.python/pytest.ini",
+      "--rootdir",
+      ".shockwave/scenarios/stripe.payment-intent-amount-units.fraud-threshold.python",
+      ".shockwave/scenarios/stripe.payment-intent-amount-units.fraud-threshold.python/test_shockwave_stripe_cases.py"
+    ],
+    "cwd": "$WORK_DIR/runs/execute-fraud-threshold/checkout-baseline"
+  },
+  "commit_sha": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+  "duration_ms": 0,
+  "exit_code": 0,
+  "fixture": {
+    "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.baseline",
+    "path": "demo/stripe-fixtures/baseline/payment_intents.json",
+    "reported_sha256": "f10738d11285948ca52b39db28de382f747b1467d26137aa91937a9e4a4b41ea",
+    "sha256": "f10738d11285948ca52b39db28de382f747b1467d26137aa91937a9e4a4b41ea"
+  },
+  "infrastructure_error": null,
+  "kind": "shockwave-demo.run-record@1",
+  "outcome": "passed",
+  "patch": null,
+  "phase": "baseline",
+  "plan_id": "c945993e-6075-53ac-8e27-2765fb6f1165",
+  "purpose": "original code against the baseline fixture",
+  "reason": "all 3 cases passed (relevant case above_threshold_flagged: expected needs_manual_review=True, actual True; guard case(s) below_threshold_not_flagged, at_threshold_not_flagged passed)",
+  "repository": "shockwave-stripe-fraud",
+  "run_id": "execute.fraud-threshold.baseline",
+  "runner": "LOCAL RUNNER DOUBLE — trusted local fixtures; plain subprocess, not a sandbox, not Sai's runner",
+  "scenario_id": "stripe.payment-intent-amount-units.fraud-threshold.python",
+  "stage": "execute",
+  "tests_run": 1,
+  "timed_out": false,
+  "timing": "duration_ms is normalized to 0 in results/ (measured durations vary between runs and interpretation never reads them); measured durations are kept in reports/runs/ only"
+}

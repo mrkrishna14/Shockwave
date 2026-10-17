@@ -448,7 +448,10 @@ def test_validate_risk_evidence_flags_invented_or_foreign_references(change, dep
     assert validate_risk_evidence(wrong_change, change, dependencies)
 
 
-def test_scenario_pointers_are_only_valid_on_conversion_risks(change, deps):
+OWN_CATEGORY_ONLY = "a scenario proves only risks of its own category"
+
+
+def test_scenario_pointers_are_only_valid_on_risks_of_their_scenarios_category(change, deps):
     dependencies = list(deps.values())
     display = deps["python_display"]
     result = analyze_impact(change, dependencies)
@@ -463,13 +466,13 @@ def test_scenario_pointers_are_only_valid_on_conversion_risks(change, deps):
         explanation="mislabelled on purpose",
         suggested_action="none",
     )
-    assert scenario_evidence(comparison) == []  # build_risk never adds pointers outside conversion
+    assert scenario_evidence(comparison) == []  # build_risk adds only pointers of the risk's own category
     comparison.evidence.append(pointer)
     forged = AnalysisResult(
         schema_version="shockwave.v1",
         change_id=change.id, risks=[comparison], unresolved_dependency_ids=[], warnings=[], analysis_mode="rules"
     )
-    assert any("only conversion risks" in problem for problem in validate_risk_evidence(forged, change, dependencies))
+    assert any(OWN_CATEGORY_ONLY in problem for problem in validate_risk_evidence(forged, change, dependencies))
 
     fraud_risk = risk_with(result, deps["python_fraud_threshold"]).model_copy(deep=True)
     fraud_risk.evidence.append(pointer)
@@ -477,7 +480,16 @@ def test_scenario_pointers_are_only_valid_on_conversion_risks(change, deps):
         schema_version="shockwave.v1",
         change_id=change.id, risks=[fraud_risk], unresolved_dependency_ids=[], warnings=[], analysis_mode="rules"
     )
-    assert any("only conversion risks" in problem for problem in validate_risk_evidence(stolen, change, dependencies))
+    assert any(OWN_CATEGORY_ONLY in problem for problem in validate_risk_evidence(stolen, change, dependencies))
+
+    storage_risk = risk_with(result, deps["python_storage"]).model_copy(deep=True)
+    storage_risk.evidence.append(pointer)
+    stored = AnalysisResult(
+        schema_version="shockwave.v1",
+        change_id=change.id, risks=[storage_risk], unresolved_dependency_ids=[], warnings=[], analysis_mode="rules"
+    )
+    problems = validate_risk_evidence(stored, change, dependencies)
+    assert any("only conversion and comparison risks have executable proof" in problem for problem in problems)
 
     typescript_risk = risk_with(result, deps["typescript_display"]).model_copy(deep=True)
     typescript_risk.evidence.append(pointer)  # the Python display risk's pointer on the TypeScript one
@@ -536,8 +548,10 @@ def test_reserved_scenario_scheme_is_flagged_wherever_it_is_copied(deps):
         copy.risks[result.risks.index(risk_with(result, deps[handle]))].evidence.append(pointer)
         return validate_risk_evidence(copy, smuggling, dependencies)
 
-    for handle in ("python_storage", "python_fraud_threshold"):  # verbatim change evidence, yet no proof
-        assert any("only conversion risks" in problem for problem in forged(handle))
+    # Verbatim change evidence, yet no proof: storage never has a scenario, and the smuggled
+    # pointer names a conversion scenario, which cannot prove a comparison risk.
+    assert any("only conversion and comparison risks" in problem for problem in forged("python_storage"))
+    assert any(OWN_CATEGORY_ONLY in problem for problem in forged("python_fraud_threshold"))
     assert any("not applicable" in problem for problem in forged("typescript_display"))
     assert any("not applicable" in problem for problem in forged("python_display"))  # not the catalog's own
 

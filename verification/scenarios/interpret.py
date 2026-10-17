@@ -25,6 +25,17 @@ that evidence proves, conservatively:
   current-contract responses, so every validated reason says its deployment must be
   coordinated with the provider's cutover.
 
+Case scenarios (``ScenarioSpec.cases``, e.g. the Stripe ones) evaluate several cases per
+run and record the requests the harness's fixture server received
+(``verification.scenarios.cases`` checks identity, integrity, expectations, preconditions
+and consistency). A phase PASSED when every case passed; it is a RELEVANT_FAIL only when the
+relevant case failed while every guard case passed, every case's comparison ran and the
+preconditions held (each case requested exactly its own ``GET`` resources with a
+Stripe-Version header and a test-mode key). A failing guard is an unrelated failure
+(inconclusive) for verification; for a patched run it is ``validation_failed``, because the
+patch broke behavior the scenario requires. A missing request, a request to anything else,
+a missing Stripe-Version or non-test-mode auth is inconclusive, never a regression.
+
 Report contents are untrusted data produced inside the consumer checkout: they are
 bounded, flattened to one line and quoted, never interpreted as instructions. A report
 is consistency-checked, not authenticated: the staged argv keeps the checkout's pytest
@@ -47,6 +58,12 @@ from urllib.parse import urlsplit
 from discovery.contracts import SCHEMA_VERSION as CONTRACT_SCHEMA_VERSION
 from discovery.contracts import ExecutionResult, VerificationPlan, VerificationResult
 from discovery.ids import verification_result_id
+from verification.scenarios.cases import (
+    CaseEvidence,
+    CasesEvaluation,
+    evaluate_cases_report,
+    value_text,
+)
 from verification.scenarios.catalog import ScenarioSpec
 from verification.scenarios.staging import (
     MAX_REPORT_BYTES,
@@ -72,10 +89,15 @@ PINNED_PATCH_CAVEAT = (
 
 @dataclass(frozen=True)
 class PhaseRun:
-    """One executed phase: the runner's result plus the raw report (read bounded, <= 64 KiB)."""
+    """One executed phase: the runner's result plus the raw report (read bounded, <= 64 KiB).
+
+    ``output_tail`` is the runner's bounded output tail (untrusted; may hold local paths),
+    kept for logs only: interpretation and result ids never read it.
+    """
 
     execution: ExecutionResult
     report: dict | bytes | str | None
+    output_tail: str | None = None
 
 
 @dataclass(frozen=True)
@@ -84,6 +106,10 @@ class PhaseClassification:
     outcome: PhaseOutcome
     reason: str
     actual: str | None = None
+    # Case scenarios only: the per-case evaluation, and whether a guard case failed with
+    # otherwise valid evidence (inconclusive for verification, validation_failed when patched).
+    evaluation: CasesEvaluation | None = None
+    guard_failure: bool = False
 
 
 @dataclass(frozen=True)
@@ -140,6 +166,13 @@ def interpret_patched_run(plan: VerificationPlan, patched: PhaseRun | None) -> P
         )
     if result.outcome == "relevant_fail":
         return PatchedOutcome("validation_failed", f"Validation failed: {against}, {result.reason}.", execution)
+    if result.guard_failure and result.evaluation is not None:
+        return PatchedOutcome(
+            "validation_failed",
+            f"Validation failed: {against}, {_failure_listing(result.evaluation.failures)}; the patch must keep every "
+            "case of the scenario passing.",
+            execution,
+        )
     return PatchedOutcome(
         "inconclusive", f"Inconclusive: the patched run is not a relevant result - {result.reason}.", execution
     )
@@ -160,7 +193,35 @@ def classify_phase(plan: VerificationPlan, phase: Phase, run: PhaseRun | None) -
     report, problem = _parse_report(run.report)
     if report is None:
         return _inconclusive(phase, problem or "no scenario report was produced")
+    if spec.cases:
+        return _classify_cases(plan, spec, phase, execution, report)
     return _classify_report(plan, spec, phase, execution, report)
+
+
+def _classify_cases(
+    plan: VerificationPlan, spec: ScenarioSpec, phase: Phase, execution: ExecutionResult, report: dict
+) -> PhaseClassification:
+    evaluation = evaluate_cases_report(spec, phase, fixture_id_for_phase(plan, phase), execution, report)
+    relevant = next((case for case in evaluation.cases if case.role == "relevant"), None)
+    actual = None if relevant is None else value_text(relevant.actual)
+    if evaluation.outcome == "inconclusive":
+        return PhaseClassification(phase, "inconclusive", evaluation.reason, evaluation=evaluation)
+    if evaluation.outcome == "passed":
+        return PhaseClassification(phase, "passed", evaluation.reason, actual, evaluation=evaluation)
+    guards = [case.case_id for case in evaluation.cases if case.role == "guard"]
+    if relevant is not None and evaluation.failures == (relevant,):
+        held = f", while the guard case(s) {', '.join(guards)} passed" if guards else ""
+        reason = f"the relevant case {relevant.case_id} failed: {relevant.detail}{held}"
+        return PhaseClassification(phase, "relevant_fail", reason, actual, evaluation=evaluation)
+    reason = (
+        f"unrelated failure: {_failure_listing(evaluation.failures)}; a failing guard case means the run is not the "
+        "isolated relevant failure the scenario tests"
+    )
+    return PhaseClassification(phase, "inconclusive", reason, actual, evaluation=evaluation, guard_failure=True)
+
+
+def _failure_listing(failures: tuple[CaseEvidence, ...]) -> str:
+    return "; ".join(f"the {case.role} case {case.case_id} failed ({case.detail})" for case in failures)
 
 
 def _verdict(

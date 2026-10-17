@@ -22,6 +22,11 @@ configuration out of the run (no conftest.py, no pytest.ini/pyproject.toml/setup
 tox.ini addopts or ``-p`` plugins, no auto-loaded plugins, and on Python >= 3.11 no
 checkout module shadowing pytest). Code the run imports from the checkout still executes
 in-process, so a report is consistency-checked, never authenticated (see interpret).
+
+Case scenarios (``ScenarioSpec.cases``, e.g. the Stripe ones) use the same staging and argv;
+only ``binding.json`` (which lists the cases) and the report (``CASES_REPORT_FIELDS``)
+differ. Control scenarios are staged with ``stage_control`` per fixture variant and never
+through a VerificationPlan: controls are not tied to Risks.
 """
 
 from __future__ import annotations
@@ -42,11 +47,14 @@ from verification.scenarios.catalog import (
     ScenarioSpec,
     UnknownScenario,
     fixture_path,
+    get_control,
     get_scenario,
 )
 
 Phase = Literal["baseline", "proposed", "patched"]
 PHASES: tuple[Phase, ...] = ("baseline", "proposed", "patched")
+ControlVariant = Literal["baseline", "proposed"]
+CONTROL_VARIANTS: tuple[ControlVariant, ...] = ("baseline", "proposed")
 
 # Version of the scenario report and binding.json protocol, hard-coded by the harness assets.
 # It is not the contract models' schema_version (discovery.contracts.SCHEMA_VERSION).
@@ -87,6 +95,33 @@ REPORT_FIELDS = (
     "binding_sha256",
 )
 
+# Case scenarios (catalog ``cases``): the report both case harnesses write. A case is
+# "passed" or "failed" only when its comparison ran; "error" means it never did. Requests are
+# what the harness's loopback fixture server received, attributed to the case whose call was
+# running; the Authorization header is recorded only as its kind, never its value.
+CASES_REPORT_FORMAT = "shockwave.cases.v1"
+CASES_REPORT_FIELDS = (
+    "schema_version",
+    "kind",
+    "report_format",
+    "scenario_id",
+    "scenario_kind",  # "risk" | "control"
+    "phase",  # baseline | proposed | patched; a control reports its fixture variant
+    "fixture_id",
+    "fixture_sha256",  # sha256 of the staged fixture bytes (the fixture revision)
+    "status",  # "passed" (every case passed) | "failed" (a case failed or errored) | "error" (no case ran)
+    "error_type",
+    "message",
+    "cases",
+    "unattributed_requests",  # received outside every case's call (e.g. at import time)
+    "requests_dropped",  # requests beyond the harness's recording bound
+    "harness_sha256",
+    "binding_sha256",
+)
+CASE_FIELDS = ("case_id", "relevant", "expected", "actual", "status", "error_type", "message", "requests")
+REQUEST_FIELDS = ("method", "path", "stripe_version", "authorization")
+AUTHORIZATION_KINDS = ("test_mode_bearer", "missing", "other")  # "Bearer sk_test_..." | absent | anything else
+
 # Runner hardening for the Python profiles, merged into the staged environment: pytest
 # auto-loads no plugin from the consumer's environment, and ``python -m pytest`` does not
 # put the checkout on sys.path (Python >= 3.11; older interpreters ignore the variable), so
@@ -117,6 +152,11 @@ def validated_spec(plan: VerificationPlan) -> ScenarioSpec:
         spec = get_scenario(plan.scenario_id)
     except UnknownScenario:
         raise ValueError(f"refusing plan: unknown scenario {clip_text(plan.scenario_id, 120)!r}") from None
+    if spec.kind != "risk":
+        raise ValueError(
+            f"refusing plan: {spec.scenario_id} is a control scenario; controls are not tied to risks and run "
+            "through verification.scenarios.controls"
+        )
     expected_tests = [spec.staged_test_file, *spec.additional_test_files]
     if list(plan.test_files) != expected_tests:
         raise ValueError(
@@ -148,6 +188,8 @@ def harness_sha256(spec: ScenarioSpec) -> str:
 
 def binding_document(spec: ScenarioSpec) -> dict:
     """The ``binding.json`` staged next to the harness (deterministic for a catalog entry)."""
+    if spec.cases:
+        return _cases_binding_document(spec)
     return {
         "schema_version": SCHEMA_VERSION,
         "scenario_id": spec.scenario_id,
@@ -160,6 +202,37 @@ def binding_document(spec: ScenarioSpec) -> dict:
             "args": list(spec.binding.args),
             "http_injection": spec.binding.http_injection,
         },
+        "harness_sha256": harness_sha256(spec),
+    }
+
+
+def _cases_binding_document(spec: ScenarioSpec) -> dict:
+    binding = spec.binding
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "scenario_id": spec.scenario_id,
+        "scenario_kind": spec.kind,
+        "report_format": CASES_REPORT_FORMAT,
+        "operation": {"method": spec.method, "path": spec.path},
+        "binding": {
+            "language": binding.language,
+            "module": binding.module,
+            "function": binding.function,
+            "http_injection": binding.http_injection,
+            "api_key_env": binding.api_key_env,
+            "api_base_env": binding.api_base_env,
+        },
+        "cases": [
+            {
+                "case_id": case.case_id,
+                "relevant": case.relevant,
+                "args": case.args,
+                "result_path": list(case.result_path),
+                "expected": case.expected,
+                "resource_ids": list(case.resource_ids),
+            }
+            for case in spec.cases
+        ],
         "harness_sha256": harness_sha256(spec),
     }
 
@@ -186,9 +259,49 @@ def stage_scenario(
     """
     _check_phase(phase)
     spec = validated_spec(plan)
+    return _stage(
+        spec,
+        repo_root,
+        work_dir,
+        phase=phase,
+        fixture_id=fixture_id_for_phase(plan, phase),
+        python=plan.runner_profile in PYTHON_PROFILES,
+        report_name=f"{phase}-report.json",
+    )
+
+
+def stage_control(scenario_id: str, repo_root: Path, variant: ControlVariant, work_dir: Path) -> StagedRun:
+    """Stage a control scenario for one fixture ``variant`` (no VerificationPlan: controls are not tied to risks).
+
+    The staged phase is the variant name, so the control's report says which fixture it ran.
+    The runner executes ``control_argv_hint(scenario_id)`` with cwd = the checkout.
+    """
+    spec = _control_spec(scenario_id)
+    if variant not in CONTROL_VARIANTS:
+        raise ValueError(f"variant must be one of {', '.join(CONTROL_VARIANTS)}; got {clip_text(variant, 40)!r}")
+    return _stage(
+        spec,
+        repo_root,
+        work_dir,
+        phase=variant,
+        fixture_id=spec.fixture_for(variant),
+        python=spec.trusted_profile in PYTHON_PROFILES,
+        report_name=f"control-{variant}-report.json",
+    )
+
+
+def _stage(
+    spec: ScenarioSpec,
+    repo_root: Path,
+    work_dir: Path,
+    *,
+    phase: str,
+    fixture_id: str,
+    python: bool,
+    report_name: str,
+) -> StagedRun:
     root = _repository_root(repo_root)
     work = _work_directory(work_dir, root)
-    python = plan.runner_profile in PYTHON_PROFILES
 
     staged_dir = _fresh_scenario_directory(root, spec)
     _write_new(staged_dir / spec.staged_test_name, _harness_bytes(spec))
@@ -196,12 +309,11 @@ def stage_scenario(
     if python:
         _write_new(staged_dir / PYTEST_CONFIG_FILE, _PYTEST_CONFIG)
 
-    fixture_id = fixture_id_for_phase(plan, phase)
     fixture_copy = work / f"{fixture_id}.json"
     _remove_file(fixture_copy)
     _write_new(fixture_copy, fixture_path(fixture_id).read_bytes())
 
-    report_path = work / f"{phase}-report.json"
+    report_path = work / report_name
     _remove_file(report_path)
 
     env = {
@@ -218,7 +330,7 @@ def stage_scenario(
         scenario_id=spec.scenario_id,
         phase=phase,
         fixture_id=fixture_id,
-        test_files=tuple(plan.test_files),
+        test_files=(spec.staged_test_file,),
         env=env,
         fixture_path=fixture_copy,
         report_path=report_path,
@@ -238,15 +350,32 @@ def runner_argv_hint(plan: VerificationPlan) -> list[str]:
     no configuration from the checkout.
     """
     spec = validated_spec(plan)
-    if plan.runner_profile in PYTHON_PROFILES:
+    return _argv(spec, plan.runner_profile, list(plan.test_files))
+
+
+def control_argv_hint(scenario_id: str) -> list[str]:
+    """``runner_argv_hint`` for a control (its trusted profile's native runner; cwd = checkout)."""
+    spec = _control_spec(scenario_id)
+    return _argv(spec, spec.trusted_profile, [spec.staged_test_file])
+
+
+def _argv(spec: ScenarioSpec, profile: str, test_files: list[str]) -> list[str]:
+    if profile in PYTHON_PROFILES:
         return [
             "python", "-m", "pytest", "-q", "-p", "no:cacheprovider", "--noconftest",
             "-c", f"{spec.staged_dir}/{PYTEST_CONFIG_FILE}", "--rootdir", spec.staged_dir,
-            *plan.test_files,
+            *test_files,
         ]
-    if plan.runner_profile in NODE_PROFILES:
-        return ["node", "--test", *plan.test_files]
-    raise ValueError(f"unknown runner profile {plan.runner_profile!r}")
+    if profile in NODE_PROFILES:
+        return ["node", "--test", *test_files]
+    raise ValueError(f"unknown runner profile {profile!r}")
+
+
+def _control_spec(scenario_id: str) -> ScenarioSpec:
+    try:
+        return get_control(scenario_id)
+    except UnknownScenario:
+        raise ValueError(f"refusing control: {clip_text(scenario_id, 120)!r} is not a control scenario") from None
 
 
 def _check_phase(phase: str) -> None:

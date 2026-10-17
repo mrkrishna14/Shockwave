@@ -1,0 +1,395 @@
+{
+  "analysis_mode": "rules",
+  "change_id": "9425e6bc-f891-540c-b87d-e6cd1fe8240b",
+  "risks": [
+    {
+      "change_id": "9425e6bc-f891-540c-b87d-e6cd1fe8240b",
+      "confidence": "direct",
+      "consumer_org_id": "6f153b43-f6db-5768-9d25-632648e129d9",
+      "dependency_ids": [
+        "a9db411a-8cc2-59bb-8bb6-954f9cbb4f3d"
+      ],
+      "enrollment_id": "d2cb2096-72c9-5f1d-b7a0-f14301f078a4",
+      "evidence": [
+        {
+          "excerpt": "import Stripe from 'stripe';",
+          "file": "src/stripeClient.ts",
+          "id": "7e356dae-c668-5659-8730-0dbb1f0ab460",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 1,
+          "line_start": 1,
+          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
+          "source_uri": "repo://shockwave-stripe-checkout",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "return new Stripe(apiKey, config);",
+          "file": "src/stripeClient.ts",
+          "id": "e6d32c49-346d-56e5-a65b-6e5cc8d65010",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 34,
+          "line_start": 34,
+          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
+          "source_uri": "repo://shockwave-stripe-checkout",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "stripe: Stripe = createStripeClient(),",
+          "file": "src/orderSummary.ts",
+          "id": "b94aca66-7150-570b-b36f-2b3fa541adfd",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 18,
+          "line_start": 18,
+          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
+          "source_uri": "repo://shockwave-stripe-checkout",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);",
+          "file": "src/orderSummary.ts",
+          "id": "342893bd-40be-54aa-a32a-fb9f18028efd",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 20,
+          "line_start": 20,
+          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
+          "source_uri": "repo://shockwave-stripe-checkout",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "const totalDollars = paymentIntent.amount / 100;",
+          "file": "src/orderSummary.ts",
+          "id": "b66935a5-9947-5488-8942-9fcd73defac4",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 22,
+          "line_start": 22,
+          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
+          "source_uri": "repo://shockwave-stripe-checkout",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "SIMULATED, not announced by Stripe: GET /v1/payment_intents/{intent} response.amount (units_changed, currency scope USD): USD amount in minor currency units (cents): 1000 represents $10.00 -> USD amount in major currency units (dollars): 10 represents $10.00. Published schema unchanged (integer).",
+          "file": null,
+          "id": "86f92c04-850b-5467-9c35-b7176e4a6283",
+          "json_pointer": "",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d4e7bcf92b553b8a4d52cea2573d789977e05621acd762153524b97f1186f647",
+          "source_uri": "demo/scenarios/stripe-payment-intent-amount-usd-major-units.manifest.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "Equivalent fixtures stripe.payment_intents.usd-whole-dollars.baseline -> stripe.payment_intents.usd-whole-dollars.proposed: pi_demo_10usd 1000 -> 10 (USD $10.00); pi_demo_4000usd 400000 -> 4000 (USD $4,000.00); pi_demo_5000usd 500000 -> 5000 (USD $5,000.00); pi_demo_6000usd 600000 -> 6000 (USD $6,000.00); pi_demo_25eur 2500 -> 2500 (EUR 25.00 (outside the USD scope; unchanged))",
+          "file": null,
+          "id": "197525b8-679d-5848-ab45-f5ed203ee4b8",
+          "json_pointer": "/fixtures/equivalences",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d4e7bcf92b553b8a4d52cea2573d789977e05621acd762153524b97f1186f647",
+          "source_uri": "demo/scenarios/stripe-payment-intent-amount-usd-major-units.manifest.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "GET /v1/payment_intents/{intent} - Retrieve a PaymentIntent",
+          "file": null,
+          "id": "346adc33-591d-553e-9cbf-f53833625bdf",
+          "json_pointer": "/paths/~1v1~1payment_intents~1{intent}/get",
+          "kind": "openapi",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:9119e72c7ff8ad142e94f7efa9cf49d8e6eec69df3592e17e8fba15099726ed7",
+          "source_uri": "https://raw.githubusercontent.com/stripe/openapi/969d8c308ea65b6dbdef4b6b4a71904027a010b8/latest/openapi.spec3.json",
+          "visibility": "public"
+        },
+        {
+          "excerpt": "Amount intended to be collected by this PaymentIntent. A positive integer representing how much to charge in the [smallest currency unit](https://docs.stripe.com/currencies#zero-decimal) (e.g., 100 cents to charge $1.00 or 100 to charge ¥100, a zero-decimal currency). The minimum amount is $0.50 US or [equivalent in charge currency](https://docs.stripe.com/currencies#minimum-and-maximum-charge-amounts). The amount value supports up to eight digits (e.g., a value of 99999999 for a USD charge of $999,999.99).",
+          "file": null,
+          "id": "174b3163-1f64-5edb-8ddf-c83fabdd579c",
+          "json_pointer": "/components/schemas/payment_intent/properties/amount",
+          "kind": "docs",
+          "line_end": null,
+          "line_start": null,
+          "revision": "969d8c308ea65b6dbdef4b6b4a71904027a010b8",
+          "source_uri": "https://raw.githubusercontent.com/stripe/openapi/969d8c308ea65b6dbdef4b6b4a71904027a010b8/latest/openapi.spec3.json",
+          "visibility": "public"
+        },
+        {
+          "excerpt": "Executable scenario available, not yet run: GET /v1/payment_intents/{intent} through the official stripe-node SDK: getOrderSummary('pi_demo_10usd') displays $10.00 for both the baseline response (amount=1000, USD minor units) and the equivalent SIMULATED proposed response (amount=10, USD major units); guard: the unrelated basis-points tax note stays 'Includes 8.25% sales tax'.",
+          "file": null,
+          "id": "0a0b3d30-2b19-5e7a-877f-7fd5c7e0ca4d",
+          "json_pointer": null,
+          "kind": "test",
+          "line_end": null,
+          "line_start": null,
+          "revision": "shockwave-scenarios@2026-10-17.1",
+          "source_uri": "shockwave-scenario://stripe.payment-intent-amount-units.checkout-display.typescript",
+          "visibility": "consumer_private"
+        }
+      ],
+      "explanation": "src/orderSummary.ts:22 divides response.amount by 100 to convert cents to dollars. Under the proposed contract amount is already in dollars (10 for $10.00), so the result becomes $0.10 instead of $10.00 (100x too small). An executable scenario exists for this usage; it has not run. Prediction from code evidence; not executed.",
+      "id": "4a144d3c-4a00-5e53-a3a1-12704955df3f",
+      "repository_snapshot_id": "bd623f0f-1656-52f7-88ee-12499ea4fc93",
+      "severity": "high",
+      "suggested_action": "Remove the /100 conversion at src/orderSummary.ts:22 for the proposed contract (pin to it) or branch on the contract version; keep the $10.00 expectation; coordinate deployment, as the fix is not backward compatible."
+    },
+    {
+      "change_id": "9425e6bc-f891-540c-b87d-e6cd1fe8240b",
+      "confidence": "inferred",
+      "consumer_org_id": "58503483-d79b-5647-ab0f-790cafe54de5",
+      "dependency_ids": [
+        "692edafd-6661-5a1d-8edb-dd7d9f81c8c2"
+      ],
+      "enrollment_id": "2b26426c-d191-5021-8a14-e972e71931a8",
+      "evidence": [
+        {
+          "excerpt": "payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)",
+          "file": "fraud_service/review.py",
+          "id": "aa64f4e8-b540-5e99-a2bf-3096614f68ed",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 22,
+          "line_start": 22,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repository-snapshot://6b6552c2-7344-547b-a011-0293f1556875/fraud_service/review.py#L22",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "if payment_intent.amount > 500000:",
+          "file": "fraud_service/review.py",
+          "id": "f81e363a-6652-5519-8e76-298c424f1b87",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 24,
+          "line_start": 24,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repository-snapshot://6b6552c2-7344-547b-a011-0293f1556875/fraud_service/review.py#L24",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "SIMULATED, not announced by Stripe: GET /v1/payment_intents/{intent} response.amount (units_changed, currency scope USD): USD amount in minor currency units (cents): 1000 represents $10.00 -> USD amount in major currency units (dollars): 10 represents $10.00. Published schema unchanged (integer).",
+          "file": null,
+          "id": "86f92c04-850b-5467-9c35-b7176e4a6283",
+          "json_pointer": "",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d4e7bcf92b553b8a4d52cea2573d789977e05621acd762153524b97f1186f647",
+          "source_uri": "demo/scenarios/stripe-payment-intent-amount-usd-major-units.manifest.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "Equivalent fixtures stripe.payment_intents.usd-whole-dollars.baseline -> stripe.payment_intents.usd-whole-dollars.proposed: pi_demo_10usd 1000 -> 10 (USD $10.00); pi_demo_4000usd 400000 -> 4000 (USD $4,000.00); pi_demo_5000usd 500000 -> 5000 (USD $5,000.00); pi_demo_6000usd 600000 -> 6000 (USD $6,000.00); pi_demo_25eur 2500 -> 2500 (EUR 25.00 (outside the USD scope; unchanged))",
+          "file": null,
+          "id": "197525b8-679d-5848-ab45-f5ed203ee4b8",
+          "json_pointer": "/fixtures/equivalences",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d4e7bcf92b553b8a4d52cea2573d789977e05621acd762153524b97f1186f647",
+          "source_uri": "demo/scenarios/stripe-payment-intent-amount-usd-major-units.manifest.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "GET /v1/payment_intents/{intent} - Retrieve a PaymentIntent",
+          "file": null,
+          "id": "346adc33-591d-553e-9cbf-f53833625bdf",
+          "json_pointer": "/paths/~1v1~1payment_intents~1{intent}/get",
+          "kind": "openapi",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:9119e72c7ff8ad142e94f7efa9cf49d8e6eec69df3592e17e8fba15099726ed7",
+          "source_uri": "https://raw.githubusercontent.com/stripe/openapi/969d8c308ea65b6dbdef4b6b4a71904027a010b8/latest/openapi.spec3.json",
+          "visibility": "public"
+        },
+        {
+          "excerpt": "Amount intended to be collected by this PaymentIntent. A positive integer representing how much to charge in the [smallest currency unit](https://docs.stripe.com/currencies#zero-decimal) (e.g., 100 cents to charge $1.00 or 100 to charge ¥100, a zero-decimal currency). The minimum amount is $0.50 US or [equivalent in charge currency](https://docs.stripe.com/currencies#minimum-and-maximum-charge-amounts). The amount value supports up to eight digits (e.g., a value of 99999999 for a USD charge of $999,999.99).",
+          "file": null,
+          "id": "174b3163-1f64-5edb-8ddf-c83fabdd579c",
+          "json_pointer": "/components/schemas/payment_intent/properties/amount",
+          "kind": "docs",
+          "line_end": null,
+          "line_start": null,
+          "revision": "969d8c308ea65b6dbdef4b6b4a71904027a010b8",
+          "source_uri": "https://raw.githubusercontent.com/stripe/openapi/969d8c308ea65b6dbdef4b6b4a71904027a010b8/latest/openapi.spec3.json",
+          "visibility": "public"
+        },
+        {
+          "excerpt": "Executable scenario available, not yet run: GET /v1/payment_intents/{intent} through the official stripe-python SDK: review_payment flags USD $6,000.00 (pi_demo_6000usd) for manual review and flags neither $4,000.00 nor exactly $5,000.00, for both the baseline responses (USD minor units: 600000/400000/500000) and the equivalent SIMULATED proposed responses (USD major units: 6000/4000/5000).",
+          "file": null,
+          "id": "fd9eda16-fc0f-5118-accd-e210a5e15451",
+          "json_pointer": null,
+          "kind": "test",
+          "line_end": null,
+          "line_start": null,
+          "revision": "shockwave-scenarios@2026-10-17.1",
+          "source_uri": "shockwave-scenario://stripe.payment-intent-amount-units.fraud-threshold.python",
+          "visibility": "consumer_private"
+        }
+      ],
+      "explanation": "fraud_service/review.py:24 compares response.amount with 500000. If that threshold is in cents ($5,000.00), under the proposed contract (dollars) it only triggers at $500,000.00 (100x higher). An executable scenario exists for this usage; it has not run. Prediction from code evidence; not executed. Missing evidence: intended unit of the threshold.",
+      "id": "a631215e-438b-524d-b2ba-fd653eb4e399",
+      "repository_snapshot_id": "6b6552c2-7344-547b-a011-0293f1556875",
+      "severity": "high",
+      "suggested_action": "Confirm the unit of the threshold at fraud_service/review.py:24; if it is in cents, rescale it (500000 -> 5000) for the proposed contract and add a comparison test before cutover."
+    },
+    {
+      "change_id": "9425e6bc-f891-540c-b87d-e6cd1fe8240b",
+      "confidence": "inferred",
+      "consumer_org_id": "a54a75e9-ac54-5f1a-b8db-139c53fbc38a",
+      "dependency_ids": [
+        "8c0d5ac3-4b9e-5edf-86a9-e24687fca1dd"
+      ],
+      "enrollment_id": "10ab008d-5029-5c8a-b409-a6b3b95dc41e",
+      "evidence": [
+        {
+          "excerpt": "from stripe import StripeClient",
+          "file": "reporting_app/stripe_client.py",
+          "id": "51dcb8fe-c56b-5550-a5c2-73b3266c2ba4",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 13,
+          "line_start": 13,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "return StripeClient(",
+          "file": "reporting_app/stripe_client.py",
+          "id": "b8099686-a9f5-5e71-8118-9a8a5d88edfe",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 26,
+          "line_start": 26,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "client = client or create_stripe_client()",
+          "file": "reporting_app/ledger.py",
+          "id": "94a4a1eb-04b7-5698-a304-de0cad0b5840",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 26,
+          "line_start": 26,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "payment_intent = client.v1.payment_intents.retrieve(payment_intent_id)",
+          "file": "reporting_app/ledger.py",
+          "id": "ae729461-06aa-5401-8101-c09b4f775ffe",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 31,
+          "line_start": 31,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "amount_minor INTEGER NOT NULL  -- smallest currency unit, as Stripe reports it",
+          "file": "reporting_app/ledger.py",
+          "id": "0546ed38-0cea-516e-af40-a4b9da3ad619",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 17,
+          "line_start": 17,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "\"INSERT OR REPLACE INTO payments (payment_intent_id, currency, amount_minor) VALUES (?, ?, ?)\",",
+          "file": "reporting_app/ledger.py",
+          "id": "697bd4f5-9b35-5755-90f3-413343a6a85e",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 33,
+          "line_start": 33,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "(payment_intent.id, payment_intent.currency, payment_intent.amount),",
+          "file": "reporting_app/ledger.py",
+          "id": "a79d2986-dbd9-5264-aa02-22e353bfdd07",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 34,
+          "line_start": 34,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "SIMULATED, not announced by Stripe: GET /v1/payment_intents/{intent} response.amount (units_changed, currency scope USD): USD amount in minor currency units (cents): 1000 represents $10.00 -> USD amount in major currency units (dollars): 10 represents $10.00. Published schema unchanged (integer).",
+          "file": null,
+          "id": "86f92c04-850b-5467-9c35-b7176e4a6283",
+          "json_pointer": "",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d4e7bcf92b553b8a4d52cea2573d789977e05621acd762153524b97f1186f647",
+          "source_uri": "demo/scenarios/stripe-payment-intent-amount-usd-major-units.manifest.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "Equivalent fixtures stripe.payment_intents.usd-whole-dollars.baseline -> stripe.payment_intents.usd-whole-dollars.proposed: pi_demo_10usd 1000 -> 10 (USD $10.00); pi_demo_4000usd 400000 -> 4000 (USD $4,000.00); pi_demo_5000usd 500000 -> 5000 (USD $5,000.00); pi_demo_6000usd 600000 -> 6000 (USD $6,000.00); pi_demo_25eur 2500 -> 2500 (EUR 25.00 (outside the USD scope; unchanged))",
+          "file": null,
+          "id": "197525b8-679d-5848-ab45-f5ed203ee4b8",
+          "json_pointer": "/fixtures/equivalences",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d4e7bcf92b553b8a4d52cea2573d789977e05621acd762153524b97f1186f647",
+          "source_uri": "demo/scenarios/stripe-payment-intent-amount-usd-major-units.manifest.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "GET /v1/payment_intents/{intent} - Retrieve a PaymentIntent",
+          "file": null,
+          "id": "346adc33-591d-553e-9cbf-f53833625bdf",
+          "json_pointer": "/paths/~1v1~1payment_intents~1{intent}/get",
+          "kind": "openapi",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:9119e72c7ff8ad142e94f7efa9cf49d8e6eec69df3592e17e8fba15099726ed7",
+          "source_uri": "https://raw.githubusercontent.com/stripe/openapi/969d8c308ea65b6dbdef4b6b4a71904027a010b8/latest/openapi.spec3.json",
+          "visibility": "public"
+        },
+        {
+          "excerpt": "Amount intended to be collected by this PaymentIntent. A positive integer representing how much to charge in the [smallest currency unit](https://docs.stripe.com/currencies#zero-decimal) (e.g., 100 cents to charge $1.00 or 100 to charge ¥100, a zero-decimal currency). The minimum amount is $0.50 US or [equivalent in charge currency](https://docs.stripe.com/currencies#minimum-and-maximum-charge-amounts). The amount value supports up to eight digits (e.g., a value of 99999999 for a USD charge of $999,999.99).",
+          "file": null,
+          "id": "174b3163-1f64-5edb-8ddf-c83fabdd579c",
+          "json_pointer": "/components/schemas/payment_intent/properties/amount",
+          "kind": "docs",
+          "line_end": null,
+          "line_start": null,
+          "revision": "969d8c308ea65b6dbdef4b6b4a71904027a010b8",
+          "source_uri": "https://raw.githubusercontent.com/stripe/openapi/969d8c308ea65b6dbdef4b6b4a71904027a010b8/latest/openapi.spec3.json",
+          "visibility": "public"
+        }
+      ],
+      "explanation": "reporting_app/ledger.py:34 stores response.amount (destination: sqlite:payments.amount_minor). After cutover new values would be in dollars while earlier ones are in cents, so mixed units become possible. Potential risk, not confirmed: the destination's units, historical records and any migration plan were not examined. Prediction from code evidence; not executed. Missing evidence: units/schema of the destination; historical records; migration plan.",
+      "id": "6d11c1a8-aed7-5d68-bdb8-5df3edf9f3bc",
+      "repository_snapshot_id": "923a9231-b7cd-5c89-a2ec-a281e98d409e",
+      "severity": "medium",
+      "suggested_action": "Check the units of the destination at reporting_app/ledger.py:34 and its existing rows; convert at the write boundary or plan a backfill/unit marker before cutover so cents and dollars do not mix."
+    }
+  ],
+  "schema_version": "shockwave.v1",
+  "unresolved_dependency_ids": [],
+  "warnings": [
+    "predictions only: no tests have run (deterministic rules, not model inference)"
+  ]
+}

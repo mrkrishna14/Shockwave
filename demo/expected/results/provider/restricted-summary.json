@@ -1,0 +1,85 @@
+{
+  "analysis_mode": "rules",
+  "change": {
+    "change_id": "9425e6bc-f891-540c-b87d-e6cd1fe8240b",
+    "endpoint": "GET /v1/payment_intents/{intent}",
+    "field_path": "response.amount",
+    "kind": "units_changed",
+    "status": "SIMULATED change: hypothetical, not announced by Stripe. Stripe is not a Shockwave customer and has not endorsed Shockwave."
+  },
+  "consumers": [
+    {
+      "by_category": {
+        "storage": 1
+      },
+      "by_severity": {
+        "medium": 1
+      },
+      "by_verification_status": {
+        "not_run": 1
+      },
+      "label": "Consumer 1",
+      "risks": 1
+    },
+    {
+      "by_category": {
+        "conversion": 1
+      },
+      "by_severity": {
+        "high": 1
+      },
+      "by_verification_status": {
+        "verified_regression": 1
+      },
+      "label": "Consumer 2",
+      "risks": 1
+    },
+    {
+      "by_category": {
+        "comparison": 1
+      },
+      "by_severity": {
+        "high": 1
+      },
+      "by_verification_status": {
+        "verified_regression": 1
+      },
+      "label": "Consumer 3",
+      "risks": 1
+    }
+  ],
+  "isolation": "Local single-machine demo: three fictional consumer organizations share one machine and one process. This does not prove cross-company identity isolation, which the backend (Ishan) must enforce.",
+  "kind": "shockwave-demo.provider-restricted-summary@1",
+  "privacy": {
+    "excluded": [
+      "consumer source code and snippets",
+      "file names, paths and line numbers",
+      "logs and test output",
+      "patches and migration artifacts",
+      "commit SHAs and consumer record ids",
+      "consumer organization and repository names"
+    ],
+    "pseudonyms": "Consumer labels are pseudonymous, ordered by a hash of the change and enrollment; they reveal no organization or repository name."
+  },
+  "provider": "Stripe",
+  "provider_note": "Stripe is not a Shockwave customer and has not endorsed Shockwave; this view shows what a provider would see for its own (here SIMULATED) change.",
+  "totals": {
+    "by_category": {
+      "comparison": 1,
+      "conversion": 1,
+      "storage": 1
+    },
+    "by_severity": {
+      "high": 2,
+      "medium": 1
+    },
+    "by_verification_status": {
+      "not_run": 1,
+      "verified_regression": 2
+    },
+    "consumers": 3,
+    "consumers_with_risks": 3,
+    "risks": 3
+  },
+  "visibility": "provider_restricted"
+}

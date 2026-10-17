@@ -1,0 +1,23 @@
+{
+  "kind": "shockwave-demo.observations@1",
+  "observations": [
+    {
+      "failing_tests": [
+        "tests/test_reporting.py::test_ledger_records_stripe_amounts"
+      ],
+      "fixture": {
+        "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.proposed",
+        "path": "tests/fixtures/payment_intents.json",
+        "sha256": "ad9c29b9aa71e3379c2c3799032a7a5f1b9d6dcf1a019819a1d2b8e9e7731a42",
+        "source": "the consumer's bundled fixture data"
+      },
+      "outcome": "failed",
+      "repository": "shockwave-stripe-reporting",
+      "risk_id": "6d11c1a8-aed7-5d68-bdb8-5df3edf9f3bc",
+      "run_id": "execute.shockwave-stripe-reporting.own-suite-proposed-fixture",
+      "statement": "Supporting observation only: the consumer's own suite was run with its bundled fixture data replaced by the simulated proposed fixture set. 1 own test failed (tests/test_reporting.py::test_ledger_records_stripe_amounts). Shockwave has no executable storage scenario, so the storage risk's verification status stays not_run (a potential risk); whether this observation upgrades it is a product decision.",
+      "tests_failed": 1,
+      "tests_run": 3
+    }
+  ]
+}

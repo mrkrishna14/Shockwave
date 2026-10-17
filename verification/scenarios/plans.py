@@ -7,11 +7,13 @@ executable scenario is bound to the (change, dependency) pair. The plan resolves
 pointer against the catalog, counting only pointers minted for one of the Risk's own
 dependencies (``catalog.bound_scenario_ids``): a pointer copied from another Risk or
 smuggled in through change evidence proves nothing. A Risk without a bound pointer
-(comparison-only, storage-only or an unbound consumer) raises ``NoExecutableScenario``,
-as does one naming two scenarios (``AmbiguousScenario``), and its verification stays
-``not_run``: a prediction is never upgraded to verified without its own executable
-proof. Building a plan executes nothing; status stays predicted/not_run until Sai's
-runner supplies execution evidence for ``verification.scenarios.interpret``.
+(storage-only, or a usage no catalog scenario is bound to) raises ``NoExecutableScenario``,
+as does one naming two scenarios (``AmbiguousScenario``) or a control scenario (controls
+are never tied to risks), and its verification stays ``not_run``: a prediction is never
+upgraded to verified without its own executable proof. Conversion (divide) and comparison
+(compare) risks can both carry a pointer, each to a scenario of its own category. Building
+a plan executes nothing; status stays predicted/not_run until Sai's runner supplies
+execution evidence for ``verification.scenarios.interpret``.
 
 Runner profile: the trusted profile (a plain local subprocess) is chosen only for
 repository connections explicitly configured as trusted local demo fixtures. Every
@@ -155,16 +157,22 @@ def _scenario_for(risk: Risk) -> ScenarioSpec:
     if len(scenario_ids) > 1:
         named = ", ".join(clip_text(item, 120) for item in scenario_ids)
         raise AmbiguousScenario(
-            f"risk {risk.id} references {len(scenario_ids)} scenarios ({named}); a conversion risk is "
-            "keyed per bound scenario, so exactly one executable scenario is expected"
+            f"risk {risk.id} references {len(scenario_ids)} scenarios ({named}); a conversion or comparison risk "
+            "is keyed per bound scenario, so exactly one executable scenario is expected"
         )
     try:
-        return get_scenario(scenario_ids[0])
+        spec = get_scenario(scenario_ids[0])
     except UnknownScenario:
         raise NoExecutableScenario(
             f"scenario {clip_text(scenario_ids[0], 120)!r} referenced by risk {risk.id} is not in this "
             "catalog; its verification status stays not_run"
         ) from None
+    if spec.kind != "risk":
+        raise NoExecutableScenario(
+            f"scenario {spec.scenario_id} referenced by risk {risk.id} is a control; controls are not tied to "
+            "risks, so its verification status stays not_run"
+        )
+    return spec
 
 
 def _canonical_id(value: object) -> str:

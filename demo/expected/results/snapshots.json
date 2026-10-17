@@ -1,0 +1,77 @@
+{
+  "kind": "shockwave-demo.repository-snapshots@1",
+  "label": "LOCAL snapshot: a deterministic local git commit of the team-created template (fixed identity and dates); not fetched from GitHub. fetched_at is the fixed commit date.",
+  "records": [
+    {
+      "commit_sha": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
+      "content_hash": "sha256:fd99f53dd6d10db694a7d3c10972c23f089ccd1953e9150b1c490ff9259d3055",
+      "fetched_at": "2026-10-17T12:00:00Z",
+      "id": "bd623f0f-1656-52f7-88ee-12499ea4fc93",
+      "repository_connection_id": "42194b11-3fa5-5ed2-88dd-c9ff81db1fe1"
+    },
+    {
+      "commit_sha": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+      "content_hash": "sha256:038e7802fb62328d341bff99fd3a80b5fadebced0cb54f9019b61b71159d6540",
+      "fetched_at": "2026-10-17T12:00:00Z",
+      "id": "6b6552c2-7344-547b-a011-0293f1556875",
+      "repository_connection_id": "26cf2ec0-04bd-5bdf-88f3-77a576f5acdb"
+    },
+    {
+      "commit_sha": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+      "content_hash": "sha256:32c438d00f93e05eabba688ca3aee93b729bfaaf2908ad3463ab8f9a169cdada",
+      "fetched_at": "2026-10-17T12:00:00Z",
+      "id": "923a9231-b7cd-5c89-a2ec-a281e98d409e",
+      "repository_connection_id": "f54ebfe3-6b0c-56a5-9c74-48c8344fc789"
+    }
+  ],
+  "repositories": {
+    "shockwave-stripe-checkout": {
+      "branch": "main",
+      "commit_sha": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
+      "consumer_org_id": "6f153b43-f6db-5768-9d25-632648e129d9",
+      "consumer_org_name": "Larkspur Outfitters",
+      "dependency": "stripe@23.0.0 (node_modules via npm ci; not committed)",
+      "enrollment_id": "d2cb2096-72c9-5f1d-b7a0-f14301f078a4",
+      "files_committed": 10,
+      "language": "typescript",
+      "node_modules_committed": false,
+      "remote": null,
+      "repository": "shockwave-stripe-checkout",
+      "repository_connection_id": "42194b11-3fa5-5ed2-88dd-c9ff81db1fe1",
+      "repository_snapshot_id": "bd623f0f-1656-52f7-88ee-12499ea4fc93",
+      "template": "demo/templates/checkout"
+    },
+    "shockwave-stripe-fraud": {
+      "branch": "main",
+      "commit_sha": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+      "consumer_org_id": "58503483-d79b-5647-ab0f-790cafe54de5",
+      "consumer_org_name": "Basalt Risk Desk",
+      "dependency": "stripe==16.0.0 (this Python)",
+      "enrollment_id": "2b26426c-d191-5021-8a14-e972e71931a8",
+      "files_committed": 11,
+      "language": "python",
+      "node_modules_committed": false,
+      "remote": null,
+      "repository": "shockwave-stripe-fraud",
+      "repository_connection_id": "26cf2ec0-04bd-5bdf-88f3-77a576f5acdb",
+      "repository_snapshot_id": "6b6552c2-7344-547b-a011-0293f1556875",
+      "template": "demo/templates/fraud"
+    },
+    "shockwave-stripe-reporting": {
+      "branch": "main",
+      "commit_sha": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+      "consumer_org_id": "a54a75e9-ac54-5f1a-b8db-139c53fbc38a",
+      "consumer_org_name": "Quarry Finance Analytics",
+      "dependency": "stripe==16.0.0 (this Python)",
+      "enrollment_id": "10ab008d-5029-5c8a-b409-a6b3b95dc41e",
+      "files_committed": 12,
+      "language": "python",
+      "node_modules_committed": false,
+      "remote": null,
+      "repository": "shockwave-stripe-reporting",
+      "repository_connection_id": "f54ebfe3-6b0c-56a5-9c74-48c8344fc789",
+      "repository_snapshot_id": "923a9231-b7cd-5c89-a2ec-a281e98d409e",
+      "template": "demo/templates/reporting"
+    }
+  }
+}
