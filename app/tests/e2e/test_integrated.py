@@ -114,3 +114,14 @@ def test_demo_payments_change_end_to_end_through_real_modules(env):
     summary = get(p, f"/api-projects/{project['id']}/impact?change_id={changes[0]['id']}").json()['items'][0]
     assert summary['verified_regression_count'] == 1 and summary['validated_fix_count'] == 1
     assert 'charges.py' not in json.dumps(summary) and 'excerpt' not in json.dumps(summary)
+
+
+def test_environment_switch_selects_the_integrated_adapters(tmp_path, monkeypatch):
+    monkeypatch.setenv('SHOCKWAVE_ADAPTERS', 'integrated')
+    monkeypatch.setenv('SHOCKWAVE_WORK_DIR', str(tmp_path / 'work'))
+    app = create_app(tmp_path / 'env.db', demo=True)
+    client = TestClient(app)
+    assert client.get('/api/v1/health').json()['integration_mode'] == 'integrated'
+    assert client.post('/api/v1/demo/session', json={'persona': 'consumer'}).status_code == 200
+    capabilities = client.get('/api/v1/capabilities').json()
+    assert capabilities['mode'] == 'integrated' and 'scan' in capabilities['real_modules']

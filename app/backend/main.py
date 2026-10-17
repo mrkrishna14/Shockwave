@@ -65,6 +65,10 @@ class PublishInput(Input): explicit_consent: bool; expected_commit: str
 def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
     settings=Settings.from_env()
     demo = settings.demo if demo is None else demo
+    if adapters_factory is DemoAdapters and settings.adapters == 'integrated':
+        from backend.integrated import integrated_factory
+        adapters_factory = integrated_factory(settings.work_dir)
+    integrated = bool(getattr(adapters_factory, 'accepts_consumer_org_id', False))
     store=Store(db_path or settings.database)
     api=FastAPI(title='Shockwave',version='0.1.0')
     api.state.store=store
@@ -166,11 +170,15 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
         db.execute('INSERT OR REPLACE INTO rate_limits VALUES(?,?,?)',(bucket,count,expiry))
 
     @api.get('/api/v1/health')
-    def health(): return {'status':'ok','integration_mode':'fixture' if demo else 'unconfigured','production_auth':False}
+    def health(): return {'status':'ok','integration_mode':('integrated' if integrated else 'fixture') if demo else 'unconfigured','production_auth':False}
     @api.get('/api/v1/capabilities')
     def capabilities(request:Request):
         with store.read() as db: identity(db,request)
-        return {'mode':'fixture' if demo else 'unconfigured',
+        return {'mode':('integrated' if integrated else 'fixture') if demo else 'unconfigured',
+                # Integrated mode: these steps call the owners' real modules (backend.integrated);
+                # repository access stays a local trusted fixture and publication stays disabled.
+                'real_modules':['discovery','scan','change_detection','impact_analysis','verification_plan',
+                                'verification','migration'] if integrated else [],
                 'discovery':'fixture' if demo else 'unavailable',
                 'repository_access':'fixture' if demo else 'unavailable',
                 'scanner':'fixture' if demo else 'unavailable',

@@ -18,6 +18,14 @@ Execution is limited to registered, team-owned fixtures. It is not a sandbox.
 """
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+# The owners' modules live at the repository root; uvicorn runs from app/.
+_REPOSITORY_ROOT = str(Path(__file__).resolve().parents[2])
+if _REPOSITORY_ROOT not in sys.path:
+    sys.path.append(_REPOSITORY_ROOT)
+
 import hashlib
 import json
 import re
@@ -25,7 +33,6 @@ import shutil
 import tempfile
 from dataclasses import dataclass, field
 from functools import partial
-from pathlib import Path
 
 from backend.demo import DemoAdapters
 from backend.store import now, uid

@@ -1,7 +1,9 @@
 """Validated local platform configuration; no credentials are loaded in fixture mode."""
 import os
 from pathlib import Path
-from pydantic import BaseModel, Field, field_validator
+from typing import Literal
+
+from pydantic import BaseModel, field_validator
 
 
 class Settings(BaseModel):
@@ -10,6 +12,9 @@ class Settings(BaseModel):
     demo: bool = False
     secure_cookie: bool = False
     inline_jobs: bool = True
+    # 'integrated' runs the owners' real modules (backend.integrated); 'fixture' is DemoAdapters.
+    adapters: Literal['fixture', 'integrated'] = 'fixture'
+    work_dir: Path = Path('.shockwave-integrated')
 
     @field_validator('origin')
     @classmethod
@@ -24,4 +29,6 @@ class Settings(BaseModel):
                    origin=os.getenv('SHOCKWAVE_ORIGIN','http://127.0.0.1:3000'),
                    demo=os.getenv('SHOCKWAVE_DEMO')=='1',
                    secure_cookie=os.getenv('SHOCKWAVE_SECURE_COOKIE')=='1',
-                   inline_jobs=os.getenv('SHOCKWAVE_INLINE_JOBS','1')=='1')
+                   inline_jobs=os.getenv('SHOCKWAVE_INLINE_JOBS','1')=='1',
+                   adapters=os.getenv('SHOCKWAVE_ADAPTERS','fixture'),
+                   work_dir=Path(os.getenv('SHOCKWAVE_WORK_DIR','.shockwave-integrated')))
