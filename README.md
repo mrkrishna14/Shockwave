@@ -35,17 +35,15 @@ Details are in `demo/README.md`. The talk track is in `demo/DEMO_SCRIPT.md` (thr
 
 ## Demo 2: the platform UI on the real modules (fictional Demo Payments provider)
 
-Two terminals, from `app/`:
+One command, from any folder:
 
 ```sh
-# Terminal 1: API (integrated mode runs the owners' real modules)
-cd app && SHOCKWAVE_ADAPTERS=integrated SHOCKWAVE_INLINE_JOBS=1 PATH=../.venv/bin:$PATH \
-  ../.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
-# (set SHOCKWAVE_DEMO=1 as well for the demo personas, as scripts/start-backend.sh does)
-
-# Terminal 2: UI
-cd app && PATH=../.venv/bin:$PATH npm ci --prefix frontend && PATH=../.venv/bin:$PATH npm run dev --prefix frontend
+~/Desktop/Shockwave-main/start-website.sh     # or ./start-website.sh from the repository root
 ```
+
+It starts the backend (port 8000, integrated mode: the owners' real modules) and the website
+(port 3000) with the repository's own Node. `Ctrl+C` stops both. If a backend is already running
+on port 8000, the website reuses it.
 
 Open http://127.0.0.1:3000 and follow the walkthrough in `app/README.md`. To run the same flow
 headless:
