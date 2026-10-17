@@ -1,4 +1,4 @@
-"""Narrow, evidence-selected Demo Payments rule. Never global replacement."""
+"""Narrow, evidence-selected amount conversion rules. Never global replacement."""
 from dataclasses import dataclass
 import difflib
 import hashlib
@@ -22,8 +22,14 @@ class ApprovedTarget:
 
 
 def prepare_patch(root: Path, target: ApprovedTarget, *, replacement=None):
-    if target.service_id != 'demo-payments':
-        raise ValueError('rule_only_supports_demo_payments')
+    if target.service_id == 'stripe':
+        from verification.scenarios.staging import validated_spec
+        spec = validated_spec(target.plan)
+        if (spec.scenario_id != 'stripe.payment-intent-amount-units.simulated.typescript'
+                or spec.service_id != 'stripe' or target.file != spec.binding.consumer_file):
+            raise ValueError('unsupported_stripe_demo_scope')
+    elif target.service_id != 'demo-payments':
+        raise ValueError('unsupported_service')
     path = safe_path(root, target.file)
     source = path.read_text()
     if hashlib.sha256(path.read_bytes()).hexdigest() != target.source_sha256:
@@ -39,6 +45,10 @@ def prepare_patch(root: Path, target: ApprovedTarget, *, replacement=None):
     match = re.fullmatch(pattern, target.expression)
     if not match:
         raise ValueError('unsupported_demo_expression')
+    # Evidence must identify the whole expression, not a prefix such as amount / 1000.
+    boundary = r'(?<![\w.])' + re.escape(target.expression) + r'(?![\w.])'
+    if len(list(re.finditer(boundary, line))) != 1:
+        raise ValueError('partial_evidence_expression')
     expected = match.group(1)
     if replacement is not None and replacement != expected:
         raise ValueError('model_output_outside_approved_rule_scope')
