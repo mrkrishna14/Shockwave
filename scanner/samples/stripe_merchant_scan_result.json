@@ -1,0 +1,106 @@
+{
+  "schema_version": "shockwave.v1",
+  "repository_snapshot_id": "snap-consumer-1",
+  "dependencies": [
+    {
+      "id": "242c5668-2aed-5d3b-8d5c-03689268b696",
+      "consumer_org_id": "org-consumer-1",
+      "enrollment_id": "enr-1",
+      "repository_snapshot_id": "snap-consumer-1",
+      "service_id": "stripe",
+      "endpoint_id": "ep-stripe-post-v1-payment-intents",
+      "language": "javascript",
+      "field_path": "response.client_secret",
+      "origin": {
+        "kind": "sdk_response",
+        "library": "stripe-node",
+        "call": "stripe.paymentIntents.create"
+      },
+      "usage": {
+        "operation": "pass_through",
+        "operand": null,
+        "destination": "clientSecret"
+      },
+      "confidence": "direct",
+      "evidence": [
+        {
+          "id": "039a451f-5ebc-555e-99f6-c9922e8d0acb",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://snap-consumer-1/node/server.js#L13",
+          "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
+          "file": "node/server.js",
+          "line_start": 13,
+          "line_end": 17,
+          "json_pointer": null,
+          "excerpt": "const paymentIntent = await stripe.paymentIntents.create({"
+        },
+        {
+          "id": "8d97d632-b631-5894-8b26-0b8477c58824",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://snap-consumer-1/node/server.js#L18",
+          "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
+          "file": "node/server.js",
+          "line_start": 18,
+          "line_end": 18,
+          "json_pointer": null,
+          "excerpt": "res.send({ clientSecret: paymentIntent.client_secret });"
+        }
+      ]
+    },
+    {
+      "id": "87d269dd-9cd2-5e8c-a153-588752177817",
+      "consumer_org_id": "org-consumer-1",
+      "enrollment_id": "enr-1",
+      "repository_snapshot_id": "snap-consumer-1",
+      "service_id": "stripe",
+      "endpoint_id": "ep-stripe-post-v1-payment-intents",
+      "language": "python",
+      "field_path": "response.client_secret",
+      "origin": {
+        "kind": "sdk_response",
+        "library": "stripe-python",
+        "call": "stripe.PaymentIntent.create"
+      },
+      "usage": {
+        "operation": "pass_through",
+        "operand": null,
+        "destination": "clientSecret"
+      },
+      "confidence": "direct",
+      "evidence": [
+        {
+          "id": "bd5912b2-e4c5-5ad9-a3f7-733a332e275f",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://snap-consumer-1/python/server.py#L19",
+          "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
+          "file": "python/server.py",
+          "line_start": 19,
+          "line_end": 23,
+          "json_pointer": null,
+          "excerpt": "intent = stripe.PaymentIntent.create("
+        },
+        {
+          "id": "dbc49457-81f6-5897-89fc-d8f590a66038",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://snap-consumer-1/python/server.py#L24",
+          "revision": "3f9c2a1b7d4e5f60718293a4b5c6d7e8f9012345",
+          "file": "python/server.py",
+          "line_start": 24,
+          "line_end": 24,
+          "json_pointer": null,
+          "excerpt": "return jsonify({\"clientSecret\": intent.client_secret})"
+        }
+      ]
+    }
+  ],
+  "coverage": {
+    "files_scanned": 2,
+    "files_skipped": 0,
+    "unsupported_patterns": []
+  },
+  "warnings": []
+}

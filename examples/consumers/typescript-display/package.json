@@ -1,0 +1,10 @@
+{
+  "name": "shockwave-typescript-display",
+  "private": true,
+  "type": "module",
+  "description": "Team-owned demo consumer of the fictional demo-payments API. No dependencies.",
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "test": "node --test test/charges.test.ts"
+  }
+}
