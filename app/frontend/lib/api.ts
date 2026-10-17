@@ -26,10 +26,12 @@ export async function api<T>(path:string,{method='GET',body,org,signal}:{method?
     headers['Idempotency-Key']=key;
   }
   const response=await fetch('/api/v1'+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),signal,cache:'no-store'});
-  const data=await response.json();
+  const data=await response.json().catch(()=>null);
   if(!response.ok){
     if(method==='POST'&&response.status<500)pendingKeys.delete(org+':'+path+':'+JSON.stringify(body??{}));
-    throw new ApiError(data.error?.message??`Request failed (${response.status})`,response.status,data.error?.code??'REQUEST_FAILED');
+    if(response.status===404&&data?.detail==='Not Found')
+      throw new ApiError('The running backend does not support this dashboard action. Restart it from the current checkout.',404,'API_ROUTE_MISSING');
+    throw new ApiError(data?.error?.message??`Request failed (${response.status})`,response.status,data?.error?.code??'REQUEST_FAILED');
   }
   if(method==='POST')pendingKeys.delete(org+':'+path+':'+JSON.stringify(body??{}));
   return data as T;
