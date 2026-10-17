@@ -1,0 +1,92 @@
+# Hand-maintained contract for the fictional Demo Payments API (proposed version).
+# Structurally identical to v1: amount is still a JSON number. The unit change
+# (cents -> dollars) is carried only by the declared change in ../changes/.
+# Written by hand on purpose: it is NOT exported from the FastAPI app, whose generated
+# docs would already include the implementation-only receipt route.
+openapi: 3.0.3
+info:
+  title: Demo Payments API (fictional)
+  version: 2.0.0
+  description: >-
+    Team-controlled fictional payments API used by the Shockwave demo.
+    Not affiliated with Stripe.
+servers:
+  - url: http://demo-payments.test
+paths:
+  /v1/charges/{id}:
+    get:
+      operationId: retrieveCharge
+      summary: Retrieve a charge
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: The charge.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Charge'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/refunds/{id}:
+    get:
+      operationId: retrieveRefund
+      summary: Retrieve a refund
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: The refund.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refund'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    NotFound:
+      description: No such resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Charge:
+      type: object
+      required: [id, amount, currency]
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+          description: Charge amount.
+        currency:
+          type: string
+          description: Three-letter ISO currency code, lowercase.
+    Refund:
+      type: object
+      required: [id, charge, amount, currency]
+      properties:
+        id:
+          type: string
+        charge:
+          type: string
+        amount:
+          type: number
+          description: Refund amount.
+        currency:
+          type: string
+    Error:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          type: string

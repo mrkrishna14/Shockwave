@@ -1,0 +1,249 @@
+{
+  "coverage": {
+    "files_scanned": 7,
+    "files_skipped": 0,
+    "unsupported_patterns": [
+      "fastapi:dynamic-prefix demo_payments/refunds.py:7"
+    ]
+  },
+  "endpoints": [
+    {
+      "confidence": "direct",
+      "evidence": [
+        {
+          "excerpt": "@router.get(\"/healthz\")",
+          "file": "demo_payments/health.py",
+          "id": "f0321845-a792-56fe-aae1-89d84dc78d34",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 8,
+          "line_start": 8,
+          "revision": "7513a35e-c989-5dff-93f0-256a8e0a79f8",
+          "source_uri": "source-snapshot://7513a35e-c989-5dff-93f0-256a8e0a79f8/demo_payments/health.py",
+          "visibility": "provider_owned"
+        }
+      ],
+      "id": "3633bec5-1c9d-5845-aa2d-8e9dffafa838",
+      "method": "GET",
+      "operation_id": null,
+      "path": "/healthz",
+      "reconciliation": "not_compared",
+      "request_schema": {
+        "properties": {},
+        "type": "object",
+        "x-shockwave-schema": "unknown: source-only route has no documented schema"
+      },
+      "response_schema": {
+        "x-shockwave-schema": "unknown: source-only route has no documented schema"
+      },
+      "service_id": "demo-payments",
+      "snapshot_id": "fbda55e7-6c86-5ee6-9ed6-fe9ac0879e15"
+    },
+    {
+      "confidence": "direct",
+      "evidence": [
+        {
+          "excerpt": "GET /v1/charges/{id} - Retrieve a charge",
+          "file": null,
+          "id": "40191f8f-4380-59f4-b0df-ceb6ac927929",
+          "json_pointer": "/paths/~1v1~1charges~1{id}/get",
+          "kind": "openapi",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d82fd9c418ae94e0c6425274bfacb6bd885a05952f733d2d078c8fb9be18739e",
+          "source_uri": "examples/provider/demo_payments/openapi/demo-payments.v1.yaml",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "@router.get(\"/{id}\")",
+          "file": "demo_payments/charges.py",
+          "id": "eae86d3d-d329-53f0-afab-38b60c8d59d2",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 10,
+          "line_start": 10,
+          "revision": "7513a35e-c989-5dff-93f0-256a8e0a79f8",
+          "source_uri": "source-snapshot://7513a35e-c989-5dff-93f0-256a8e0a79f8/demo_payments/charges.py",
+          "visibility": "provider_owned"
+        }
+      ],
+      "id": "0ae014eb-3e86-57b6-9027-77afca1a1d65",
+      "method": "GET",
+      "operation_id": "retrieveCharge",
+      "path": "/v1/charges/{id}",
+      "reconciliation": "documented_and_found",
+      "request_schema": {
+        "properties": {
+          "path": {
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "response_schema": {
+        "properties": {
+          "amount": {
+            "description": "Charge amount.",
+            "type": "number"
+          },
+          "currency": {
+            "description": "Three-letter ISO currency code, lowercase.",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "currency"
+        ],
+        "type": "object",
+        "x-shockwave-content-type": "application/json",
+        "x-shockwave-origin": "/components/schemas/Charge",
+        "x-shockwave-ref-digest": "sha256:bb5f1f8e9f7ab3dc5b9e3bc66a5d14c8",
+        "x-shockwave-status": "200"
+      },
+      "service_id": "demo-payments",
+      "snapshot_id": "fbda55e7-6c86-5ee6-9ed6-fe9ac0879e15"
+    },
+    {
+      "confidence": "direct",
+      "evidence": [
+        {
+          "excerpt": "@router.get(\"/{id}/receipt\")",
+          "file": "demo_payments/charges.py",
+          "id": "691251e0-34bc-5021-b189-f3edaa817029",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 23,
+          "line_start": 23,
+          "revision": "7513a35e-c989-5dff-93f0-256a8e0a79f8",
+          "source_uri": "source-snapshot://7513a35e-c989-5dff-93f0-256a8e0a79f8/demo_payments/charges.py",
+          "visibility": "provider_owned"
+        }
+      ],
+      "id": "8408f083-b562-5f4d-9cd8-72ad242bde4e",
+      "method": "GET",
+      "operation_id": null,
+      "path": "/v1/charges/{id}/receipt",
+      "reconciliation": "implementation_only",
+      "request_schema": {
+        "properties": {
+          "path": {
+            "properties": {
+              "id": {
+                "x-shockwave-source-token": "{id}"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object",
+        "x-shockwave-schema": "unknown: implementation-only route has no documented schema"
+      },
+      "response_schema": {
+        "x-shockwave-schema": "unknown: implementation-only route has no documented schema"
+      },
+      "service_id": "demo-payments",
+      "snapshot_id": "fbda55e7-6c86-5ee6-9ed6-fe9ac0879e15"
+    },
+    {
+      "confidence": "direct",
+      "evidence": [
+        {
+          "excerpt": "GET /v1/refunds/{id} - Retrieve a refund",
+          "file": null,
+          "id": "35f64e18-5037-5fe2-a863-f029e0a4482b",
+          "json_pointer": "/paths/~1v1~1refunds~1{id}/get",
+          "kind": "openapi",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d82fd9c418ae94e0c6425274bfacb6bd885a05952f733d2d078c8fb9be18739e",
+          "source_uri": "examples/provider/demo_payments/openapi/demo-payments.v1.yaml",
+          "visibility": "provider_owned"
+        }
+      ],
+      "id": "5b261951-d469-552d-9b1c-5d73ec8a11ac",
+      "method": "GET",
+      "operation_id": "retrieveRefund",
+      "path": "/v1/refunds/{id}",
+      "reconciliation": "documented_not_found_in_scan",
+      "request_schema": {
+        "properties": {
+          "path": {
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "response_schema": {
+        "properties": {
+          "amount": {
+            "description": "Refund amount.",
+            "type": "number"
+          },
+          "charge": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "charge",
+          "amount",
+          "currency"
+        ],
+        "type": "object",
+        "x-shockwave-content-type": "application/json",
+        "x-shockwave-origin": "/components/schemas/Refund",
+        "x-shockwave-ref-digest": "sha256:680424362fe622615be6f1d0d41184f0",
+        "x-shockwave-status": "200"
+      },
+      "service_id": "demo-payments",
+      "snapshot_id": "fbda55e7-6c86-5ee6-9ed6-fe9ac0879e15"
+    }
+  ],
+  "schema_version": "shockwave.v1",
+  "service_id": "demo-payments",
+  "snapshot_id": "fbda55e7-6c86-5ee6-9ed6-fe9ac0879e15",
+  "warnings": [
+    "fastapi: 1 route registration(s) could not be resolved to a concrete path and were not emitted (dynamic prefix: 1); coverage is incomplete, see unsupported_patterns",
+    "1 source route(s) are outside the documented namespace (/v1) and were not compared with documentation: GET /healthz (demo_payments/health.py:8)",
+    "1 documented operation(s) were not found in the scanned source; the scan reported 1 unsupported pattern(s) and skipped 0 file(s), which may explain unmatched documented routes (not found in scan is not proof of absence)"
+  ]
+}

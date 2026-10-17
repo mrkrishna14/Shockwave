@@ -1,0 +1,231 @@
+# Compact OpenAPI 3.1 fixture for discovery tests (data only; never executed).
+# Covers local $refs of every kind (path item, parameters, request bodies, responses,
+# schemas), a self-recursive schema (TreeNode), a mutual cycle (CycleA <-> CycleB),
+# ref-to-ref chains (ThingAlias -> Thing, and the circular LoopA -> LoopB -> LoopA),
+# a 3.1 sibling keyword next to $ref, a path-level parameter overridden by an
+# operation, content-type preference, and success-status selection.
+openapi: 3.1.0
+info:
+  title: Compact refs and cycles (test fixture)
+  version: 0.3.0
+servers:
+  - url: http://compact.test/api/
+paths:
+  /things:
+    get:
+      operationId: listThings
+      summary: List things
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: A page of things.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThingList'
+    post:
+      operationId: createThing
+      requestBody:
+        $ref: '#/components/requestBodies/ThingInput'
+      responses:
+        default:
+          $ref: '#/components/responses/Problem'
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Thing'
+  /things/{thing_id}:
+    parameters:
+      - $ref: '#/components/parameters/ThingId'
+      - name: verbose
+        in: query
+        schema:
+          type: boolean
+    get:
+      operationId: getThing
+      parameters:
+        - name: verbose
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: ['yes', 'no']
+      responses:
+        '200':
+          $ref: '#/components/responses/ThingResponse'
+    put:
+      operationId: replaceThing
+      deprecated: true
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ThingInput'
+      responses:
+        '200':
+          description: Replaced.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Thing'
+    delete:
+      operationId: deleteThing
+      responses:
+        '204':
+          description: Deleted.
+        default:
+          $ref: '#/components/responses/Problem'
+  /trees/{tree_id}:
+    $ref: '#/components/pathItems/TreeItem'
+  /pairs:
+    get:
+      operationId: getPair
+      responses:
+        '200':
+          description: A mutually recursive pair.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CycleA'
+  /loops:
+    get:
+      operationId: getLoop
+      responses:
+        2XX:
+          description: A circular alias chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoopA'
+components:
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        maximum: 100
+    ThingId:
+      name: thing_id
+      in: path
+      required: true
+      schema:
+        type: string
+  requestBodies:
+    ThingInput:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+        application/vnd.thing+json:
+          schema:
+            type: object
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ThingInput'
+  responses:
+    Problem:
+      description: A problem.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ThingResponse:
+      description: One thing.
+      content:
+        text/plain:
+          schema:
+            type: string
+        application/hal+json:
+          schema:
+            $ref: '#/components/schemas/ThingAlias'
+  pathItems:
+    TreeItem:
+      get:
+        operationId: getTree
+        parameters:
+          - name: tree_id
+            in: path
+            required: true
+            schema:
+              type: string
+        responses:
+          '200':
+            description: A tree.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/TreeNode'
+  schemas:
+    Money:
+      type: integer
+      description: Generic money value.
+    Thing:
+      type: object
+      required: [id, amount]
+      properties:
+        id:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Money'
+          description: Amount in cents.
+        tags:
+          type: [array, 'null']
+          items:
+            type: string
+    ThingAlias:
+      $ref: '#/components/schemas/Thing'
+    ThingList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Thing'
+        next_cursor:
+          type: [string, 'null']
+    ThingInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+    TreeNode:
+      type: object
+      properties:
+        label:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeNode'
+    CycleA:
+      type: object
+      properties:
+        b:
+          $ref: '#/components/schemas/CycleB'
+    CycleB:
+      type: object
+      properties:
+        a:
+          $ref: '#/components/schemas/CycleA'
+    LoopA:
+      $ref: '#/components/schemas/LoopB'
+    LoopB:
+      $ref: '#/components/schemas/LoopA'
+    Problem:
+      type: object
+      properties:
+        title:
+          type: string

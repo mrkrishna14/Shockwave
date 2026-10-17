@@ -1,0 +1,68 @@
+{
+  "schema_diff_only": [],
+  "with_declared_change": [
+    {
+      "api_project_id": "3f35ea07-6269-5964-8d65-7a3b7ba36a87",
+      "endpoint_id": "0ae014eb-3e86-57b6-9027-77afca1a1d65",
+      "evidence": [
+        {
+          "excerpt": "GET /v1/charges/{id} response.amount: USD cents -> USD dollars; JSON type stays number. USD only.",
+          "file": null,
+          "id": "ccdd6bcb-b467-51ba-8d51-75235243faee",
+          "json_pointer": "",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@2.0.0-proposed",
+          "source_uri": "examples/provider/demo_payments/changes/charge_amount_cents_to_dollars.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "current contract example: {\"id\":\"ch_demo\",\"amount\":1000,\"currency\":\"usd\"} represents $10.00",
+          "file": null,
+          "id": "f4cadcb3-8194-5f2d-b127-f4b780f53599",
+          "json_pointer": "/response/body/amount",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@1.0.0",
+          "source_uri": "verification/scenarios/fixtures/demo-payments.charge.ch_demo.v1-cents.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "proposed contract example: {\"id\":\"ch_demo\",\"amount\":10,\"currency\":\"usd\"} represents $10.00",
+          "file": null,
+          "id": "5e0c2d72-d100-58cd-82f6-5f39aea70a4e",
+          "json_pointer": "/response/body/amount",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@2.0.0-proposed",
+          "source_uri": "verification/scenarios/fixtures/demo-payments.charge.ch_demo.v2-dollars.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "GET /v1/charges/{id} - Retrieve a charge",
+          "file": null,
+          "id": "40191f8f-4380-59f4-b0df-ceb6ac927929",
+          "json_pointer": "/paths/~1v1~1charges~1{id}/get",
+          "kind": "openapi",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d82fd9c418ae94e0c6425274bfacb6bd885a05952f733d2d078c8fb9be18739e",
+          "source_uri": "examples/provider/demo_payments/openapi/demo-payments.v1.yaml",
+          "visibility": "provider_owned"
+        }
+      ],
+      "field_path": "response.amount",
+      "id": "7c57a2e7-022c-5665-bf39-e2c6a25d0745",
+      "kind": "units_changed",
+      "new_semantics": "USD amount in major currency units (dollars): 10 represents $10.00",
+      "new_snapshot_id": "9f9eed12-9741-5e6c-890d-ab70bc01abaf",
+      "old_semantics": "USD amount in minor currency units (cents): 1000 represents $10.00",
+      "old_snapshot_id": "fbda55e7-6c86-5ee6-9ed6-fe9ac0879e15",
+      "service_id": "demo-payments",
+      "structural_breaking": false
+    }
+  ]
+}

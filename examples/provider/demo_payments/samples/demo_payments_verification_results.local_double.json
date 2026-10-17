@@ -1,0 +1,105 @@
+{
+  "patch_source": "simulated targeted edit for the local double only: removes the divide-by-100 conversion at the dependency's evidence line and keeps the $10.00 expectation; real patches come from Sai's migration adapter. The edit is pinned to the proposed contract: it is not backward compatible with current-contract (cents) responses, which it would display 100x too large, so its deployment must be coordinated with the provider's cutover",
+  "patched": [
+    {
+      "execution": {
+        "artifact_ids": [],
+        "duration_ms": 0,
+        "exit_code": 0,
+        "infrastructure_error": null,
+        "tests_run": 1,
+        "timed_out": false
+      },
+      "patch": {
+        "file": "src/pricing.ts",
+        "line_end": 20,
+        "line_start": 20,
+        "removed": "/ 100"
+      },
+      "plan_id": "8a1e7884-b8bf-52f5-8818-7a0a06443dc9",
+      "reason": "Validated within the tested scope only: against the proposed contract fixture demo-payments.charge.ch_demo.v2-dollars, the relevant assertion displayed_price_usd passed (expected $10.00, actual $10.00) with the unchanged invariant expectation. The patch is pinned to the proposed contract: it is not backward compatible with current-contract responses unless made version-aware, so its deployment must be coordinated with the provider's cutover.",
+      "repository_snapshot_id": "7e9177f2-8efe-520b-995b-e9d91f1b8341",
+      "risk_id": "7ee48ef7-6404-54b8-9944-d56508d4d735",
+      "scenario_id": "demo-payments.charge-amount-units.display.typescript",
+      "status": "validated"
+    },
+    {
+      "execution": {
+        "artifact_ids": [],
+        "duration_ms": 0,
+        "exit_code": 0,
+        "infrastructure_error": null,
+        "tests_run": 1,
+        "timed_out": false
+      },
+      "patch": {
+        "file": "storefront/pricing.py",
+        "line_end": 18,
+        "line_start": 18,
+        "removed": "/ 100"
+      },
+      "plan_id": "e39e1c17-07f3-5484-a355-1696541d8ecd",
+      "reason": "Validated within the tested scope only: against the proposed contract fixture demo-payments.charge.ch_demo.v2-dollars, the relevant assertion displayed_price_usd passed (expected $10.00, actual $10.00) with the unchanged invariant expectation. The patch is pinned to the proposed contract: it is not backward compatible with current-contract responses unless made version-aware, so its deployment must be coordinated with the provider's cutover.",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "risk_id": "1dc12d45-43cc-552e-9fda-946f3b048c20",
+      "scenario_id": "demo-payments.charge-amount-units.display.python",
+      "status": "validated"
+    }
+  ],
+  "results": [
+    {
+      "artifact_ids": [],
+      "baseline": {
+        "artifact_ids": [],
+        "duration_ms": 0,
+        "exit_code": 0,
+        "infrastructure_error": null,
+        "tests_run": 1,
+        "timed_out": false
+      },
+      "id": "fbd92c6b-febd-52e1-9beb-e5278a8740a9",
+      "proposed": {
+        "artifact_ids": [],
+        "duration_ms": 0,
+        "exit_code": 1,
+        "infrastructure_error": null,
+        "tests_run": 1,
+        "timed_out": false
+      },
+      "repository_snapshot_id": "7e9177f2-8efe-520b-995b-e9d91f1b8341",
+      "risk_id": "7ee48ef7-6404-54b8-9944-d56508d4d735",
+      "scenario_id": "demo-payments.charge-amount-units.display.typescript",
+      "schema_version": "shockwave.v1",
+      "status": "verified_regression",
+      "summary": "LOCAL RUNNER DOUBLE (trusted local fixtures; plain subprocess, not a sandbox; not Sai's runner; demo run, duration_ms normalized to 0): Verified regression within scenario demo-payments.charge-amount-units.display.typescript: against the current contract fixture demo-payments.charge.ch_demo.v1-cents, the relevant assertion displayed_price_usd passed (expected $10.00, actual $10.00); against the proposed contract fixture demo-payments.charge.ch_demo.v2-dollars, the relevant assertion displayed_price_usd failed: expected $10.00, actual $0.10. Proven for the tested scenario only."
+    },
+    {
+      "artifact_ids": [],
+      "baseline": {
+        "artifact_ids": [],
+        "duration_ms": 0,
+        "exit_code": 0,
+        "infrastructure_error": null,
+        "tests_run": 1,
+        "timed_out": false
+      },
+      "id": "1f8d591b-1a97-5fdc-a497-baed3a1555ba",
+      "proposed": {
+        "artifact_ids": [],
+        "duration_ms": 0,
+        "exit_code": 1,
+        "infrastructure_error": null,
+        "tests_run": 1,
+        "timed_out": false
+      },
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "risk_id": "1dc12d45-43cc-552e-9fda-946f3b048c20",
+      "scenario_id": "demo-payments.charge-amount-units.display.python",
+      "schema_version": "shockwave.v1",
+      "status": "verified_regression",
+      "summary": "LOCAL RUNNER DOUBLE (trusted local fixtures; plain subprocess, not a sandbox; not Sai's runner; demo run, duration_ms normalized to 0): Verified regression within scenario demo-payments.charge-amount-units.display.python: against the current contract fixture demo-payments.charge.ch_demo.v1-cents, the relevant assertion displayed_price_usd passed (expected $10.00, actual $10.00); against the proposed contract fixture demo-payments.charge.ch_demo.v2-dollars, the relevant assertion displayed_price_usd failed: expected $10.00, actual $0.10. Proven for the tested scenario only."
+    }
+  ],
+  "runner": "dev_runner_double (local, trusted fixtures only; plain subprocess, not a sandbox; not Sai's runner)",
+  "timing": "duration_ms is normalized to 0 before interpretation: measured durations vary between runs, interpretation never reads them, and result ids derive from the normalized evidence"
+}

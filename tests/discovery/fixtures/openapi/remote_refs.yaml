@@ -1,0 +1,49 @@
+# OpenAPI 3.0 fixture (data only): remote and unresolvable references must be
+# reported and preserved -- never fetched, never replaced by an invented schema.
+openapi: 3.0.3
+info:
+  title: Remote refs (test fixture)
+  version: '1'
+paths:
+  /payments/{id}:
+    get:
+      operationId: getPayment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: './common.yaml#/components/parameters/Expand'
+      responses:
+        '200':
+          description: A payment.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  amount:
+                    $ref: './common.yaml#/components/schemas/Money'
+                  metadata:
+                    $ref: 'https://example.com/schemas/x.json'
+                  status:
+                    $ref: '#/components/schemas/DoesNotExist'
+                  currency:
+                    $ref: '#/components/schemas/Currency'
+                  fee:
+                    $ref: './common.yaml#/components/schemas/Money'
+  /payments:
+    post:
+      operationId: createPayment
+      requestBody:
+        $ref: 'https://example.com/bodies/payment.json'
+      responses:
+        '201':
+          $ref: './common.yaml#/components/responses/Created'
+  /external:
+    $ref: './paths.yaml#/external'
+components:
+  schemas:
+    Currency:
+      type: string

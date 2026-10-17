@@ -1,0 +1,65 @@
+# OpenAPI 3.0 fixture (data only) for expansion limits: a four-level $ref chain and a
+# wide object whose properties all reference the same small schema.
+openapi: 3.0.3
+info:
+  title: Deep refs (test fixture)
+  version: '1'
+paths:
+  /chain:
+    get:
+      operationId: getChain
+      responses:
+        '200':
+          description: A deep chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Level1'
+  /wide:
+    get:
+      operationId: getWide
+      responses:
+        '200':
+          description: A wide object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  p1:
+                    $ref: '#/components/schemas/Leaf'
+                  p2:
+                    $ref: '#/components/schemas/Leaf'
+                  p3:
+                    $ref: '#/components/schemas/Leaf'
+                  p4:
+                    $ref: '#/components/schemas/Leaf'
+                  p5:
+                    $ref: '#/components/schemas/Leaf'
+components:
+  schemas:
+    Level1:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/Level2'
+    Level2:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/Level3'
+    Level3:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/Level4'
+    Level4:
+      type: object
+      properties:
+        value:
+          type: string
+    Leaf:
+      type: object
+      properties:
+        x:
+          type: string

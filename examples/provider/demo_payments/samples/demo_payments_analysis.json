@@ -1,0 +1,342 @@
+{
+  "analysis_mode": "rules",
+  "change_id": "7c57a2e7-022c-5665-bf39-e2c6a25d0745",
+  "risks": [
+    {
+      "change_id": "7c57a2e7-022c-5665-bf39-e2c6a25d0745",
+      "confidence": "direct",
+      "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+      "dependency_ids": [
+        "baab6919-f87e-557d-adca-e0366f1097d1"
+      ],
+      "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+      "evidence": [
+        {
+          "excerpt": "return `$${(charge.amount / 100).toFixed(2)}`;",
+          "file": "src/pricing.ts",
+          "id": "0d826e29-4b1d-5598-b62f-8b6d09ab7c2b",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 20,
+          "line_start": 20,
+          "revision": "8fa45b536d7364cda17ad3c9a4dd5d60db5e4727",
+          "source_uri": "repository-snapshot://7e9177f2-8efe-520b-995b-e9d91f1b8341/src/pricing.ts",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "GET /v1/charges/{id} response.amount: USD cents -> USD dollars; JSON type stays number. USD only.",
+          "file": null,
+          "id": "ccdd6bcb-b467-51ba-8d51-75235243faee",
+          "json_pointer": "",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@2.0.0-proposed",
+          "source_uri": "examples/provider/demo_payments/changes/charge_amount_cents_to_dollars.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "current contract example: {\"id\":\"ch_demo\",\"amount\":1000,\"currency\":\"usd\"} represents $10.00",
+          "file": null,
+          "id": "f4cadcb3-8194-5f2d-b127-f4b780f53599",
+          "json_pointer": "/response/body/amount",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@1.0.0",
+          "source_uri": "verification/scenarios/fixtures/demo-payments.charge.ch_demo.v1-cents.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "proposed contract example: {\"id\":\"ch_demo\",\"amount\":10,\"currency\":\"usd\"} represents $10.00",
+          "file": null,
+          "id": "5e0c2d72-d100-58cd-82f6-5f39aea70a4e",
+          "json_pointer": "/response/body/amount",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@2.0.0-proposed",
+          "source_uri": "verification/scenarios/fixtures/demo-payments.charge.ch_demo.v2-dollars.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "GET /v1/charges/{id} - Retrieve a charge",
+          "file": null,
+          "id": "40191f8f-4380-59f4-b0df-ceb6ac927929",
+          "json_pointer": "/paths/~1v1~1charges~1{id}/get",
+          "kind": "openapi",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d82fd9c418ae94e0c6425274bfacb6bd885a05952f733d2d078c8fb9be18739e",
+          "source_uri": "examples/provider/demo_payments/openapi/demo-payments.v1.yaml",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "Executable scenario available, not yet run: GET /v1/charges/{id}: the displayed price is $10.00 for both the current response (amount=1000, USD minor units) and the equivalent proposed response (amount=10, USD major units).",
+          "file": null,
+          "id": "ab4bbeac-1fd1-546c-8504-57eb77e0314f",
+          "json_pointer": null,
+          "kind": "test",
+          "line_end": null,
+          "line_start": null,
+          "revision": "shockwave-scenarios@2026-10-16.1",
+          "source_uri": "shockwave-scenario://demo-payments.charge-amount-units.display.typescript",
+          "visibility": "consumer_private"
+        }
+      ],
+      "explanation": "src/pricing.ts:20 divides response.amount by 100 to convert cents to dollars. Under the proposed contract amount is already in dollars (10 for $10.00), so the result becomes $0.10 instead of $10.00 (100x too small). An executable scenario exists for this usage; it has not run. Prediction from code evidence; not executed.",
+      "id": "7ee48ef7-6404-54b8-9944-d56508d4d735",
+      "repository_snapshot_id": "7e9177f2-8efe-520b-995b-e9d91f1b8341",
+      "severity": "high",
+      "suggested_action": "Remove the /100 conversion at src/pricing.ts:20 for the proposed contract (pin to it) or branch on the contract version; keep the $10.00 expectation; coordinate deployment, as the fix is not backward compatible."
+    },
+    {
+      "change_id": "7c57a2e7-022c-5665-bf39-e2c6a25d0745",
+      "confidence": "direct",
+      "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+      "dependency_ids": [
+        "aef326ec-fdc0-5c12-b853-9798c5766c75"
+      ],
+      "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+      "evidence": [
+        {
+          "excerpt": "return f\"${charge['amount'] / 100:.2f}\"",
+          "file": "storefront/pricing.py",
+          "id": "c03a2763-9ff3-54c4-9bd1-2ed00278bcd8",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 18,
+          "line_start": 18,
+          "revision": "ec701e5dd3ef0fd0df052eee08e52e88a64af72e",
+          "source_uri": "repository-snapshot://da308024-f945-5616-8d29-6889269584e0/storefront/pricing.py",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "GET /v1/charges/{id} response.amount: USD cents -> USD dollars; JSON type stays number. USD only.",
+          "file": null,
+          "id": "ccdd6bcb-b467-51ba-8d51-75235243faee",
+          "json_pointer": "",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@2.0.0-proposed",
+          "source_uri": "examples/provider/demo_payments/changes/charge_amount_cents_to_dollars.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "current contract example: {\"id\":\"ch_demo\",\"amount\":1000,\"currency\":\"usd\"} represents $10.00",
+          "file": null,
+          "id": "f4cadcb3-8194-5f2d-b127-f4b780f53599",
+          "json_pointer": "/response/body/amount",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@1.0.0",
+          "source_uri": "verification/scenarios/fixtures/demo-payments.charge.ch_demo.v1-cents.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "proposed contract example: {\"id\":\"ch_demo\",\"amount\":10,\"currency\":\"usd\"} represents $10.00",
+          "file": null,
+          "id": "5e0c2d72-d100-58cd-82f6-5f39aea70a4e",
+          "json_pointer": "/response/body/amount",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@2.0.0-proposed",
+          "source_uri": "verification/scenarios/fixtures/demo-payments.charge.ch_demo.v2-dollars.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "GET /v1/charges/{id} - Retrieve a charge",
+          "file": null,
+          "id": "40191f8f-4380-59f4-b0df-ceb6ac927929",
+          "json_pointer": "/paths/~1v1~1charges~1{id}/get",
+          "kind": "openapi",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d82fd9c418ae94e0c6425274bfacb6bd885a05952f733d2d078c8fb9be18739e",
+          "source_uri": "examples/provider/demo_payments/openapi/demo-payments.v1.yaml",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "Executable scenario available, not yet run: GET /v1/charges/{id}: the displayed price is $10.00 for both the current response (amount=1000, USD minor units) and the equivalent proposed response (amount=10, USD major units).",
+          "file": null,
+          "id": "8c675abf-7bc2-57bc-a5df-c6f915868271",
+          "json_pointer": null,
+          "kind": "test",
+          "line_end": null,
+          "line_start": null,
+          "revision": "shockwave-scenarios@2026-10-16.1",
+          "source_uri": "shockwave-scenario://demo-payments.charge-amount-units.display.python",
+          "visibility": "consumer_private"
+        }
+      ],
+      "explanation": "storefront/pricing.py:18 divides response.amount by 100 to convert cents to dollars. Under the proposed contract amount is already in dollars (10 for $10.00), so the result becomes $0.10 instead of $10.00 (100x too small). An executable scenario exists for this usage; it has not run. Prediction from code evidence; not executed.",
+      "id": "1dc12d45-43cc-552e-9fda-946f3b048c20",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "severity": "high",
+      "suggested_action": "Remove the /100 conversion at storefront/pricing.py:18 for the proposed contract (pin to it) or branch on the contract version; keep the $10.00 expectation; coordinate deployment, as the fix is not backward compatible."
+    },
+    {
+      "change_id": "7c57a2e7-022c-5665-bf39-e2c6a25d0745",
+      "confidence": "inferred",
+      "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+      "dependency_ids": [
+        "a56dd734-b2a7-52d7-b80f-6bda1d166792"
+      ],
+      "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+      "evidence": [
+        {
+          "excerpt": "return charge[\"amount\"] >= REVIEW_THRESHOLD_CENTS",
+          "file": "storefront/fraud.py",
+          "id": "b8cde3f7-7d0c-5559-99de-9a46c4f7124d",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 10,
+          "line_start": 10,
+          "revision": "ec701e5dd3ef0fd0df052eee08e52e88a64af72e",
+          "source_uri": "repository-snapshot://da308024-f945-5616-8d29-6889269584e0/storefront/fraud.py",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "GET /v1/charges/{id} response.amount: USD cents -> USD dollars; JSON type stays number. USD only.",
+          "file": null,
+          "id": "ccdd6bcb-b467-51ba-8d51-75235243faee",
+          "json_pointer": "",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@2.0.0-proposed",
+          "source_uri": "examples/provider/demo_payments/changes/charge_amount_cents_to_dollars.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "current contract example: {\"id\":\"ch_demo\",\"amount\":1000,\"currency\":\"usd\"} represents $10.00",
+          "file": null,
+          "id": "f4cadcb3-8194-5f2d-b127-f4b780f53599",
+          "json_pointer": "/response/body/amount",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@1.0.0",
+          "source_uri": "verification/scenarios/fixtures/demo-payments.charge.ch_demo.v1-cents.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "proposed contract example: {\"id\":\"ch_demo\",\"amount\":10,\"currency\":\"usd\"} represents $10.00",
+          "file": null,
+          "id": "5e0c2d72-d100-58cd-82f6-5f39aea70a4e",
+          "json_pointer": "/response/body/amount",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@2.0.0-proposed",
+          "source_uri": "verification/scenarios/fixtures/demo-payments.charge.ch_demo.v2-dollars.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "GET /v1/charges/{id} - Retrieve a charge",
+          "file": null,
+          "id": "40191f8f-4380-59f4-b0df-ceb6ac927929",
+          "json_pointer": "/paths/~1v1~1charges~1{id}/get",
+          "kind": "openapi",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d82fd9c418ae94e0c6425274bfacb6bd885a05952f733d2d078c8fb9be18739e",
+          "source_uri": "examples/provider/demo_payments/openapi/demo-payments.v1.yaml",
+          "visibility": "provider_owned"
+        }
+      ],
+      "explanation": "storefront/fraud.py:10 compares response.amount with 50000. If that threshold is in cents ($500.00), under the proposed contract (dollars) it only triggers at $50,000.00 (100x higher). Prediction from code evidence; not executed. Missing evidence: intended unit of the threshold; an executable comparison scenario.",
+      "id": "96e3219f-e451-5053-9d3c-d3c16662d267",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "severity": "high",
+      "suggested_action": "Confirm the unit of the threshold at storefront/fraud.py:10; if it is in cents, rescale it (50000 -> 500) for the proposed contract and add a comparison test before cutover."
+    },
+    {
+      "change_id": "7c57a2e7-022c-5665-bf39-e2c6a25d0745",
+      "confidence": "inferred",
+      "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+      "dependency_ids": [
+        "a091103e-7d52-50a4-a1d5-8f2efaa6f38e"
+      ],
+      "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+      "evidence": [
+        {
+          "excerpt": "connection.execute(\"INSERT INTO ledger (charge_id, amount_cents) VALUES (?, ?)\", (charge[\"id\"], charge[\"amount\"]))",
+          "file": "storefront/ledger.py",
+          "id": "28b16656-bb17-5548-9614-f67a4cf3ee23",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 13,
+          "line_start": 10,
+          "revision": "ec701e5dd3ef0fd0df052eee08e52e88a64af72e",
+          "source_uri": "repository-snapshot://da308024-f945-5616-8d29-6889269584e0/storefront/ledger.py",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "GET /v1/charges/{id} response.amount: USD cents -> USD dollars; JSON type stays number. USD only.",
+          "file": null,
+          "id": "ccdd6bcb-b467-51ba-8d51-75235243faee",
+          "json_pointer": "",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@2.0.0-proposed",
+          "source_uri": "examples/provider/demo_payments/changes/charge_amount_cents_to_dollars.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "current contract example: {\"id\":\"ch_demo\",\"amount\":1000,\"currency\":\"usd\"} represents $10.00",
+          "file": null,
+          "id": "f4cadcb3-8194-5f2d-b127-f4b780f53599",
+          "json_pointer": "/response/body/amount",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@1.0.0",
+          "source_uri": "verification/scenarios/fixtures/demo-payments.charge.ch_demo.v1-cents.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "proposed contract example: {\"id\":\"ch_demo\",\"amount\":10,\"currency\":\"usd\"} represents $10.00",
+          "file": null,
+          "id": "5e0c2d72-d100-58cd-82f6-5f39aea70a4e",
+          "json_pointer": "/response/body/amount",
+          "kind": "declared_change",
+          "line_end": null,
+          "line_start": null,
+          "revision": "demo-payments@2.0.0-proposed",
+          "source_uri": "verification/scenarios/fixtures/demo-payments.charge.ch_demo.v2-dollars.json",
+          "visibility": "provider_owned"
+        },
+        {
+          "excerpt": "GET /v1/charges/{id} - Retrieve a charge",
+          "file": null,
+          "id": "40191f8f-4380-59f4-b0df-ceb6ac927929",
+          "json_pointer": "/paths/~1v1~1charges~1{id}/get",
+          "kind": "openapi",
+          "line_end": null,
+          "line_start": null,
+          "revision": "sha256:d82fd9c418ae94e0c6425274bfacb6bd885a05952f733d2d078c8fb9be18739e",
+          "source_uri": "examples/provider/demo_payments/openapi/demo-payments.v1.yaml",
+          "visibility": "provider_owned"
+        }
+      ],
+      "explanation": "storefront/ledger.py:10-13 stores response.amount (destination: sqlite:ledger.amount_cents). After cutover new values would be in dollars while earlier ones are in cents, so mixed units become possible. Potential risk, not confirmed: the destination's units, historical records and any migration plan were not examined. Prediction from code evidence; not executed. Missing evidence: units/schema of the destination; historical records; migration plan.",
+      "id": "9c72babf-e116-5ff7-a634-68c1cd3ddce0",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "severity": "medium",
+      "suggested_action": "Check the units of the destination at storefront/ledger.py:10-13 and its existing rows; convert at the write boundary or plan a backfill/unit marker before cutover so cents and dollars do not mix."
+    }
+  ],
+  "schema_version": "shockwave.v1",
+  "unresolved_dependency_ids": [
+    "9fa4c18f-c86e-5260-bea7-95f0d5c32bee"
+  ],
+  "warnings": [
+    "predictions only: no tests have run (deterministic rules, not model inference)",
+    "1 matched dependency is unresolved (unknown, not safe): it consumes an enclosing object, so use of the changed field is not visible (1)"
+  ]
+}

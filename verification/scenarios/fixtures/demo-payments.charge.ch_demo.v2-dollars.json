@@ -1,0 +1,13 @@
+{
+  "fixture_id": "demo-payments.charge.ch_demo.v2-dollars",
+  "service_id": "demo-payments",
+  "endpoint": {"method": "GET", "path": "/v1/charges/{id}"},
+  "request": {"method": "GET", "url": "http://demo-payments.test/v1/charges/ch_demo"},
+  "contract": "proposed",
+  "semantics": "amount is USD major units (dollars); 10 represents $10.00",
+  "response": {
+    "status": 200,
+    "headers": {"content-type": "application/json"},
+    "body": {"id": "ch_demo", "amount": 10, "currency": "usd"}
+  }
+}
