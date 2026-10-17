@@ -1,0 +1,28 @@
+{
+  "fixture_id": "stripe.payment-intent.pi_demo.current-cents",
+  "service_id": "stripe",
+  "endpoint": {
+    "method": "GET",
+    "path": "/v1/payment_intents/{intent}"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.stripe.com/v1/payment_intents/pi_demo"
+  },
+  "contract": "current",
+  "simulation": true,
+  "semantics": "Demo: USD cents in current fixture; hypothetical USD dollars in proposed fixture. Not an announced Stripe change.",
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {
+      "id": "pi_demo",
+      "object": "payment_intent",
+      "amount": 1000,
+      "currency": "usd",
+      "status": "succeeded"
+    }
+  }
+}
