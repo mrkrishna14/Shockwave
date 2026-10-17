@@ -1,7 +1,12 @@
 # Integration — Shockwave MVP on `main`
 
-Status: **local only**. `main` exists only in this clone (worktree `~/Desktop/Shockwave-main`) and
-has **not been pushed**. No PR, force-push, rebase or branch deletion was done. Nothing was published.
+Status: pushed to `origin/main` after review (normal push; no force-push, rebase or branch deletion).
+No PR was opened and nothing was published to consumer repositories.
+
+How to run:
+- **Stripe demo:** see `demo/README.md` and the three-minute `demo/DEMO_SCRIPT.md`.
+- **Platform flow on the real modules:** see "Orchestrator wiring" below.
+- **Root `README.md`** has both in one page.
 
 ## Merge order
 
@@ -18,6 +23,10 @@ There was no `main` anywhere. It was created locally at `1d3ee7c`, the common ro
 Fix commits (in order): `8250983` (after noirit), `7532804` (after Kanishk), `3f6f244` (after Sai),
 then wiring `bd045e0` and `c1ed84e`.
 
+| # | Second round | Notes |
+|---|---|---|
+| 5 | `Kanishk` @ `d0d86d3` (Stripe demo environment) | `--no-ff`. Conflicts in `.gitignore`, `verification/scenarios/catalog.py` and `staging.py`, all resolved by keeping both sides (see below). |
+
 ## Conflicts and overlaps
 
 No merge produced a textual conflict.
@@ -29,6 +38,35 @@ No merge produced a textual conflict.
   `demo-identities.json` are byte-identical to Ishan's. Sai's extra `app/shared/PROVENANCE.md` is
   kept, since Ishan has no version of it.
 - No teammate code was deleted.
+
+### Second-round merge (Stripe demo)
+
+**Conflict resolution:** both sides kept.
+- `catalog.py` keeps Sai's `additional_test_files` and Sai's simulated scenario, Noirit's consumer
+  bindings, and Kanishk's three Stripe case scenarios.
+- `staging.py` keeps the control-scenario refusal and checks Sai's extra test files.
+- `.gitignore` is the union of both sides.
+
+**Fixes the merge needed:**
+
+| Area | Fix |
+|---|---|
+| Scenario binding collision | Kanishk's Stripe checkout scenario and Sai's simulated scenario were both bound to `src/checkout.ts`, so Sai's plans resolved to Kanishk's scenario (`KeyError: 'response'` in Sai's runner). Kanishk's template file is now `src/orderSummary.ts`; the fixture, ids, migration, reference results and tests were updated. Sai's code is unchanged. |
+| Evidence order | Kanishk's dependency fixture listed the use site first; the scanner (and the rules) use origin → … → use site last. The fixture was reordered, ids recomputed per the documented derivation, and tests updated. |
+| Real scanner in the demo | `demo.py scan` called a guessed scanner interface. It now calls Noirit's real `scan_repository` per repository and uses its records when they reproduce every expected use site; otherwise it keeps the line-verified fixture and records the misses. Fraud is a real scan; checkout and reporting expose two scanner gaps (see `demo/HANDOFF.md`). |
+| `fixture-server --max-requests` race | The threading server returned before counting the request and then blocked forever. Requests are now answered synchronously in that mode (the CLI test was flaky; three consecutive passes after the fix). |
+| Inferred-pointer policy | Kanishk's Stripe test still expected `inferred` to get no scenario; it now uses `unresolved`, consistent with the policy below. |
+| Contracts in the demo | `demo/scripts/demo.py` puts `app/` on the path, so the demo uses `shared.schemas` too. |
+
+**"Still broken" items fixed in this round:**
+
+| Item | Fix |
+|---|---|
+| Ishan's Node 24 test count | `backend/demo.execute` also accepts the spec reporter's `ℹ tests 2`. The app suite is 28/28. |
+| `SW_RESPONSE` vs `SHOCKWAVE_RESPONSE_FIXTURE` | Sai's runner also writes the response to a file and sets `SHOCKWAVE_RESPONSE_FIXTURE`. New test `tests/canonical/test_consumer_fixture_injection.py`: without the fix the result was a false `compatible_within_tested_scope`; with it, `verified_regression`. |
+| No integrated-mode switch | `SHOCKWAVE_ADAPTERS=integrated` (plus `SHOCKWAVE_WORK_DIR`) selects `backend.integrated`. `/health` and `/capabilities` report `integrated` and list `real_modules`. |
+| No single dependency manifest | A root `requirements.txt` holds the tested versions. |
+| Stripe demo not on a branch | Committed on `Kanishk` and merged here. |
 
 ## Fixes made
 
@@ -78,8 +116,9 @@ The root `pytest.ini` puts `app/` on the path, and `app/pyproject.toml` now also
 | send_invitation | development inbox (`DemoAdapters`) | **fake, labeled** |
 | publish_migration | disabled (`DemoAdapters` raises; no PR) | **not attempted** |
 
-The default `create_app()` (the server and its `start-backend.sh`) still uses Ishan's `DemoAdapters`.
-There is no environment switch for integrated mode yet.
+Start the server in integrated mode with `SHOCKWAVE_ADAPTERS=integrated SHOCKWAVE_INLINE_JOBS=1
+./app/scripts/start-backend.sh`. Inline jobs keep the integrated state in one process. Without the
+setting, the server uses Ishan's `DemoAdapters` as before.
 
 ## Test results
 
@@ -88,15 +127,16 @@ is x86 and does not run):
 
 | Command | Result |
 |---|---|
-| `PATH=.venv/bin:$PATH .venv/bin/python -m pytest -q -p no:cacheprovider` (root `pytest.ini`: tests/, pythonpath `. app`) | **869 passed** |
-| `cd app && PATH=../.venv/bin:$PATH ../.venv/bin/python -m pytest -q -p no:cacheprovider` | **27 passed, 1 failed** (see "Still broken") |
-| `app/tests/e2e/test_integrated.py` (part of the line above) | **passed** |
-| `npm ci && npm run typecheck && npm run build` in `app/frontend` | **passed** |
+| `PATH=.venv/bin:$PATH .venv/bin/python -m pytest -q -p no:cacheprovider` (root; `pytest.ini`: tests/, pythonpath `. app`) | **1108 passed** |
+| `cd app && PATH=../.venv/bin:$PATH ../.venv/bin/python -m pytest -q -p no:cacheprovider` | **29 passed** (incl. `test_integrated.py`) |
+| `.venv/bin/python demo/scripts/demo.py reset && .venv/bin/python demo/scripts/demo.py all` | exit 0; `results/ is byte-identical to demo/expected/results (35 files)` |
+| `cd app && PYTHONPATH=.:.. python scripts/integrated_demo.py` | verified_regression, then patch_validated (output below) |
+| `npm ci && npm run typecheck && npm run build` in `app/frontend` | passed |
+| `SHOCKWAVE_ADAPTERS=integrated SHOCKWAVE_DEMO=1 SHOCKWAVE_INLINE_JOBS=1 uvicorn backend.main:app` | `/api/v1/health` reports `integration_mode: integrated` |
 
-Dependencies were installed into `.venv` (uv): `app/requirements.lock`, `requirements-integration.txt`,
-the scanner's tree-sitter pins, and `pyyaml`, `anthropic`, `nodejs-wheel` and `ruff`. Sai's checkout
-demo also needs `npm ci --ignore-scripts --prefix demo/stripe-checkout`. There is no single root
-dependency manifest yet.
+Dependencies come from the root `requirements.txt` (uv). The checkout template and Sai's checkout
+demo also need `npm ci`; `demo.py prepare` does it for the template, and
+`npm ci --ignore-scripts --prefix demo/stripe-checkout` does it for Sai's demo.
 
 ## Scenario output
 
@@ -143,26 +183,20 @@ adapter chain directly (outside the API): verified_regression, then patch_valida
 
 ## Still broken or open
 
-1. **Ishan's `test_vertical_slice_and_private_artifacts` fails on Node 24.**
-   - `backend/demo.execute` counts JS tests only from TAP output (`# tests 2`).
-   - Node 24's default reporter prints `ℹ tests 2`, so the run is counted as 0 tests and marked inconclusive.
-   - It passes on Node 20 (Ishan's target), which can't run on this Mac.
-   - Fix (Ishan): pass `--test-reporter=tap`, or parse both formats.
-2. **Fixture injection mismatch between Sai's runner and Noirit's consumers.** For non-catalog
-   scenarios, Sai's runner passes the response as `SW_RESPONSE` (JSON). Noirit's consumer tests read
-   `SHOCKWAVE_RESPONSE_FIXTURE` (a file path). The integrated path avoids this by using catalog
-   scenarios (Kanishk's harness), but the two need one convention.
-3. **No live GitHub fetch or publication.** It needs Sai's GitHub App configuration (credentials,
-   installation) and Ishan's integration. Publication stays disabled.
-4. **No integrated-mode switch.** The running server (`start-backend.sh`) is still in fixture mode.
-   Add a setting (Ishan) to select `integrated_factory()`.
-5. **Proposed `ScanRequest` fields are not in `shared.schemas`.** Noirit proposed `consumer_org_id`
-   and `base_urls`. They are currently passed as a keyword or taken from scanner defaults. Ishan
-   decides whether to add them.
-6. **Kanishk's Stripe demo environment is not on any branch.** It is uncommitted work in the
-   `Kanishk` working tree. It rewrites the same `verification/scenarios` files Sai touched, and
-   overlaps with Sai's `demo/stripe-checkout`. It needs reconciling before it lands on `main`.
-7. **No single dependency manifest.** Dependencies are split across `app/requirements.lock`,
-   `requirements-integration.txt` and `scanner/requirements.txt`, plus undeclared `pyyaml`,
-   `anthropic` and `nodejs-wheel` for Kanishk's modules.
-8. **Fallback contract copies.** Kanishk's and Noirit's fallback models still exist (inactive; see Contracts).
+1. **No live GitHub fetch or publication.** It needs the GitHub App to be created and installed
+   (`demo/GITHUB_SETUP.md`) and Sai's transport configured. Publication stays disabled.
+2. **Scanner gaps (Noirit):**
+   - SDK clients injected through a parameter named `stripe` from a factory are not attributed.
+   - `StripeClient(...).v1.payment_intents.*` is not mapped.
+   - Both misses are silent: no coverage gap is reported.
+   The demo uses the labeled fixture for those two repositories.
+3. **Stripe demo verification runs on the local runner double, not Sai's `RunnerService`.** The
+   fraud threshold rescale also has no rule in Sai's migration generator yet.
+4. **`ScanRequest` fields.** `ScanRequest` lacks `consumer_org_id` / `base_urls`; Ishan decides.
+   `consumer_org_id` is passed as a keyword for now.
+5. **Fallback contract copies.** Kanishk's and Noirit's fallback models still exist (inactive when
+   `app/` is on the path).
+6. **Integrated-mode UI labels.** Some UI texts still read "fixture" in integrated mode.
+   `capabilities.mode` and `real_modules` are correct.
+7. **Teammate lint.** Teammates' modules have pre-existing ruff findings under default rules
+   (style only; there is no shared ruff config). Kanishk's areas and all new files are clean.
