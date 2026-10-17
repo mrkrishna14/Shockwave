@@ -77,6 +77,8 @@ def test_stripe_provider_end_to_end_with_a_restart(tmp_path):
                                                    'allow_pr_write': True}).json()
         assert repo['full_name'] == option['full_name']
         run(c, f"/repository-connections/{repo['id']}/scans", {'enrollment_id': enrollment['id'], 'ref': COMMIT})
+        # "Scan / retry" again on unchanged code is a harmless repeat, not a conflict.
+        run(c, f"/repository-connections/{repo['id']}/scans", {'enrollment_id': enrollment['id'], 'ref': COMMIT})
     run(p, f"/api-projects/{project['id']}/assessments", {})
 
     changes = get(p, f"/api-projects/{project['id']}/changes").json()['items']

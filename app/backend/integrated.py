@@ -271,12 +271,22 @@ class IntegratedAdapters(DemoAdapters):
         source = self.state.repositories.get(connection.full_name)
         if source is None:
             raise ValueError(f"no local team repository registered for {connection.full_name}")
-        root = self.state.work_dir / "snapshots" / f"{connection.id}-{commit_sha}"
+        snapshots = self.state.work_dir / "snapshots"
+        incoming = snapshots / f".incoming-{uid()}"
+        shutil.copytree(source, incoming, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", "node_modules"))
+        content_hash = TrustedSnapshot.register_team_fixture(incoming, commit_sha).content_hash
+        # Same connection, commit and content -> the same snapshot. A rescan then repeats the scan
+        # (stable dependency ids) instead of conflicting with the records it already stored.
+        snapshot_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"shockwave-snapshot:{connection.id}:{commit_sha}:{content_hash}"))
+        if snapshot_id in self.state.records and snapshot_id in self.state.snapshots:
+            shutil.rmtree(incoming, ignore_errors=True)
+            return self.state.snapshot_record(snapshot_id)
+        root = snapshots / snapshot_id
         if root.exists():
             shutil.rmtree(root)
-        shutil.copytree(source, root, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", "node_modules"))
+        incoming.rename(root)
         trusted = TrustedSnapshot.register_team_fixture(root, commit_sha)
-        snapshot = RepositorySnapshot(id=uid(), repository_connection_id=connection.id, commit_sha=commit_sha,
+        snapshot = RepositorySnapshot(id=snapshot_id, repository_connection_id=connection.id, commit_sha=commit_sha,
                                       fetched_at=now(), content_hash=trusted.content_hash)
         self.state.remember(snapshot, trusted)
         return snapshot
