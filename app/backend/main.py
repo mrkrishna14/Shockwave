@@ -337,22 +337,31 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             return {'connected':True,'mode':'fixture','installation_id':installation_id}
     @api.post('/api/v1/github/webhook')
     def webhook(): fail(503,'ADAPTER_UNAVAILABLE','Live signed webhook adapter unavailable; no event accepted')
+    options_for=getattr(adapters_factory,'repository_options',None)
+    def repository_options(db,org_id):
+        # Integrated adapters offer the repositories for the APIs this consumer is enrolled in.
+        if options_for is None:
+            return [{'github_repository_id':'fixture-'+org_id,'full_name':'acme/storefront','default_branch':'main','mode':'fixture'}]
+        services={(store.get(db,e['api_project_id'],'project') or {}).get('service_id')
+                  for e in store.list(db,'enrollment',org_id) if e['status']=='active'}
+        return options_for(org_id,{s for s in services if s})
     @api.get('/api/v1/github/repositories')
     def github_repositories(request:Request):
         with store.read() as db:
             _,org=context(db,request,'consumer',True)
             installed=db.execute('SELECT 1 FROM installations WHERE org_id=?',(org['id'],)).fetchone()
-            return page([{'github_repository_id':'fixture-'+org['id'],'full_name':'acme/storefront','default_branch':'main','mode':'fixture'}] if installed else [],request)
+            return page(repository_options(db,org['id']) if installed else [],request)
     @api.post('/api/v1/repository-connections',status_code=201)
     def repository(body:RepoInput,request:Request):
         with store.tx() as db:
             _,org=context(db,request,'consumer',True);active(db,body.enrollment_id,org['id'])
             if not body.scan_consent: fail(422,'CONSENT_REQUIRED','Explicit source processing consent is required')
             installed=db.execute('SELECT * FROM installations WHERE org_id=?',(org['id'],)).fetchone()
-            if not demo or not installed or body.github_repository_id!='fixture-'+org['id']: fail(403,'REPOSITORY_OWNERSHIP','Repository is not in the verified installation list')
+            option=next((o for o in repository_options(db,org['id']) if o['github_repository_id']==body.github_repository_id),None)
+            if not demo or not installed or option is None: fail(403,'REPOSITORY_OWNERSHIP','Repository is not in the verified installation list')
             r=next((x for x in store.list(db,'repository',org['id']) if x['github_repository_id']==body.github_repository_id and x['status']=='connected'),None)
             if not r:
-                r=dump(RepositoryConnection(id=uid(),consumer_org_id=org['id'],installation_id=installed['installation_id'],github_repository_id=body.github_repository_id,full_name='acme/storefront',default_branch='main',status='connected',scan_consent_at=now(),allow_model_processing=body.allow_model_processing,allow_pr_write=body.allow_pr_write))
+                r=dump(RepositoryConnection(id=uid(),consumer_org_id=org['id'],installation_id=installed['installation_id'],github_repository_id=body.github_repository_id,full_name=option['full_name'],default_branch=option['default_branch'],status='connected',scan_consent_at=now(),allow_model_processing=body.allow_model_processing,allow_pr_write=body.allow_pr_write))
                 store.put(db,'repository',org['id'],r)
             db.execute('''INSERT INTO enrollment_repositories(enrollment_id,repository_id,allow_model_processing,allow_pr_write,scan_consent_at)
                 VALUES(?,?,?,?,?) ON CONFLICT(enrollment_id,repository_id) DO UPDATE SET

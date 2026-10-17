@@ -144,7 +144,7 @@ class Orchestrator:
                 ScanRequest(repository_snapshot_id=snapshot.id,enrollment_id=enrollment['id'],
                             service_id=project['service_id'],
                             endpoint_catalog=adapters.endpoint_catalog(project) if hasattr(adapters,'endpoint_catalog') else [endpoint()],
-                            supported_languages=['python','javascript']),snapshot,Path('.')))
+                            supported_languages=['python','javascript','typescript']),snapshot,Path('.')))
             if result.repository_snapshot_id!=snapshot.id or any(
                 d.consumer_org_id!=org or d.enrollment_id!=enrollment['id'] or
                 d.repository_snapshot_id!=snapshot.id or d.service_id!=project['service_id']
