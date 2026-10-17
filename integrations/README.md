@@ -1,3 +1,8 @@
+> Stripe integration update: see [the current handoff](../migration/STRIPE_HANDOFF.md)
+> and [runnable demo](../demo/stripe-checkout/README.md). The sections below describe
+> the original scaffold; the new checkout scenario now supports a simulated Stripe
+> change and canonical schema integration is tested. Live setup remains incomplete.
+
 # Sai adapters — integration notes
 
 This is an owned-module scaffold, not the Shockwave app. The workspace was empty.

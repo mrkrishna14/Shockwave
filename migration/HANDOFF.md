@@ -1,3 +1,6 @@
+> Superseded for current status by [STRIPE_HANDOFF.md](STRIPE_HANDOFF.md).
+> This file preserves the original checkpoint and its historical limitations.
+
 # Sai checkpoint — October 16, 2026 (America/Los_Angeles)
 
 ## State
