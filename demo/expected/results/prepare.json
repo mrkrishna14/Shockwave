@@ -3,7 +3,7 @@
   "label": "LOCAL snapshot: a deterministic local git commit of the team-created template (fixed identity and dates); not fetched from GitHub. fetched_at is the fixed commit date.",
   "repositories": {
     "shockwave-stripe-checkout": {
-      "commit_sha": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
+      "commit_sha": "a6964c11d46004f3a3120cece33d34edee890d0f",
       "dependency": "stripe@23.0.0 (node_modules via npm ci; not committed)",
       "files_committed": 10,
       "node_modules_committed": false,

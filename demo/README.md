@@ -46,7 +46,7 @@ results:
 |---|---|
 | inventory | The pinned Stripe spec (commit `969d8c3`, API `2026-09-30.endive`, sha256 matches the lock). It reports the measured **644 operations over 454 paths** and 1701 schemas, and **provider source access: unavailable**. |
 | prepare | Three apps with their commits. The apps' own suites pass: checkout 4/4, fraud 5/5, reporting 3/3. |
-| scan | Fraud: **real scan** by Noirit's scanner. Checkout and reporting: the line-verified **FIXTURE**, with the use sites the scanner missed listed. |
+| scan | Checkout and fraud: **real scan** by Noirit's scanner. Reporting: the line-verified **FIXTURE**, with the use sites the scanner missed listed (its `StripeClient(...).v1` client style is not mapped yet). |
 | submit-change | Schema diff alone: **0 changes**; with the declaration: 1 change. Predicted risks: conversion high (checkout), comparison high (fraud), storage medium (reporting). |
 | execute | Checkout: **verified_regression**, "expected $10.00, actual $0.10". Fraud: **verified_regression**, a $6,000 payment is no longer flagged. Reporting summary: the **control passes** on both response versions. Ledger storage: **not_run** (a potential risk, with the missing evidence listed). |
 | validate-migrations | Both patches are **validated** with the unchanged expectations. Run against today's responses, the patched code fails ($1000.00), which is recorded as the deployment caveat, not a regression. |

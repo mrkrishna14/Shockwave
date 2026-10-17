@@ -7,68 +7,32 @@
       "confidence": "direct",
       "consumer_org_id": "6f153b43-f6db-5768-9d25-632648e129d9",
       "dependency_ids": [
-        "a9db411a-8cc2-59bb-8bb6-954f9cbb4f3d"
+        "c3bdbcbb-98a4-59b5-a6b7-f20f2caca19e"
       ],
       "enrollment_id": "d2cb2096-72c9-5f1d-b7a0-f14301f078a4",
       "evidence": [
         {
-          "excerpt": "import Stripe from 'stripe';",
-          "file": "src/stripeClient.ts",
-          "id": "7e356dae-c668-5659-8730-0dbb1f0ab460",
-          "json_pointer": null,
-          "kind": "source",
-          "line_end": 1,
-          "line_start": 1,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "visibility": "consumer_private"
-        },
-        {
-          "excerpt": "return new Stripe(apiKey, config);",
-          "file": "src/stripeClient.ts",
-          "id": "e6d32c49-346d-56e5-a65b-6e5cc8d65010",
-          "json_pointer": null,
-          "kind": "source",
-          "line_end": 34,
-          "line_start": 34,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "visibility": "consumer_private"
-        },
-        {
-          "excerpt": "stripe: Stripe = createStripeClient(),",
-          "file": "src/orderSummary.ts",
-          "id": "b94aca66-7150-570b-b36f-2b3fa541adfd",
-          "json_pointer": null,
-          "kind": "source",
-          "line_end": 18,
-          "line_start": 18,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "visibility": "consumer_private"
-        },
-        {
           "excerpt": "const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);",
           "file": "src/orderSummary.ts",
-          "id": "342893bd-40be-54aa-a32a-fb9f18028efd",
+          "id": "f572ec2c-ccef-5a52-ad9b-1b47a0ff7b5f",
           "json_pointer": null,
           "kind": "source",
           "line_end": 20,
           "line_start": 20,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
+          "revision": "a6964c11d46004f3a3120cece33d34edee890d0f",
+          "source_uri": "repository-snapshot://bd623f0f-1656-52f7-88ee-12499ea4fc93/src/orderSummary.ts#L20",
           "visibility": "consumer_private"
         },
         {
           "excerpt": "const totalDollars = paymentIntent.amount / 100;",
           "file": "src/orderSummary.ts",
-          "id": "b66935a5-9947-5488-8942-9fcd73defac4",
+          "id": "8107f90a-2111-5b52-829d-07989a20b407",
           "json_pointer": null,
           "kind": "source",
           "line_end": 22,
           "line_start": 22,
-          "revision": "1a691698659ee7ac82186a4ef9dfdcc78c9cf08f",
-          "source_uri": "repo://shockwave-stripe-checkout",
+          "revision": "a6964c11d46004f3a3120cece33d34edee890d0f",
+          "source_uri": "repository-snapshot://bd623f0f-1656-52f7-88ee-12499ea4fc93/src/orderSummary.ts#L22",
           "visibility": "consumer_private"
         },
         {
@@ -122,7 +86,7 @@
         {
           "excerpt": "Executable scenario available, not yet run: GET /v1/payment_intents/{intent} through the official stripe-node SDK: getOrderSummary('pi_demo_10usd') displays $10.00 for both the baseline response (amount=1000, USD minor units) and the equivalent SIMULATED proposed response (amount=10, USD major units); guard: the unrelated basis-points tax note stays 'Includes 8.25% sales tax'.",
           "file": null,
-          "id": "0a0b3d30-2b19-5e7a-877f-7fd5c7e0ca4d",
+          "id": "f257dd81-0565-534f-bb3c-81663adad8e2",
           "json_pointer": null,
           "kind": "test",
           "line_end": null,

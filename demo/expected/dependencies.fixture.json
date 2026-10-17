@@ -27,7 +27,7 @@
     "catalog_snapshot_id": "7f233b59-9179-5f22-b169-e7645f5cf503",
     "derivation": "discovery.ids.endpoint_id(baseline_contract_snapshot_id, \"stripe\", \"GET\", \"/v1/payment_intents/{intent}\"): the record in the baseline catalog the scan is keyed to"
   },
-  "evidence_order": "Scanner order (scanner/HANDOFF.md): origin first, use site last - SDK import, client initialization, client, SDK call, then the usage line. Analyzer explanations cite the use site, the last located source item.",
+  "evidence_order": "Scanner order (scanner/HANDOFF.md): origin first, use site last - SDK import, client initialization, the client (when it is set up apart from its initialization), SDK call, then the usage line. Analyzer explanations cite the use site, the last located source item.",
   "dependencies": {
     "checkout_amount_divide": {
       "id": "a9db411a-8cc2-59bb-8bb6-954f9cbb4f3d",
@@ -51,40 +51,28 @@
       "confidence": "direct",
       "evidence": [
         {
-          "id": "7e356dae-c668-5659-8730-0dbb1f0ab460",
+          "id": "6006adc7-e0a0-5716-94e1-742d754bcb48",
           "kind": "source",
           "visibility": "consumer_private",
           "source_uri": "repo://shockwave-stripe-checkout",
           "revision": "unbound:prepared-commit:shockwave-stripe-checkout",
-          "file": "src/stripeClient.ts",
+          "file": "src/orderSummary.ts",
           "line_start": 1,
           "line_end": 1,
           "json_pointer": null,
           "excerpt": "import Stripe from 'stripe';"
         },
         {
-          "id": "e6d32c49-346d-56e5-a65b-6e5cc8d65010",
-          "kind": "source",
-          "visibility": "consumer_private",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "revision": "unbound:prepared-commit:shockwave-stripe-checkout",
-          "file": "src/stripeClient.ts",
-          "line_start": 34,
-          "line_end": 34,
-          "json_pointer": null,
-          "excerpt": "return new Stripe(apiKey, config);"
-        },
-        {
-          "id": "b94aca66-7150-570b-b36f-2b3fa541adfd",
+          "id": "c708fd4c-ecd9-5ecd-8544-3b9358a6b755",
           "kind": "source",
           "visibility": "consumer_private",
           "source_uri": "repo://shockwave-stripe-checkout",
           "revision": "unbound:prepared-commit:shockwave-stripe-checkout",
           "file": "src/orderSummary.ts",
-          "line_start": 18,
-          "line_end": 18,
+          "line_start": 19,
+          "line_end": 19,
           "json_pointer": null,
-          "excerpt": "stripe: Stripe = createStripeClient(),"
+          "excerpt": "const stripe = new Stripe(stripeApiKey(), stripeConfig());"
         },
         {
           "id": "342893bd-40be-54aa-a32a-fb9f18028efd",
@@ -127,47 +115,35 @@
         "call": "stripe.paymentIntents.retrieve"
       },
       "usage": {
-        "operation": "read",
+        "operation": "pass_through",
         "operand": null,
-        "destination": null
+        "destination": "status"
       },
       "confidence": "direct",
       "evidence": [
         {
-          "id": "7e356dae-c668-5659-8730-0dbb1f0ab460",
+          "id": "6006adc7-e0a0-5716-94e1-742d754bcb48",
           "kind": "source",
           "visibility": "consumer_private",
           "source_uri": "repo://shockwave-stripe-checkout",
           "revision": "unbound:prepared-commit:shockwave-stripe-checkout",
-          "file": "src/stripeClient.ts",
+          "file": "src/orderSummary.ts",
           "line_start": 1,
           "line_end": 1,
           "json_pointer": null,
           "excerpt": "import Stripe from 'stripe';"
         },
         {
-          "id": "e6d32c49-346d-56e5-a65b-6e5cc8d65010",
-          "kind": "source",
-          "visibility": "consumer_private",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "revision": "unbound:prepared-commit:shockwave-stripe-checkout",
-          "file": "src/stripeClient.ts",
-          "line_start": 34,
-          "line_end": 34,
-          "json_pointer": null,
-          "excerpt": "return new Stripe(apiKey, config);"
-        },
-        {
-          "id": "b94aca66-7150-570b-b36f-2b3fa541adfd",
+          "id": "c708fd4c-ecd9-5ecd-8544-3b9358a6b755",
           "kind": "source",
           "visibility": "consumer_private",
           "source_uri": "repo://shockwave-stripe-checkout",
           "revision": "unbound:prepared-commit:shockwave-stripe-checkout",
           "file": "src/orderSummary.ts",
-          "line_start": 18,
-          "line_end": 18,
+          "line_start": 19,
+          "line_end": 19,
           "json_pointer": null,
-          "excerpt": "stripe: Stripe = createStripeClient(),"
+          "excerpt": "const stripe = new Stripe(stripeApiKey(), stripeConfig());"
         },
         {
           "id": "342893bd-40be-54aa-a32a-fb9f18028efd",
@@ -210,47 +186,35 @@
         "call": "stripe.paymentIntents.retrieve"
       },
       "usage": {
-        "operation": "read",
+        "operation": "pass_through",
         "operand": null,
-        "destination": null
+        "destination": "paymentIntentId"
       },
       "confidence": "direct",
       "evidence": [
         {
-          "id": "7e356dae-c668-5659-8730-0dbb1f0ab460",
+          "id": "6006adc7-e0a0-5716-94e1-742d754bcb48",
           "kind": "source",
           "visibility": "consumer_private",
           "source_uri": "repo://shockwave-stripe-checkout",
           "revision": "unbound:prepared-commit:shockwave-stripe-checkout",
-          "file": "src/stripeClient.ts",
+          "file": "src/orderSummary.ts",
           "line_start": 1,
           "line_end": 1,
           "json_pointer": null,
           "excerpt": "import Stripe from 'stripe';"
         },
         {
-          "id": "e6d32c49-346d-56e5-a65b-6e5cc8d65010",
-          "kind": "source",
-          "visibility": "consumer_private",
-          "source_uri": "repo://shockwave-stripe-checkout",
-          "revision": "unbound:prepared-commit:shockwave-stripe-checkout",
-          "file": "src/stripeClient.ts",
-          "line_start": 34,
-          "line_end": 34,
-          "json_pointer": null,
-          "excerpt": "return new Stripe(apiKey, config);"
-        },
-        {
-          "id": "b94aca66-7150-570b-b36f-2b3fa541adfd",
+          "id": "c708fd4c-ecd9-5ecd-8544-3b9358a6b755",
           "kind": "source",
           "visibility": "consumer_private",
           "source_uri": "repo://shockwave-stripe-checkout",
           "revision": "unbound:prepared-commit:shockwave-stripe-checkout",
           "file": "src/orderSummary.ts",
-          "line_start": 18,
-          "line_end": 18,
+          "line_start": 19,
+          "line_end": 19,
           "json_pointer": null,
-          "excerpt": "stripe: Stripe = createStripeClient(),"
+          "excerpt": "const stripe = new Stripe(stripeApiKey(), stripeConfig());"
         },
         {
           "id": "342893bd-40be-54aa-a32a-fb9f18028efd",
@@ -998,12 +962,11 @@
       "evidence_roles": [
         "sdk_import",
         "client_initialization",
-        "client",
         "sdk_call",
         "usage"
       ],
       "sdk_operation": "stripe-node 23.0.0 paymentIntents.retrieve(id) sends GET /v1/payment_intents/{intent} (demo/stripe-sources.lock.json#stripe-node)",
-      "confidence_basis": "direct: paymentIntent is assigned from stripe.paymentIntents.retrieve(paymentIntentId) at src/orderSummary.ts:20 in getOrderSummary; the stripe parameter (typed Stripe) defaults to createStripeClient() (src/orderSummary.ts:18), which returns new Stripe(apiKey, config) built from the official SDK import (src/stripeClient.ts:34, :1); paymentIntent.amount is divided by the literal 100 two lines later in the same function, with no reassignment in between."
+      "confidence_basis": "direct: paymentIntent is assigned from stripe.paymentIntents.retrieve(paymentIntentId) at src/orderSummary.ts:20 in getOrderSummary, on the client created one line earlier with new Stripe(stripeApiKey(), stripeConfig()) (src/orderSummary.ts:19) from the official SDK import (src/orderSummary.ts:1); paymentIntent.amount is divided by the literal 100 two lines later in the same function, with no reassignment in between."
     },
     "checkout_status_read": {
       "repository": "shockwave-stripe-checkout",
@@ -1011,12 +974,11 @@
       "evidence_roles": [
         "sdk_import",
         "client_initialization",
-        "client",
         "sdk_call",
         "usage"
       ],
       "sdk_operation": "stripe-node 23.0.0 paymentIntents.retrieve(id) sends GET /v1/payment_intents/{intent} (demo/stripe-sources.lock.json#stripe-node)",
-      "confidence_basis": "direct: paymentIntent is assigned from stripe.paymentIntents.retrieve(paymentIntentId) at src/orderSummary.ts:20 in getOrderSummary; the stripe parameter (typed Stripe) defaults to createStripeClient() (src/orderSummary.ts:18), which returns new Stripe(apiKey, config) built from the official SDK import (src/stripeClient.ts:34, :1); paymentIntent.status is read into the returned order summary."
+      "confidence_basis": "direct: paymentIntent is assigned from stripe.paymentIntents.retrieve(paymentIntentId) at src/orderSummary.ts:20 in getOrderSummary, on the client created one line earlier with new Stripe(stripeApiKey(), stripeConfig()) (src/orderSummary.ts:19) from the official SDK import (src/orderSummary.ts:1); paymentIntent.status is passed through unchanged into the returned order summary's status field."
     },
     "checkout_id_read": {
       "repository": "shockwave-stripe-checkout",
@@ -1024,12 +986,11 @@
       "evidence_roles": [
         "sdk_import",
         "client_initialization",
-        "client",
         "sdk_call",
         "usage"
       ],
       "sdk_operation": "stripe-node 23.0.0 paymentIntents.retrieve(id) sends GET /v1/payment_intents/{intent} (demo/stripe-sources.lock.json#stripe-node)",
-      "confidence_basis": "direct: paymentIntent is assigned from stripe.paymentIntents.retrieve(paymentIntentId) at src/orderSummary.ts:20 in getOrderSummary; the stripe parameter (typed Stripe) defaults to createStripeClient() (src/orderSummary.ts:18), which returns new Stripe(apiKey, config) built from the official SDK import (src/stripeClient.ts:34, :1); paymentIntent.id is read into the returned order summary."
+      "confidence_basis": "direct: paymentIntent is assigned from stripe.paymentIntents.retrieve(paymentIntentId) at src/orderSummary.ts:20 in getOrderSummary, on the client created one line earlier with new Stripe(stripeApiKey(), stripeConfig()) (src/orderSummary.ts:19) from the official SDK import (src/orderSummary.ts:1); paymentIntent.id is passed through unchanged into the returned order summary's paymentIntentId field."
     },
     "fraud_amount_compare": {
       "repository": "shockwave-stripe-fraud",

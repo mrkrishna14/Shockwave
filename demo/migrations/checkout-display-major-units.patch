@@ -11,12 +11,12 @@ Apply:      git apply <this file> at the consumer repository root.
 Caveat:     The patch is pinned to the proposed contract: it is not backward compatible with current-contract responses unless made version-aware, so its deployment must be coordinated with the provider's cutover.
 
 diff --git a/src/orderSummary.ts b/src/orderSummary.ts
-index 8116ca681e045ccaf6699f127bb5a12c8a267f7a..e4a98465ddb7cacb96eb6f785efa1d12a94eb49d 100644
+index 52f7781a70efa7805e7b36e66dd3ae8b6b8a60bb..bd88e900b7e6646d4c516bf2ed90dc9265664817 100644
 --- a/src/orderSummary.ts
 +++ b/src/orderSummary.ts
-@@ -18,8 +18,8 @@ export async function getOrderSummary(
-   stripe: Stripe = createStripeClient(),
- ): Promise<OrderSummary> {
+@@ -18,8 +18,8 @@ export interface OrderSummary {
+ export async function getOrderSummary(paymentIntentId: string): Promise<OrderSummary> {
+   const stripe = new Stripe(stripeApiKey(), stripeConfig());
    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 -  // Stripe reports USD amounts in cents.
 -  const totalDollars = paymentIntent.amount / 100;
