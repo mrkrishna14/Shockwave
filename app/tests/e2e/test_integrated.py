@@ -9,11 +9,12 @@ import json
 from uuid import uuid4
 
 import pytest
+from fastapi.testclient import TestClient
+
 from backend.demo import COMMIT
 from backend.integrated import integrated_factory
 from backend.main import CONSENT, create_app
 from backend.store import stable
-from fastapi.testclient import TestClient
 
 
 @pytest.fixture
@@ -125,3 +126,30 @@ def test_environment_switch_selects_the_integrated_adapters(tmp_path, monkeypatc
     assert client.post('/api/v1/demo/session', json={'persona': 'consumer'}).status_code == 200
     capabilities = client.get('/api/v1/capabilities').json()
     assert capabilities['mode'] == 'integrated' and 'scan' in capabilities['real_modules']
+
+
+def test_backend_restarts_between_steps_do_not_break_verification_or_migration(tmp_path):
+    # Integrated state is rebuilt from the work directory and the stored records after a restart.
+    def fresh():
+        app = create_app(tmp_path / 'restart.db', demo=True, adapters_factory=integrated_factory(tmp_path / 'work'))
+        clients = {}
+        for persona in ('provider', 'consumer'):
+            client = TestClient(app)
+            assert client.post('/api/v1/demo/session', json={'persona': persona}).status_code == 200
+            clients[persona] = client
+        return clients['provider'], clients['consumer']
+
+    p, c = fresh()
+    project, enrollment, repo = onboard(p, c)
+    run(c, f"/repository-connections/{repo['id']}/scans", {'enrollment_id': enrollment['id'], 'ref': COMMIT})
+    run(p, f"/api-projects/{project['id']}/assessments", {})
+
+    p, c = fresh()  # restart before verification
+    risk = get(c, '/consumer/risks').json()['items'][0]
+    run(c, f"/risks/{risk['id']}/verifications")
+    verification = next(x for x in get(c, '/consumer/risks').json()['items'] if x['id'] == risk['id'])['verifications'][-1]
+    assert verification['status'] == 'verified_regression', verification
+
+    p, c = fresh()  # restart before the migration
+    job = run(c, f"/risks/{risk['id']}/migrations", {'mode': 'preview'})
+    assert get(c, '/migrations/' + job['result_id']).json()['status'] == 'patch_validated'

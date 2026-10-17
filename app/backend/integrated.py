@@ -34,10 +34,6 @@ import tempfile
 from dataclasses import dataclass, field
 from functools import partial
 
-from backend.demo import DemoAdapters
-from backend.store import now, uid
-from shared.schemas import APIChange, DiscoveryResult, RepositorySnapshot
-
 from analyzer import analyze_impact as kanishk_analyze_impact
 from analyzer import detect_changes as kanishk_detect_changes
 from analyzer.demo import DECLARED_CHANGE_PATH, PROVIDER_IDS_PATH, discover_demo
@@ -47,8 +43,13 @@ from migration.service import MigrationService
 from scanner import scan_repository as noirit_scan_repository
 from verification.runner.profiles import Scenario, TrustedSnapshot
 from verification.runner.service import RunnerService
+from verification.scenarios.catalog import get_scenario
 from verification.scenarios.plans import PlanConfig
 from verification.scenarios.plans import build_verification_plan as kanishk_build_plan
+
+from backend.demo import DemoAdapters
+from backend.store import now, uid
+from shared.schemas import APIChange, DiscoveryResult, RepositorySnapshot
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSUMERS = ROOT / "examples" / "consumers"
@@ -72,8 +73,45 @@ class IntegratedState:
     def __post_init__(self) -> None:
         self.work_dir = Path(self.work_dir)
         self.artifacts = ArtifactStore(self.work_dir / "artifacts")
+        self.records: dict[str, dict] = {}  # snapshot id -> {root, commit_sha, content_hash, connection id}
+        self._load_registry()
         self.runner = RunnerService(self.artifacts, self.snapshots, self.scenarios,
                                     consent_check=self.registered)
+
+    @property
+    def registry_path(self) -> Path:
+        return self.work_dir / "registry.json"
+
+    def _load_registry(self) -> None:
+        """Re-register snapshots fetched before a backend restart (unchanged copies only)."""
+        try:
+            records = json.loads(self.registry_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return
+        for snapshot_id, record in records.items():
+            root = Path(record["root"])
+            if not root.is_dir():
+                continue
+            trusted = TrustedSnapshot.register_team_fixture(root, record["commit_sha"])
+            if trusted.content_hash == record["content_hash"]:
+                self.snapshots[snapshot_id] = trusted
+                self.records[snapshot_id] = record
+
+    def remember(self, snapshot, trusted: TrustedSnapshot) -> None:
+        self.snapshots[snapshot.id] = trusted
+        self.records[snapshot.id] = {"root": str(trusted.root), "commit_sha": trusted.commit_sha,
+                                     "content_hash": trusted.content_hash,
+                                     "repository_connection_id": str(snapshot.repository_connection_id),
+                                     "fetched_at": snapshot.fetched_at if isinstance(snapshot.fetched_at, str)
+                                     else snapshot.fetched_at.isoformat()}
+        self.registry_path.parent.mkdir(parents=True, exist_ok=True)
+        self.registry_path.write_text(json.dumps(self.records, indent=2), encoding="utf-8")
+
+    def snapshot_record(self, snapshot_id: str) -> RepositorySnapshot:
+        record = self.records[snapshot_id]
+        return RepositorySnapshot(id=snapshot_id, repository_connection_id=record["repository_connection_id"],
+                                  commit_sha=record["commit_sha"], fetched_at=record["fetched_at"],
+                                  content_hash=record["content_hash"])
 
     def registered(self, snapshot_id: str) -> bool:
         # The orchestrator re-checks enrollment and repository consent before and after
@@ -133,7 +171,7 @@ class IntegratedAdapters(DemoAdapters):
         trusted = TrustedSnapshot.register_team_fixture(root, commit_sha)
         snapshot = RepositorySnapshot(id=uid(), repository_connection_id=connection.id, commit_sha=commit_sha,
                                       fetched_at=now(), content_hash=trusted.content_hash)
-        self.state.snapshots[snapshot.id] = trusted
+        self.state.remember(snapshot, trusted)
         return snapshot
 
     def scan_repository(self, request, snapshot, repo_root):
@@ -157,9 +195,10 @@ class IntegratedAdapters(DemoAdapters):
 
     def generate_migration(self, request, risk, verification, repo_root):
         snapshot = self.state.snapshots[request.repository_snapshot_id]
-        plan = self.state.plans[risk.id]
+        plan = self.state.plans.get(risk.id) or self.build_verification_plan(
+            risk, self.state.snapshot_record(request.repository_snapshot_id))
         file, line, expression = self._use_site(risk, snapshot.root)
-        target = ApprovedTarget(risk.id, request.repository_snapshot_id, snapshot.commit_sha, risk_service(risk, self.state),
+        target = ApprovedTarget(risk.id, request.repository_snapshot_id, snapshot.commit_sha, get_scenario(plan.scenario_id).service_id,
                                 file, line, expression,
                                 hashlib.sha256((snapshot.root / file).read_bytes()).hexdigest(),
                                 request.target_contract_snapshot_id, plan)
@@ -171,17 +210,18 @@ class IntegratedAdapters(DemoAdapters):
         return result
 
     def _use_site(self, risk, root: Path):
-        """The scanner's use-site evidence (last source item) holding a '/ 100' amount conversion."""
-        for dependency_id in risk.dependency_ids:
-            dependency = self.state.dependencies.get(dependency_id)
-            sources = [item for item in (dependency.evidence if dependency else []) if item.kind == "source" and item.file]
-            if not sources:
-                continue
-            use = sources[-1]
-            text = (root / use.file).read_text(encoding="utf-8").splitlines()[use.line_start - 1]
-            match = _CONVERSION.search(text)
-            if match:
-                return use.file, use.line_start, match.group(0)
+        """The use site holding a '/ 100' amount conversion, from the Risk's own source evidence.
+
+        The Risk carries its dependencies' scanner evidence verbatim (origin first, use site last),
+        so this also works after a backend restart.
+        """
+        sources = [item for item in risk.evidence if item.kind == "source" and item.file and item.line_start]
+        for use in reversed(sources):
+            lines = (root / use.file).read_text(encoding="utf-8").splitlines()
+            if 1 <= use.line_start <= len(lines):
+                match = _CONVERSION.search(lines[use.line_start - 1])
+                if match:
+                    return use.file, use.line_start, match.group(0)
         raise ValueError("no approved '/ 100' amount conversion at the risk's use-site evidence")
 
     def _bounded_logs(self, artifact_ids) -> str:
@@ -192,13 +232,6 @@ class IntegratedAdapters(DemoAdapters):
             except (KeyError, OSError, ValueError):
                 continue
         return "\n".join(texts)[:16000]
-
-
-def risk_service(risk, state: IntegratedState) -> str:
-    services = {state.dependencies[d].service_id for d in risk.dependency_ids if d in state.dependencies}
-    if len(services) != 1:
-        raise ValueError("a migration target needs exactly one service")
-    return services.pop()
 
 
 def integrated_factory(work_dir: Path | None = None, repositories: dict[str, Path] | None = None):
