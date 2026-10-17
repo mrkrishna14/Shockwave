@@ -27,13 +27,18 @@ for _entry in (str(_ROOT), str(_ROOT / "demo" / "scripts")):
         sys.path.append(_entry)
 
 import hashlib
+import logging
 import json
+import os
 import re
 import shutil
 import tempfile
+import time
 import uuid
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from functools import partial
+from fcntl import LOCK_EX, LOCK_UN, flock
 
 from analyzer import analyze_impact as kanishk_analyze_impact
 from analyzer import detect_changes as kanishk_detect_changes
@@ -86,6 +91,8 @@ FIXTURE_LABEL = "LOCAL TEAM REPOSITORY (copied from this checkout); not a GitHub
 NOT_EXECUTABLE = "not-executable"
 _CONVERSION = re.compile(r"""[A-Za-z_]\w*(?:\[\s*['"]amount['"]\s*\]|\.amount)\s*/\s*100(?:\.0)?""")
 _STRIPE_DETAILED = "GET /v1/payment_intents/{intent}"
+_COMMIT_SHA = re.compile(r"[0-9a-f]{40}\Z")
+_LOG = logging.getLogger(__name__)
 
 
 @dataclass
@@ -101,9 +108,10 @@ class IntegratedState:
     unrunnable: dict[str, str] = field(default_factory=dict)  # risk id -> why no scenario exists
     dependencies: dict[str, object] = field(default_factory=dict)  # dependency id -> Dependency
     contracts: dict[str, tuple[DiscoveryResult, DiscoveryResult]] = field(default_factory=dict)
+    _last_orphan_sweep: float = 0
 
     def __post_init__(self) -> None:
-        self.work_dir = Path(self.work_dir)
+        self.work_dir = Path(self.work_dir).resolve()
         self.repositories.update(STRIPE_REPOSITORIES)
         self.artifacts = ArtifactStore(self.work_dir / "artifacts")
         self.records: dict[str, dict] = {}  # snapshot id -> {root, commit_sha, content_hash, connection id}
@@ -115,32 +123,209 @@ class IntegratedState:
     def registry_path(self) -> Path:
         return self.work_dir / "registry.json"
 
-    def _load_registry(self) -> None:
-        """Re-register snapshots fetched before a backend restart (unchanged copies only)."""
+    def snapshot_directory(self) -> Path:
+        snapshots = self.work_dir / "snapshots"
+        snapshots.mkdir(parents=True, exist_ok=True)
+        if snapshots.is_symlink() or snapshots.resolve().parent != self.work_dir:
+            raise ValueError("SNAPSHOT_DIRECTORY_UNSAFE")
+        return snapshots
+
+    @contextmanager
+    def _registry_lock(self):
+        self.work_dir.mkdir(parents=True, exist_ok=True)
+        with (self.work_dir / "registry.lock").open("a+b") as lock:
+            flock(lock.fileno(), LOCK_EX)
+            try:
+                yield
+            finally:
+                flock(lock.fileno(), LOCK_UN)
+
+    def _read_registry(self) -> dict:
         try:
             records = json.loads(self.registry_path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            return
-        for snapshot_id, record in records.items():
+        except FileNotFoundError:
+            return {}
+        except (OSError, ValueError, UnicodeError) as error:
+            self._quarantine_registry(str(error))
+            return {}
+        if not isinstance(records, dict):
+            self._quarantine_registry("top-level value is not an object")
+            return {}
+        return records
+
+    def _quarantine_registry(self, reason: str) -> None:
+        # Preserve damaged bytes for diagnosis instead of silently erasing all records.
+        try:
+            damaged = self.work_dir / f"registry.invalid.{uid()}.json"
+            os.replace(self.registry_path, damaged)
+            _LOG.error("Damaged snapshot registry moved to %s: %s", damaged, reason)
+        except OSError:
+            _LOG.error("Could not read or quarantine the snapshot registry: %s", reason)
+
+    def _validated_record(self, snapshot_id: str, record: object) -> TrustedSnapshot | None:
+        try:
+            if not isinstance(record, dict):
+                return None
             root = Path(record["root"])
-            if not root.is_dir():
-                continue
+            expected = self.snapshot_directory()
+            if not root.is_absolute() or root.is_symlink() or not root.is_dir() or root.resolve().parent != expected:
+                return None
+            if not _COMMIT_SHA.fullmatch(record["commit_sha"]):
+                return None
+            if not re.fullmatch(r"[0-9a-f]{64}", record["content_hash"]):
+                return None
+            RepositorySnapshot(id=snapshot_id, repository_connection_id=record["repository_connection_id"],
+                               commit_sha=record["commit_sha"], fetched_at=record["fetched_at"],
+                               content_hash=record["content_hash"])
             trusted = TrustedSnapshot.register_team_fixture(root, record["commit_sha"])
-            if trusted.content_hash == record["content_hash"]:
+            return trusted if trusted.content_hash == record["content_hash"] else None
+        except (KeyError, TypeError, ValueError, OSError):
+            return None
+
+    def _load_registry(self) -> None:
+        """Re-register snapshots fetched before a backend restart (unchanged copies only)."""
+        with self._registry_lock():
+            records = self._read_registry()
+            valid = {}
+            for snapshot_id, record in records.items():
+                trusted = self._validated_record(snapshot_id, record)
+                if trusted is None:
+                    _LOG.warning("Ignoring invalid or changed snapshot record %s", snapshot_id)
+                    continue
+                valid[snapshot_id] = record
                 self.snapshots[snapshot_id] = trusted
                 self.records[snapshot_id] = record
+            for snapshot_id in set(self.records) - set(valid):
+                self.records.pop(snapshot_id, None)
+                self.snapshots.pop(snapshot_id, None)
+            if len(valid) != len(records):
+                self._quarantine_registry("one or more invalid snapshot records")
+                self._write_registry(valid)
+
+    def _write_registry(self, records: dict) -> None:
+        fd, name = tempfile.mkstemp(prefix="registry.", suffix=".tmp", dir=self.work_dir)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                json.dump(records, handle, indent=2)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(name, self.registry_path)
+            directory = os.open(self.work_dir, os.O_RDONLY)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+        finally:
+            if os.path.exists(name):
+                os.unlink(name)
 
     def remember(self, snapshot, trusted: TrustedSnapshot) -> None:
-        self.snapshots[snapshot.id] = trusted
-        self.records[snapshot.id] = {"root": str(trusted.root), "commit_sha": trusted.commit_sha,
-                                     "content_hash": trusted.content_hash,
-                                     "repository_connection_id": str(snapshot.repository_connection_id),
-                                     "fetched_at": snapshot.fetched_at if isinstance(snapshot.fetched_at, str)
-                                     else snapshot.fetched_at.isoformat()}
-        self.registry_path.parent.mkdir(parents=True, exist_ok=True)
-        self.registry_path.write_text(json.dumps(self.records, indent=2), encoding="utf-8")
+        record = {"root": str(trusted.root), "commit_sha": trusted.commit_sha,
+                  "content_hash": trusted.content_hash,
+                  "repository_connection_id": str(snapshot.repository_connection_id),
+                  "fetched_at": snapshot.fetched_at if isinstance(snapshot.fetched_at, str)
+                  else snapshot.fetched_at.isoformat()}
+        with self._registry_lock():
+            records = self._read_registry()
+            records[snapshot.id] = record
+            self._write_registry(records)
+            self.records[snapshot.id] = record
+            self.snapshots[snapshot.id] = trusted
+
+    def snapshot(self, snapshot_id: str) -> TrustedSnapshot:
+        if snapshot_id not in self.records:
+            self._load_registry()  # another worker may have fetched it after this process started
+        record = self.records[snapshot_id]
+        trusted = self._validated_record(snapshot_id, record)
+        if trusted is None:
+            self.snapshots.pop(snapshot_id, None)
+            self.records.pop(snapshot_id, None)
+            raise ValueError("SNAPSHOT_UNAVAILABLE")
+        self.snapshots[snapshot_id] = trusted
+        return trusted
+
+    def purge_snapshot(self, snapshot_id: str) -> None:
+        """Remove one private copy after consent revocation; never follow registry paths outside work_dir."""
+        with self._registry_lock():
+            records = self._read_registry()
+            record = records.pop(snapshot_id, None)
+            allowed = self.snapshot_directory()
+            root = allowed / snapshot_id
+            if isinstance(record, dict):
+                candidate = Path(record.get("root", ""))
+                legacy = allowed / f"{record.get('repository_connection_id', '')}-{record.get('commit_sha', '')}"
+                if candidate in (root, legacy) and candidate.parent == allowed:
+                    root = candidate
+            if root.is_symlink() and root.parent == allowed:
+                root.unlink()
+            elif root.is_dir() and root.resolve().parent == allowed:
+                shutil.rmtree(root)
+            if record is not None:
+                self._write_registry(records)
+            self.records.pop(snapshot_id, None)
+            self.snapshots.pop(snapshot_id, None)
+
+    def reconcile_cleanup(self, store) -> int:
+        """Finish committed revocations after a process crash or in another worker."""
+        with store.read() as db:
+            pending = [row["snapshot_id"] for row in db.execute("SELECT snapshot_id FROM snapshot_cleanup")]
+        completed = 0
+        for snapshot_id in pending:
+            try:
+                self.purge_snapshot(snapshot_id)
+            except (OSError, ValueError) as error:
+                _LOG.error("Could not purge snapshot %s: %s", snapshot_id, error)
+                continue
+            with store.tx() as db:
+                db.execute("DELETE FROM snapshot_cleanup WHERE snapshot_id=?", (snapshot_id,))
+            completed += 1
+        self.prune_orphans(store)
+        return completed
+
+    def prune_orphans(self, store, *, grace_seconds: int = 86400) -> int:
+        """Delete old copies with no SQLite snapshot, while leaving in-flight scans alone."""
+        if time.monotonic()-self._last_orphan_sweep < 3600:
+            return 0
+        self._last_orphan_sweep = time.monotonic()
+        with store.read() as db:
+            active_scan=db.execute("""SELECT 1 FROM records WHERE kind='job'
+                AND json_extract(payload,'$.kind')='scan'
+                AND json_extract(payload,'$.status') IN ('queued','running') LIMIT 1""").fetchone()
+            if active_scan:
+                return 0
+            persisted=[json.loads(row['payload']) for row in db.execute("SELECT payload FROM records WHERE kind='snapshot'")]
+        if not (self.work_dir / "snapshots").is_dir():
+            return 0
+        allowed=self.snapshot_directory()
+        persisted_ids={snapshot['id'] for snapshot in persisted}
+        known={allowed / snapshot_id for snapshot_id in persisted_ids}
+        known.update(allowed / f"{snapshot['repository_connection_id']}-{snapshot['commit_sha']}"
+                     for snapshot in persisted)
+        with self._registry_lock():
+            records=self._read_registry()
+            removed=0
+            for path in allowed.iterdir():
+                if path in known or path.is_symlink() or not path.is_dir():
+                    continue
+                if time.time()-path.stat().st_mtime < grace_seconds:
+                    continue
+                shutil.rmtree(path)
+                removed+=1
+            stale_ids=[snapshot_id for snapshot_id,record in records.items()
+                       if snapshot_id not in persisted_ids and
+                       (not isinstance(record,dict) or
+                        not isinstance(record.get('root'),str) or
+                        not Path(record['root']).is_dir())]
+            for snapshot_id in stale_ids:
+                records.pop(snapshot_id,None)
+                self.records.pop(snapshot_id,None)
+                self.snapshots.pop(snapshot_id,None)
+            if stale_ids:
+                self._write_registry(records)
+            return removed
 
     def snapshot_record(self, snapshot_id: str) -> RepositorySnapshot:
+        self.snapshot(snapshot_id)
         record = self.records[snapshot_id]
         return RepositorySnapshot(id=snapshot_id, repository_connection_id=record["repository_connection_id"],
                                   commit_sha=record["commit_sha"], fetched_at=record["fetched_at"],
@@ -149,7 +334,11 @@ class IntegratedState:
     def registered(self, snapshot_id: str) -> bool:
         # The orchestrator re-checks enrollment and repository consent before and after
         # each job; the runner refuses anything that was not registered by fetch_repository.
-        return snapshot_id in self.snapshots
+        try:
+            self.snapshot(snapshot_id)
+            return True
+        except (KeyError, ValueError):
+            return False
 
     def contract_pair(self, service_id: str = "demo-payments") -> tuple[DiscoveryResult, DiscoveryResult]:
         """(current, proposed) contract snapshots; Stripe's proposed contract is the same pinned bytes."""
@@ -184,8 +373,7 @@ def _run_dir(state: IntegratedState, snapshot_root: Path) -> Path:
     work.mkdir(parents=True)
     if (snapshot_root / "package.json").is_file():
         if not (NODE_MODULES / "stripe").is_dir():
-            raise ValueError(f"{NODE_MODULES.parent} has no installed node_modules; run `npm ci` there "
-                             "(demo/scripts/demo.py prepare does it)")
+            raise ValueError("NODE_DEPENDENCIES_MISSING")
         (work / "node_modules").symlink_to(NODE_MODULES, target_is_directory=True)
     return work
 
@@ -219,6 +407,7 @@ class IntegratedAdapters(DemoAdapters):
     def __init__(self, consumer_org_id=None, *, state: IntegratedState):
         super().__init__(consumer_org_id=consumer_org_id)
         self.state = state
+        self.reused: set[str] = set()  # snapshot ids fetch_repository returned from an earlier scan
 
     # Discovery and contracts (Kanishk) -------------------------------------------------
 
@@ -268,32 +457,54 @@ class IntegratedAdapters(DemoAdapters):
     # Repository fetch (local stand-in) and scan (Noirit) --------------------------------
 
     def fetch_repository(self, connection, commit_sha):
+        if not isinstance(commit_sha, str) or not _COMMIT_SHA.fullmatch(commit_sha):
+            raise ValueError("INVALID_SNAPSHOT_REF")
         source = self.state.repositories.get(connection.full_name)
         if source is None:
             raise ValueError(f"no local team repository registered for {connection.full_name}")
-        snapshots = self.state.work_dir / "snapshots"
-        incoming = snapshots / f".incoming-{uid()}"
-        shutil.copytree(source, incoming, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", "node_modules"))
-        content_hash = TrustedSnapshot.register_team_fixture(incoming, commit_sha).content_hash
-        # Same connection, commit and content -> the same snapshot. A rescan then repeats the scan
-        # (stable dependency ids) instead of conflicting with the records it already stored.
-        snapshot_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"shockwave-snapshot:{connection.id}:{commit_sha}:{content_hash}"))
-        if snapshot_id in self.state.records and snapshot_id in self.state.snapshots:
-            shutil.rmtree(incoming, ignore_errors=True)
-            return self.state.snapshot_record(snapshot_id)
-        root = snapshots / snapshot_id
-        if root.exists():
-            shutil.rmtree(root)
-        incoming.rename(root)
-        trusted = TrustedSnapshot.register_team_fixture(root, commit_sha)
-        snapshot = RepositorySnapshot(id=snapshot_id, repository_connection_id=connection.id, commit_sha=commit_sha,
-                                      fetched_at=now(), content_hash=trusted.content_hash)
-        self.state.remember(snapshot, trusted)
-        return snapshot
+        snapshots = self.state.snapshot_directory()
+        staging = Path(tempfile.mkdtemp(prefix=".staging-", dir=snapshots))
+        root = None
+        try:
+            copied = staging / "source"
+            shutil.copytree(source, copied, symlinks=True,
+                            ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", "node_modules"))
+            # Registration hashes the copy and rejects symlinks, including links outside the source.
+            content_hash = TrustedSnapshot.register_team_fixture(copied, commit_sha).content_hash
+            # Same connection, commit and content -> the same snapshot. A rescan then repeats the scan
+            # (stable dependency ids) instead of conflicting with the records it already stored.
+            snapshot_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"shockwave-snapshot:{connection.id}:{commit_sha}:{content_hash}"))
+            if self.state.registered(snapshot_id):
+                self.reused.add(snapshot_id)
+                return self.state.snapshot_record(snapshot_id)
+            root = snapshots / snapshot_id
+            if root.exists():
+                shutil.rmtree(root)
+            os.rename(copied, root)
+            trusted = TrustedSnapshot.register_team_fixture(root, commit_sha)
+            snapshot = RepositorySnapshot(id=snapshot_id, repository_connection_id=connection.id,
+                                          commit_sha=commit_sha, fetched_at=now(),
+                                          content_hash=trusted.content_hash)
+            self.state.remember(snapshot, trusted)
+            return snapshot
+        except BaseException:
+            if root is not None and root.exists():
+                shutil.rmtree(root)
+            raise
+        finally:
+            shutil.rmtree(staging, ignore_errors=True)
 
     def scan_repository(self, request, snapshot, repo_root):
-        trusted = self.state.snapshots[snapshot.id]
+        trusted = self.state.snapshot(snapshot.id)
         return noirit_scan_repository(request, snapshot, trusted.root, consumer_org_id=self.consumer_org_id)
+
+    def discard_snapshot(self, snapshot_id):
+        """Drop a fetched copy when its scan loses the job lease or consent fence.
+
+        A reused snapshot (rescan of unchanged code) already backs stored scans, so it stays."""
+        if snapshot_id in self.reused:
+            return
+        self.state.purge_snapshot(snapshot_id)
 
     # Plans (Kanishk), verification and migration ---------------------------------------
 
@@ -317,6 +528,7 @@ class IntegratedAdapters(DemoAdapters):
         return plan
 
     def verify_regression(self, plan, repo_root):
+        snapshot = self.state.snapshot(plan.repository_snapshot_id)
         if plan.scenario_id == NOT_EXECUTABLE:
             risk = self.state.risks[plan.risk_id]
             reason = self.state.unrunnable.get(plan.risk_id, "no executable scenario")
@@ -324,13 +536,13 @@ class IntegratedAdapters(DemoAdapters):
             return not_run_result(risk, f"No executable scenario for this usage, so it remains a prediction ({reason}).")
         if get_scenario(plan.scenario_id).service_id == STRIPE:
             return self._verify_locally(plan)
-        result = self.state.runner.verify_regression(plan, self.state.snapshots[plan.repository_snapshot_id].root)
+        result = self.state.runner.verify_regression(plan, snapshot.root)
         self.logs = self._bounded_logs(result.artifact_ids)
         return result
 
     def _verify_locally(self, plan):
         """Stripe case scenarios: current and proposed runs of the real consumer code (runner double)."""
-        root = self.state.snapshots[plan.repository_snapshot_id].root
+        root = self.state.snapshot(plan.repository_snapshot_id).root
         work = _run_dir(self.state, root)
         try:
             runs = {phase: run_phase_locally(plan, root, phase, work_dir=work, node_executable=str(NODE))
@@ -344,7 +556,7 @@ class IntegratedAdapters(DemoAdapters):
         return result
 
     def generate_migration(self, request, risk, verification, repo_root):
-        snapshot = self.state.snapshots[request.repository_snapshot_id]
+        snapshot = self.state.snapshot(request.repository_snapshot_id)
         plan = self.state.plans.get(risk.id) or self.build_verification_plan(
             risk, self.state.snapshot_record(request.repository_snapshot_id))
         if get_scenario(plan.scenario_id).service_id == STRIPE:
@@ -428,4 +640,7 @@ def integrated_factory(work_dir: Path | None = None, repositories: dict[str, Pat
     factory.accepts_consumer_org_id = True
     factory.state = state
     factory.repository_options = repository_options
+    factory.reconcile_cleanup = state.reconcile_cleanup
+    factory.prerequisites = lambda: (["Stripe checkout tests need `npm ci --ignore-scripts --prefix demo/templates/checkout`."]
+                                     if not (NODE_MODULES / "stripe" / "package.json").is_file() else [])
     return factory

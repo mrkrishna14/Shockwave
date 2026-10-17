@@ -142,7 +142,7 @@ def test_restart_and_no_production_demo_login(env,tmp_path):
     assert get(c2,'/jobs/'+job['id']).json()['status']=='succeeded'
     assert len(get(c2,'/repository-connections').json()['items'])==1
     prod=TestClient(create_app(tmp_path/'prod.db',demo=False));assert post(prod,'/demo/session',{'persona':'provider'}).status_code==404
-    assert get(prod,'/session').status_code==401
+    assert get(prod,'/session').status_code==401  # password accounts still sign in without demo mode
 
 def test_origins_invalid_input_and_no_arbitrary_fetch(env):
     app,cs=env;p=cs['provider'];pr=project(p)
@@ -237,9 +237,30 @@ def test_pagination_and_capabilities_are_scoped(env):
     second=p.get('/api/v1/api-projects?limit=2&cursor='+first['next_cursor']).json()
     assert len(first['items'])==2 and len(second['items'])==1
     assert len({x['id'] for x in first['items']+second['items']})==3
+    assert p.get('/api/v1/jobs?cursor='+first['next_cursor']).status_code==422
     assert p.get('/api/v1/api-projects?limit=999').status_code==422
     assert get(c,'/capabilities').json()['publication']=='unavailable'
+    assert get(c,'/job-metrics').json()['queued']==0
     assert get(p,'/consumer/risks').status_code==403
+
+
+def test_switching_off_demo_rejects_existing_demo_sessions(tmp_path):
+    path=tmp_path/'existing.db'
+    demo_app=create_app(path,demo=True)
+    client=TestClient(demo_app)
+    assert client.post('/api/v1/demo/session',json={'persona':'provider'}).status_code==200
+    disabled=TestClient(create_app(path,demo=False))
+    disabled.cookies.update(client.cookies)
+    assert disabled.get('/api/v1/session').status_code==503
+    assert disabled.get('/api/v1/api-projects').status_code==503
+    assert disabled.get('/api/v1/capabilities').json()['mode']=='unconfigured'
+
+
+def test_demo_rejects_non_loopback_clients(tmp_path):
+    app=create_app(tmp_path/'loopback.db',demo=True)
+    remote=TestClient(app,client=('198.51.100.2',50000))
+    assert remote.get('/api/v1/health').status_code==403
+    assert remote.post('/api/v1/demo/session',json={'persona':'provider'}).status_code==403
 
 def test_slow_adapter_does_not_block_api(tmp_path,monkeypatch):
     from threading import Event

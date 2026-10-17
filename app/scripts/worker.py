@@ -11,6 +11,8 @@ from backend.main import create_app
 def main():
     app=create_app()
     while True:
+        cleanup=getattr(app.state.orchestrator.adapters_factory,'reconcile_cleanup',None)
+        if cleanup: cleanup(app.state.store)
         app.state.outbox.reconcile_abandoned()
         pending=app.state.outbox.pending()
         for id in pending: app.state.outbox.dispatch(id)

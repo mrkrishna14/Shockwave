@@ -1,6 +1,6 @@
 # Shockwave platform
 
-The platform is a permissioned, local fixture demonstration of API change impact. It stores provider projects, invitations, consumer enrollment and repository consent, jobs, private evidence, and provider summaries. Python and JavaScript assertions really run against embedded trusted fixture code. It does **not** scan arbitrary repositories, connect GitHub, publish a PR, import Stripe, or provide production authentication. Email/password accounts and SMTP invitation notices are available (see [Accounts and email](#accounts-and-email)).
+The platform is a permissioned, local demonstration of API change impact. It stores provider projects, invitations, consumer enrollment and repository consent, jobs, private evidence, and provider summaries. The integrated mode calls the owners' real discovery, scanner, analyzer, verification, and migration modules on trusted local copies, including Stripe consumer examples. Stripe's proposed change is hypothetical. It does **not** scan arbitrary repositories, connect GitHub, publish a PR, or provide production authentication. Email/password accounts and SMTP invitation notices are available (see [Accounts and email](#accounts-and-email)).
 
 ## Install
 
@@ -87,4 +87,4 @@ It writes `docs/sample-demo-output.json`; use a copy if you need to keep that tr
 
 The API lives in `backend/main.py`, storage and additive migrations in `backend/store.py`, durable claims in `backend/jobs.py`, adapter execution in `backend/orchestration.py`, invitation delivery state in `backend/outbox.py`, and current-result policy in `backend/readiness.py`. Pydantic contracts in `shared/schemas.py` remain canonical; `frontend/contracts.ts` and the JSON schema are generated.
 
-Real scanner, provider discovery/analysis, signed GitHub installation and snapshots, email, sandbox execution, migration publication, and production identity integration are still needed. The application fails closed when demo mode is disabled. See `docs/INTEGRATION.md` and `docs/HANDOFF-platform.md` for exact seams and limitations.
+Integrated mode has real scanner, discovery, and analysis wiring for trusted team-owned examples. Signed GitHub installation and snapshots, live email, sandboxed execution, migration publication, and production identity integration are still needed. The application fails closed when demo mode is disabled. See `docs/INTEGRATION.md` and `docs/HANDOFF-platform.md` for exact seams and limitations.

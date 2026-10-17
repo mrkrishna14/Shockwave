@@ -83,13 +83,36 @@ def test_pinned_fetch_cache_rechecks_and_revocation(tmp_path):
     first = client.fetch_repository(connection, sha)
     second = client.fetch_repository(connection, sha)
     assert first.content_hash == second.content_hash
+    assert client.snapshot_root(first.id) != client.snapshot_root(second.id)
     assert sum('tarball' in c[1] for c in client.transport.calls) == 1
+    first_root=client.snapshot_root(first.id)
+    (client.cache / f'2-{sha}' / 'consumer.py').write_text('changed')
+    third=client.fetch_repository(connection, sha)
+    assert (first_root/'consumer.py').read_text()=='x=1'
+    assert client.snapshot_root(third.id)!=first_root
+    assert sum('tarball' in c[1] for c in client.transport.calls) == 2
     routes[('GET', '/installation/repositories?per_page=100&page=1')] = Response(200, {'repositories': []}, {})
     with pytest.raises(GitHubError, match='repository_removed'): client.fetch_repository(connection, sha)
     connection.status = 'revoked'
     with pytest.raises(GitHubError, match='revoked'): client.fetch_repository(connection, sha)
     client.purge_repository(2)
     assert not list(client.cache.iterdir())
+
+
+def test_repository_purge_removes_copies_after_adapter_restart(tmp_path):
+    sha='a'*40
+    routes={
+        ('POST','/app/installations/1/access_tokens'):Response(201,{'token':'private','permissions':{'contents':'read'}},{}),
+        ('GET','/installation/repositories?per_page=100&page=1'):Response(200,{'repositories':[{'id':2,'full_name':'team/demo'}]},{}),
+        ('GET',f'/repos/team/demo/commits/{sha}'):Response(200,{'sha':sha},{}),
+        ('GET',f'/repos/team/demo/tarball/{sha}'):Response(200,archive(),{}),
+    }
+    connection=D(id='conn',installation_id=1,github_repository_id=2,status='connected',scan_consent_at='now')
+    first=adapter(tmp_path,routes)
+    snapshot=first.fetch_repository(connection,sha)
+    root=first.snapshot_root(snapshot.id)
+    adapter(tmp_path,routes).purge_repository(2)
+    assert not root.exists() and not list(first.cache.iterdir())
 
 
 def test_suspended_installation_is_rejected(tmp_path):

@@ -32,10 +32,11 @@ atomic `consume_state` callback binding state to user, organization, session and
 It checks that user's accessible installations and then checks the app installation.
 Ishan must persist the verified binding; a callback installation ID is insufficient.
 
-Every snapshot/cache read checks current consent and live repository access. Cache
-keys are numeric repository ID plus full SHA. Backend maps returned snapshot IDs to
-`adapter.snapshot_roots`; do not serialize these paths. Cache metadata is currently
-process-local and re-downloads after restart. Invoke `purge_repository` on revocation
+Every fetch checks current consent and live repository access. Cache
+keys are numeric repository ID plus full SHA. Each fetch gets a separate copied
+snapshot, whose hash is rechecked through `adapter.snapshot_root`; do not serialize
+these paths. Cache metadata is currently process-local and re-downloads after restart.
+Invoke `purge_repository` on revocation, including after a restart, to remove copied source,
 and delete corresponding findings/artifacts under backend retention policy. Use a
 single worker per cache until backend locking is added.
 

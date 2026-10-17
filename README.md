@@ -33,17 +33,20 @@ offline.
 
 Details are in `demo/README.md`. The talk track is in `demo/DEMO_SCRIPT.md` (three minutes).
 
-## Demo 2: the platform UI on the real modules (fictional Demo Payments provider)
+## Demo 2: the platform UI on the real modules (Stripe or fictional Demo Payments provider)
 
 One command, from any folder:
 
 ```sh
-~/Desktop/Shockwave-main/start-website.sh     # or ./start-website.sh from the repository root
+./start-website.sh
 ```
 
 It starts the backend (port 8000, integrated mode: the owners' real modules) and the website
 (port 3000) with the repository's own Node. `Ctrl+C` stops both. Stop any backend already using
 port 8000 before running the script; a process started before a pull may lack current dashboard routes.
+The launcher checks the Stripe checkout's Node dependencies and prints the exact install command if
+they are missing. Integrated scans accept only a 40-character lowercase hexadecimal fixture revision;
+each scan keeps its own immutable source copy.
 
 Open http://127.0.0.1:3000 and follow the walkthrough in `app/README.md`. To run the same flow
 headless:

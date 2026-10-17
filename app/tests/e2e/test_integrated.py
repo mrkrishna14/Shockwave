@@ -6,10 +6,12 @@ fetch copies Noirit's local team fixture (examples/consumers/python-display) ins
 snapshot; invitations use the development inbox; publication stays disabled.
 """
 import json
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from integrations.storage import tree_hash
 
 from backend.demo import COMMIT
 from backend.integrated import integrated_factory
@@ -153,3 +155,130 @@ def test_backend_restarts_between_steps_do_not_break_verification_or_migration(t
     p, c = fresh()  # restart before the migration
     job = run(c, f"/risks/{risk['id']}/migrations", {'mode': 'preview'})
     assert get(c, '/migrations/' + job['result_id']).json()['status'] == 'patch_validated'
+
+
+def test_scan_rejects_path_traversal_before_fetch(env, tmp_path):
+    _app, cs, _factory = env
+    _project, enrollment, repo = onboard(cs['provider'], cs['consumer'])
+    marker=tmp_path/'outside'/'marker';marker.parent.mkdir();marker.write_text('keep')
+    for ref in ('..','../../../../outside','not-a-commit'):
+        response=post(cs['consumer'],f"/repository-connections/{repo['id']}/scans",
+                      {'enrollment_id':enrollment['id'],'ref':ref})
+        assert response.status_code==422
+    assert marker.read_text()=='keep'
+
+
+def test_repeated_ref_keeps_each_snapshot_immutable(tmp_path):
+    source=tmp_path/'source';source.mkdir();(source/'consumer.py').write_text('before')
+    factory=integrated_factory(tmp_path/'work',{'acme/storefront':source})
+    connection=SimpleNamespace(id=str(uuid4()),full_name='acme/storefront')
+    adapter=factory(consumer_org_id=str(uuid4()))
+    first=adapter.fetch_repository(connection,COMMIT)
+    (source/'consumer.py').write_text('after')
+    second=adapter.fetch_repository(connection,COMMIT)
+    assert factory.state.snapshot(first.id).root!=factory.state.snapshot(second.id).root
+    assert (factory.state.snapshot(first.id).root/'consumer.py').read_text()=='before'
+    assert (factory.state.snapshot(second.id).root/'consumer.py').read_text()=='after'
+    (factory.state.snapshot(first.id).root/'consumer.py').write_text('tampered')
+    assert not factory.state.registered(first.id)
+
+
+def test_registry_merges_process_writes_and_loads_new_snapshots(tmp_path):
+    source=tmp_path/'source';source.mkdir();(source/'consumer.py').write_text('fixture')
+    work=tmp_path/'work'
+    first=integrated_factory(work,{'acme/storefront':source})
+    second=integrated_factory(work,{'acme/storefront':source})
+    connection=SimpleNamespace(id=str(uuid4()),full_name='acme/storefront')
+    one=first().fetch_repository(connection,COMMIT)
+    two=second().fetch_repository(connection,COMMIT)
+    assert second.state.snapshot(one.id).content_hash==one.content_hash
+    restarted=integrated_factory(work,{'acme/storefront':source})
+    assert {one.id,two.id}.issubset(restarted.state.snapshots)
+
+
+def test_invalid_registry_entries_do_not_prevent_startup(tmp_path):
+    work=tmp_path/'work';work.mkdir()
+    (work/'registry.json').write_text('{"bad": {}}')
+    assert integrated_factory(work).state.snapshots=={}
+    (work/'registry.json').write_text('{corrupt')
+    assert integrated_factory(work).state.snapshots=={}
+    assert list(work.glob('registry.invalid.*.json'))
+
+
+def test_registry_rejects_root_outside_snapshot_area(tmp_path):
+    source=tmp_path/'outside';source.mkdir();(source/'source.py').write_text('private')
+    work=tmp_path/'work';work.mkdir()
+    (work/'registry.json').write_text(json.dumps({str(uuid4()):{
+        'root':str(source),'commit_sha':COMMIT,'content_hash':tree_hash(source),
+        'repository_connection_id':str(uuid4()),'fetched_at':'2026-10-17T00:00:00+00:00'}}))
+    assert integrated_factory(work).state.snapshots=={}
+    assert (source/'source.py').read_text()=='private'
+
+
+def test_revocation_purges_copied_source_and_registry(env):
+    app, cs, factory=env
+    _project,enrollment,repo=onboard(cs['provider'],cs['consumer'])
+    run(cs['consumer'],f"/repository-connections/{repo['id']}/scans",{'enrollment_id':enrollment['id']})
+    snapshot_id=next(iter(factory.state.records))
+    root=factory.state.snapshot(snapshot_id).root
+    assert root.is_dir()
+    assert cs['consumer'].delete('/api/v1/enrollments/'+enrollment['id']).status_code==200
+    assert not root.exists() and snapshot_id not in factory.state.records
+    with app.state.store.read() as db:
+        assert db.execute('SELECT count(*) FROM snapshot_cleanup').fetchone()[0]==0
+
+
+def test_restart_finishes_committed_snapshot_cleanup(env):
+    app, cs, factory=env
+    _project,enrollment,repo=onboard(cs['provider'],cs['consumer'])
+    run(cs['consumer'],f"/repository-connections/{repo['id']}/scans",{'enrollment_id':enrollment['id']})
+    snapshot_id=next(iter(factory.state.records));root=factory.state.snapshot(snapshot_id).root
+    with app.state.store.tx() as db:
+        db.execute('INSERT INTO snapshot_cleanup VALUES(?,?)',(snapshot_id,'2026-10-17T00:00:00+00:00'))
+    create_app(app.state.store.path,demo=True,adapters_factory=integrated_factory(factory.state.work_dir))
+    assert not root.exists()
+    with app.state.store.read() as db:
+        assert db.execute('SELECT count(*) FROM snapshot_cleanup').fetchone()[0]==0
+
+
+def test_failed_scan_discards_fetched_source(env, monkeypatch):
+    from backend.integrated import IntegratedAdapters
+
+    app, cs, factory=env
+    _project,enrollment,repo=onboard(cs['provider'],cs['consumer'])
+
+    def fail_after_fetch(*_args, **_kwargs):
+        raise RuntimeError('scanner failed')
+
+    monkeypatch.setattr(IntegratedAdapters,'scan_repository',fail_after_fetch)
+    response=post(cs['consumer'],f"/repository-connections/{repo['id']}/scans",
+                  {'enrollment_id':enrollment['id'],'ref':COMMIT})
+    assert response.status_code==202
+    assert get(cs['consumer'],'/jobs/'+response.json()['id']).json()['status']=='failed'
+    assert factory.state.records=={}
+    assert list(factory.state.snapshot_directory().iterdir())==[]
+
+
+def test_lost_scan_claim_discards_fetched_source(env, monkeypatch):
+    app, cs, factory=env
+    _project,enrollment,repo=onboard(cs['provider'],cs['consumer'])
+    monkeypatch.setattr(app.state.queue,'finish',lambda *_args: False)
+    response=post(cs['consumer'],f"/repository-connections/{repo['id']}/scans",
+                  {'enrollment_id':enrollment['id'],'ref':COMMIT})
+    assert response.status_code==202
+    assert factory.state.records=={}
+    assert list(factory.state.snapshot_directory().iterdir())==[]
+
+
+def test_orphan_sweep_removes_unpersisted_registered_copy(env):
+    from shared.schemas import RepositoryConnection
+
+    app, cs, factory=env
+    _project,_enrollment,repo=onboard(cs['provider'],cs['consumer'])
+    snapshot=factory(consumer_org_id=stable('consumer')).fetch_repository(
+        RepositoryConnection.model_validate({k:v for k,v in repo.items() if k!='enrollment_permissions'}),COMMIT)
+    root=factory.state.snapshot(snapshot.id).root
+    assert root.is_dir()
+    factory.state._last_orphan_sweep=0
+    assert factory.state.prune_orphans(app.state.store,grace_seconds=0)==1
+    assert not root.exists() and snapshot.id not in factory.state.records

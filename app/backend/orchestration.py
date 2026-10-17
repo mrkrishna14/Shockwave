@@ -1,4 +1,5 @@
 """Platform job execution. Adapter calls happen outside SQLite transactions."""
+import logging
 from pathlib import Path
 from threading import Event, Thread
 
@@ -12,6 +13,9 @@ from shared.schemas import (
 
 
 def dump(model): return model.model_dump(mode='json')
+
+
+_LOG=logging.getLogger(__name__)
 
 
 class Orchestrator:
@@ -56,8 +60,20 @@ class Orchestrator:
             return self.adapters_factory(consumer_org_id=org)
         return self.adapters_factory()
 
+    def _discard_scan(self, adapters, snapshot_id):
+        if not hasattr(adapters,'discard_snapshot'): return
+        try:
+            adapters.discard_snapshot(snapshot_id)
+        except Exception:
+            # A failed deletion must not hide the original scan failure. The
+            # registry's orphan sweep can retry a copy without a stored scan.
+            _LOG.exception('Could not discard uncommitted snapshot %s',snapshot_id)
+
     def run(self, claim):
         stop=Event()
+        adapters=None
+        result=None
+        kind=None
         def renew():
             while not stop.wait(max(1,self.queue.lease_seconds/3)):
                 if not self.queue.heartbeat(claim): return
@@ -78,12 +94,17 @@ class Orchestrator:
             def persist(db):
                 self._persist(db,kind,prepared,task,org,result)
 
-            self.queue.finish(claim,persist,result['id'])
+            committed=self.queue.finish(claim,persist,result['id'])
+            if not committed and kind=='scan':
+                self._discard_scan(adapters,result['snapshot']['id'])
         except Exception as exc:
+            if kind=='scan' and result and adapters:
+                self._discard_scan(adapters,result['snapshot']['id'])
             code=str(exc) if str(exc) in {
                 'CONSENT_REVOKED','REPOSITORY_REVOKED','ADAPTER_UNAVAILABLE',
                 'PROJECT_UNAVAILABLE','RISK_UNAVAILABLE','SNAPSHOT_UNAVAILABLE',
-                'VERIFICATION_UNAVAILABLE','RESULT_ID_CONFLICT'} else 'ADAPTER_FAILED'
+                'VERIFICATION_UNAVAILABLE','RESULT_ID_CONFLICT',
+                'NODE_DEPENDENCIES_MISSING'} else 'ADAPTER_FAILED'
             self.queue.fail(claim,code,retryable=code not in {'CONSENT_REVOKED','REPOSITORY_REVOKED','ADAPTER_UNAVAILABLE'})
         finally:
             stop.set()
@@ -138,18 +159,22 @@ class Orchestrator:
         if kind=='scan':
             project,repo,enrollment=prepared['project'],prepared['repo'],prepared['enrollment']
             snapshot=RepositorySnapshot.model_validate(adapters.fetch_repository(RepositoryConnection.model_validate(repo),task['ref']))
-            if snapshot.repository_connection_id!=repo['id'] or snapshot.commit_sha!=task['ref']:
-                raise ValueError('ADAPTER_FAILED')
-            result=ScanResult.model_validate(adapters.scan_repository(
-                ScanRequest(repository_snapshot_id=snapshot.id,enrollment_id=enrollment['id'],
-                            service_id=project['service_id'],
-                            endpoint_catalog=adapters.endpoint_catalog(project) if hasattr(adapters,'endpoint_catalog') else [endpoint()],
-                            supported_languages=['python','javascript','typescript']),snapshot,Path('.')))
-            if result.repository_snapshot_id!=snapshot.id or any(
-                d.consumer_org_id!=org or d.enrollment_id!=enrollment['id'] or
-                d.repository_snapshot_id!=snapshot.id or d.service_id!=project['service_id']
-                for d in result.dependencies): raise ValueError('ADAPTER_FAILED')
-            return {'id':uid(),'snapshot':dump(snapshot),'scan':dump(result)}
+            try:
+                if snapshot.repository_connection_id!=repo['id'] or snapshot.commit_sha!=task['ref']:
+                    raise ValueError('ADAPTER_FAILED')
+                result=ScanResult.model_validate(adapters.scan_repository(
+                    ScanRequest(repository_snapshot_id=snapshot.id,enrollment_id=enrollment['id'],
+                                service_id=project['service_id'],
+                                endpoint_catalog=adapters.endpoint_catalog(project) if hasattr(adapters,'endpoint_catalog') else [endpoint()],
+                                supported_languages=['python','javascript','typescript']),snapshot,Path('.')))
+                if result.repository_snapshot_id!=snapshot.id or any(
+                    d.consumer_org_id!=org or d.enrollment_id!=enrollment['id'] or
+                    d.repository_snapshot_id!=snapshot.id or d.service_id!=project['service_id']
+                    for d in result.dependencies): raise ValueError('ADAPTER_FAILED')
+                return {'id':uid(),'snapshot':dump(snapshot),'scan':dump(result)}
+            except Exception:
+                self._discard_scan(adapters,snapshot.id)
+                raise
         if kind=='analysis':
             project=prepared['project']
             declared=[APIChange.model_validate(c) for c in task['declared_changes']]

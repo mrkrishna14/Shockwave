@@ -32,12 +32,25 @@ def page(items,request=None):
         limit=int(request.query_params.get('limit','50'))
         if not 1<=limit<=100: raise ValueError()
         token=request.query_params.get('cursor')
-        offset=int(base64.urlsafe_b64decode(token+'===').decode()) if token else 0
-        if offset<0 or offset>len(items): raise ValueError()
-    except (ValueError,UnicodeDecodeError,binascii.Error):
+        def item_key(item):
+            return next(str(item[name]) for name in ('id','invitation_id','enrollment_id','github_repository_id')
+                        if name in item)
+        keys=[item_key(item) for item in items]
+        if len(set(keys))!=len(keys): raise ValueError()
+        scope=request.url.path+'?'+str(sorted((key,value) for key,value in request.query_params.multi_items()
+                                             if key not in ('cursor','limit')))
+        if token:
+            if len(token)>1024: raise ValueError()
+            cursor=json.loads(base64.urlsafe_b64decode(token+'===').decode())
+            if cursor['scope']!=digest(scope) or cursor['after'] not in keys: raise ValueError()
+            offset=keys.index(cursor['after'])+1
+        else:
+            offset=0
+    except (ValueError,UnicodeDecodeError,binascii.Error,KeyError,StopIteration,TypeError):
         fail(422,'INVALID_PAGE','Use a valid cursor and limit from 1 to 100')
     end=offset+limit
-    next_cursor=base64.urlsafe_b64encode(str(end).encode()).decode().rstrip('=') if end<len(items) else None
+    next_cursor=(base64.urlsafe_b64encode(json.dumps({'scope':digest(scope),'after':keys[end-1]}).encode())
+                 .decode().rstrip('=')) if end<len(items) else None
     return {'items':items[offset:end],'next_cursor':next_cursor}
 
 class Problem(Exception):
@@ -60,7 +73,7 @@ class PasswordLogin(Input): email: str = Field(min_length=3,max_length=254); pas
 class AcceptInput(Input): invitation_id: ID; consumer_org_id: ID; consent_version: str; share_summary: bool
 class ConnectInput(Input): return_route: str = '/'
 class RepoInput(Input): github_repository_id: str; enrollment_id: ID; scan_consent: bool; allow_model_processing: bool=False; allow_pr_write: bool=False
-class ScanInput(Input): enrollment_id: ID; ref: str=COMMIT
+class ScanInput(Input): enrollment_id: ID; ref: str=Field(default=COMMIT, pattern=r'^[0-9a-f]{40}$')
 class DiscoverInput(Input): spec_reference: Literal['demo-fixture']='demo-fixture'
 class AssessInput(Input): old_snapshot_id: ID=OLD; new_snapshot_id: ID=NEW; declared_changes: list[APIChange]=Field(default_factory=list)
 class MigrationInput(Input): mode: Literal['preview']='preview'
@@ -75,6 +88,8 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
         adapters_factory = integrated_factory(settings.work_dir)
     integrated = bool(getattr(adapters_factory, 'accepts_consumer_org_id', False))
     store=Store(db_path or settings.database)
+    reconcile_snapshots=getattr(adapters_factory,'reconcile_cleanup',None)
+    if reconcile_snapshots: reconcile_snapshots(store)
     api=FastAPI(title='Shockwave',version='0.1.0')
     api.state.store=store
     api.state.demo=demo
@@ -105,6 +120,9 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
     @api.middleware('http')
     async def origin_guard(request, call_next):
         # Same-origin frontend proxy. Reject browser cross-site mutations.
+        if demo and (not request.client or request.client.host not in ('127.0.0.1','::1','testclient')):
+            return JSONResponse(status_code=403,content={'error':{'code':'DEMO_LOOPBACK_ONLY',
+                'message':'Local demo access is limited to loopback clients.','retryable':False},'request_id':uid()})
         origin=request.headers.get('origin')
         allowed=settings.origin
         if request.method not in ('GET','HEAD','OPTIONS') and (request.headers.get('sec-fetch-site')=='cross-site' or (origin and origin!=allowed)):
@@ -116,9 +134,12 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
 
     def identity(db,request):
         token=request.cookies.get('shockwave_session','')
-        row=db.execute('SELECT users.id,users.email,users.verified FROM sessions JOIN users ON users.id=sessions.user_id WHERE token_hash=? AND expires>?',(digest(token),now())).fetchone()
+        row=db.execute('SELECT users.id,users.email,users.verified,users.password_hash FROM sessions JOIN users ON users.id=sessions.user_id WHERE token_hash=? AND expires>?',(digest(token),now())).fetchone()
         if not row: fail(401,'UNAUTHENTICATED','Sign in first')
-        return dict(row)
+        # Demo personas have no password and exist only for local demo mode; switching demo off ends
+        # their sessions. Email/password accounts keep working without demo mode.
+        if not demo and row['password_hash'] is None: fail(503,'PRODUCTION_UNCONFIGURED','Demo sessions are disabled; sign in with an account')
+        return {key:row[key] for key in ('id','email','verified')}
     def context(db,request,kind=None,admin=False):
         user=identity(db,request)
         org=request.headers.get('x-organization-id')
@@ -189,7 +210,9 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
     def health(): return {'status':'ok','integration_mode':('integrated' if integrated else 'fixture') if demo else 'unconfigured','production_auth':False,'password_auth':True,'demo_sessions':demo}
     @api.get('/api/v1/capabilities')
     def capabilities(request:Request):
-        with store.read() as db: identity(db,request)
+        if demo:
+            with store.read() as db: identity(db,request)
+        prerequisite_warnings=getattr(adapters_factory,'prerequisites',lambda:[])()
         return {'mode':('integrated' if integrated else 'fixture') if demo else 'unconfigured',
                 # Integrated mode: these steps call the owners' real modules (backend.integrated);
                 # repository access stays a local trusted fixture and publication stays disabled.
@@ -202,7 +225,9 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
                 'migration':'fixture' if demo else 'unavailable',
                 'email':'smtp' if outbox.mailer else 'development_inbox' if demo else 'unavailable',
                 'publication':'unavailable',
-                'reasons':{'publication':'Live GitHub publication adapter and fresh remote revision checks are not configured.'}}
+                'reasons':{'publication':'Live GitHub publication adapter and fresh remote revision checks are not configured.',
+                           **({'identity':'Production identity, installation binding, external transport and isolated execution are not configured.'} if not demo else {}),
+                           **({'verification':' '.join(prerequisite_warnings)} if prerequisite_warnings else {})}}
     @api.post('/api/v1/demo/session')
     def login(body:Login,request:Request):
         if not demo: fail(404,'NOT_FOUND','Demo sessions disabled')
@@ -345,14 +370,23 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             task=store.get(db,job['id']+'-task','task')
             if job['status'] in ('queued','running') and task and (repo_id is None or task.get('repository_id')==repo_id) and (enrollment_id is None or task.get('enrollment_id')==enrollment_id):
                 job.update(status='cancelled',stage='consent_revoked',updated_at=now());store.update(db,job);queue.cancel(db,job['id'])
-        # Purge private artifacts in this scope immediately (no cached checkout in demo).
+        # The cleanup intent commits with the consent change. A restart or worker can
+        # complete deletion if this process exits before touching the filesystem.
+        scans=store.list(db,'scan',org,enrollment_id) if enrollment_id else store.list(db,'scan',org)
+        for scan in scans:
+            snapshot=store.get(db,scan['repository_snapshot_id'],'snapshot',org)
+            if snapshot and (repo_id is None or snapshot['repository_connection_id']==repo_id):
+                db.execute('INSERT OR IGNORE INTO snapshot_cleanup VALUES(?,?)',(snapshot['id'],now()))
+        # Purge private artifacts in this scope immediately.
         for artifact in store.list(db,'artifact',org):
             if (repo_id is None or artifact.get('repository_id')==repo_id) and (enrollment_id is None or artifact.get('enrollment_id')==enrollment_id):
                 artifact.update(content='',purged=True);store.update(db,artifact)
     @api.delete('/api/v1/enrollments/{id}')
     def revoke_enrollment(id:str,request:Request):
         with store.tx() as db:
-            e,_,org=owned(db,request,id,'enrollment','consumer',True);e.update(status='revoked',revoked_at=now());store.update(db,e);revoke(db,org['id'],enrollment_id=id);return e
+            e,_,org=owned(db,request,id,'enrollment','consumer',True);e.update(status='revoked',revoked_at=now());store.update(db,e);revoke(db,org['id'],enrollment_id=id)
+        if reconcile_snapshots: reconcile_snapshots(store)
+        return e
     @api.post('/api/v1/github/connect')
     def connect(body:ConnectInput,request:Request):
         if not demo: fail(503,'ADAPTER_UNAVAILABLE','GitHub adapter is not connected')
@@ -423,7 +457,9 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
     @api.delete('/api/v1/repository-connections/{id}')
     def disconnect(id:str,request:Request):
         with store.tx() as db:
-            r,_,org=owned(db,request,id,'repository','consumer',True);r['status']='revoked';store.update(db,r);revoke(db,org['id'],repo_id=id);return r
+            r,_,org=owned(db,request,id,'repository','consumer',True);r['status']='revoked';store.update(db,r);revoke(db,org['id'],repo_id=id)
+        if reconcile_snapshots: reconcile_snapshots(store)
+        return r
 
     def enqueue(db,request,background,kind,org,task,body,scope):
         key,fp,previous=idem(db,request,scope,body)
@@ -471,6 +507,15 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
         with store.read() as db:
             _,org=context(db,request)
             return page([job_view(db,j) for j in store.list(db,'job',org['id'])],request)
+    @api.get('/api/v1/job-metrics')
+    def job_metrics(request:Request):
+        with store.read() as db:
+            _,org=context(db,request)
+            jobs=store.list(db,'job',org['id'])
+            return {'queued':sum(j['status']=='queued' for j in jobs),
+                    'running':sum(j['status']=='running' for j in jobs),
+                    'failed':sum(j['status']=='failed' for j in jobs),
+                    'oldest_queued_at':min((j['created_at'] for j in jobs if j['status']=='queued'),default=None)}
     def job_view(db,j):
         lease=db.execute('SELECT attempts,cancel_requested FROM job_leases WHERE job_id=?',(j['id'],)).fetchone()
         history=[dict(row) for row in db.execute('''SELECT generation,started_at,ended_at,status,error_code

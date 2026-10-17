@@ -87,6 +87,8 @@ export function Consumer({w,run}:{w:Workspace;run:(fn:()=>Promise<unknown>)=>voi
   </Table>:<Empty title="No selected repositories">Connect repositories and choose which ones to analyze.</Empty>;
   const incoming=data.incoming.length>0&&<Table headers={['Provider','API','Expires','Action']}>{data.incoming.map(i=><tr key={i.invitation_id}><td>{i.provider_name}</td><td>{i.api_name}</td><td className="date">{new Date(i.expires_at).toLocaleDateString()}</td><td><button className="link" onClick={()=>review(i.invitation_id)}>Review invitation</button></td></tr>)}</Table>;
 
+  const prerequisite=w.capabilities?.reasons.verification&&<div role="status" className="notice">{w.capabilities.reasons.verification}</div>;
+
   if(tab==='invitations')return <>
     <PageHead title="Invitations" subtitle={`Providers invite you by email address. Invitations sent to ${w.session?.user.email} appear here.`}
       meta={[`${data.incoming.length} pending`,plural(data.enrollments.filter(e=>e.status==='active').length,'active enrollment')]}/>
@@ -109,6 +111,7 @@ export function Consumer({w,run}:{w:Workspace;run:(fn:()=>Promise<unknown>)=>voi
   </>;
 
   if(tab==='repositories')return <>
+    {prerequisite}
     <PageHead title="Repositories" subtitle="You choose exactly which repositories Shockwave may analyze. Processing, AI model access and pull-request permissions are granted separately."
       meta={enrollment?[plural(selected.length,'selected repository','selected repositories'),`Enrollment ${enrollment.status}`]:undefined}/>
     {!enrollment?<Section title="Accept an invitation first" sub="Repository selection is specific to one active enrollment."><button className="link" onClick={()=>w.navigate({tab:'invitations'})}>Go to invitations</button></Section>:<>
@@ -126,13 +129,14 @@ export function Consumer({w,run}:{w:Workspace;run:(fn:()=>Promise<unknown>)=>voi
         </div>:<p className="small-muted">No repositories listed yet. Connect the installation to see them.</p>}
       </Section>
       <Section title="Selected for this enrollment">{repoTable(true)}</Section>
-      <Section title="Consent" sub="Revocation stops new work and removes access to private artifacts.">
+      <Section title="Consent" sub="Revocation stops new work, removes access to private artifacts, and deletes this enrollment’s copied source snapshots.">
         <button className="button danger" disabled={enrollment.status!=='active'} onClick={()=>run(()=>api(`/enrollments/${enrollment.id}`,{method:'DELETE',org:org.id}))}>Revoke enrollment consent</button>
       </Section>
     </>}
   </>;
 
   if(tab==='findings')return <>
+    {prerequisite}
     <PageHead title="Findings" subtitle={`Private to ${org.name}. Predictions and executed tests are kept separate.`}
       meta={[plural(current.length,'current finding'),plural(data.risks.filter(r=>r.evidence_state.verified).length,'verified regression'),plural(validated.length,'validated patch','validated patches')]}/>
     <Section title="Impact findings">{findings}</Section>
@@ -140,6 +144,7 @@ export function Consumer({w,run}:{w:Workspace;run:(fn:()=>Promise<unknown>)=>voi
   </>;
 
   return <>
+    {prerequisite}
     <PageHead title={org.name} subtitle="Consumer workspace"
       meta={[plural(selected.length,'selected repository','selected repositories'),plural(current.length,'current finding'),plural(validated.length,'validated patch','validated patches')]}/>
     <DemoPath role="consumer" data={data}/>

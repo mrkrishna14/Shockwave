@@ -31,8 +31,11 @@ class JobQueue:
 
     def claim(self, job_id=None):
         with self.store.tx() as db:
-            q = "SELECT l.*, r.payload FROM job_leases l JOIN records r ON r.id=l.job_id WHERE r.kind='job'"
-            args = []
+            q = """SELECT l.*, r.payload FROM job_leases l JOIN records r ON r.id=l.job_id
+                WHERE r.kind='job' AND l.cancel_requested=0
+                AND json_extract(r.payload,'$.status') IN ('queued','running')
+                AND (json_extract(r.payload,'$.status')='queued' OR l.expires_at IS NULL OR l.expires_at<=?)"""
+            args = [now()]
             if job_id:
                 q += ' AND l.job_id=?'; args.append(job_id)
             q += ' ORDER BY r.rowid LIMIT 100'
@@ -101,8 +104,12 @@ class JobQueue:
         with self.store.tx() as db:
             if not self.owns(db, claim): return False
             job = self.store.get(db, claim.job_id, 'job')
+            message=('Stripe checkout dependencies are missing. Run `npm ci --ignore-scripts --prefix '
+                     'demo/templates/checkout` from the repository root, then retry.'
+                     if code=='NODE_DEPENDENCIES_MISSING' else
+                     'Operation failed. Check its prerequisites and retry if appropriate.')
             job.update(status='failed',stage='failed',updated_at=now(),error={
-                'code':code,'message':'Operation failed. Check its prerequisites and retry if appropriate.',
+                'code':code,'message':message,
                 'retryable':retryable})
             self.store.update(db, job)
             db.execute("UPDATE job_attempts SET ended_at=?,status='failed',error_code=? WHERE job_id=? AND generation=? AND ended_at IS NULL",
