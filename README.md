@@ -42,8 +42,8 @@ One command, from any folder:
 ```
 
 It starts the backend (port 8000, integrated mode: the owners' real modules) and the website
-(port 3000) with the repository's own Node. `Ctrl+C` stops both. If a backend is already running
-on port 8000, the website reuses it.
+(port 3000) with the repository's own Node. `Ctrl+C` stops both. Stop any backend already using
+port 8000 before running the script; a process started before a pull may lack current dashboard routes.
 
 Open http://127.0.0.1:3000 and follow the walkthrough in `app/README.md`. To run the same flow
 headless:
