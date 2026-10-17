@@ -42,7 +42,8 @@ def execute(amount, patched=False, language='python'):
         try:
             proc=subprocess.run(argv,cwd=directory,env={'PATH':os.environ.get('PATH','/usr/bin:/bin'),'HOME':directory},capture_output=True,text=True,timeout=45)
             log=(proc.stdout+proc.stderr)[:16000]
-            tests=2 if ('Ran 2 tests' in log or '# tests 2' in log) else 0
+            # unittest, node --test TAP (Node 20) or spec reporter (Node 22+ prints 'ℹ tests 2').
+            tests=2 if ('Ran 2 tests' in log or '# tests 2' in log or '\u2139 tests 2' in log) else 0
             return ExecutionResult(exit_code=proc.returncode,timed_out=False,infrastructure_error=None,artifact_ids=[],duration_ms=int((time.monotonic()-start)*1000),tests_run=tests), log
         except (OSError,subprocess.TimeoutExpired) as exc:
             return ExecutionResult(exit_code=None,timed_out=isinstance(exc,subprocess.TimeoutExpired),infrastructure_error=type(exc).__name__,artifact_ids=[],duration_ms=int((time.monotonic()-start)*1000),tests_run=0), str(exc)
