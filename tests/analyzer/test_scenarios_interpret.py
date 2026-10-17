@@ -54,6 +54,10 @@ PLAN = VerificationPlan(
 DEMO_URL = "http://demo-payments.test/v1/charges/ch_demo"
 
 
+# Runner artifact ids are UUIDs in the canonical contracts (shared.schemas ExecutionResult).
+LOG_B = "00000000-0000-4000-8000-00000000000b"
+LOG_P = "00000000-0000-4000-8000-00000000000f"
+
 def _report(phase: Phase, **overrides: object) -> dict:
     report: dict = {
         "schema_version": "shockwave.v1",
@@ -196,8 +200,8 @@ def test_outcome_table_covers_the_required_cases() -> None:
 
 
 def test_verified_regression_carries_both_executions_and_names_the_assertion() -> None:
-    baseline = PhaseRun(_execution(artifact_ids=("log-b",)), _encode(_report("baseline")))
-    proposed = PhaseRun(_execution(exit_code=1, artifact_ids=("log-p", "log-b")), _encode(_failed("proposed")))
+    baseline = PhaseRun(_execution(artifact_ids=(LOG_B,)), _encode(_report("baseline")))
+    proposed = PhaseRun(_execution(exit_code=1, artifact_ids=(LOG_P, LOG_B)), _encode(_failed("proposed")))
 
     result = interpret_verification(PLAN, baseline, proposed)
 
@@ -205,7 +209,7 @@ def test_verified_regression_carries_both_executions_and_names_the_assertion() -
     assert "expected $10.00, actual $0.10" in result.summary
     assert SPEC.assertion_id in result.summary
     assert (result.baseline, result.proposed) == (baseline.execution, proposed.execution)
-    assert result.artifact_ids == ["log-b", "log-p"]
+    assert result.artifact_ids == [LOG_B, LOG_P]
     assert (result.risk_id, result.repository_snapshot_id, result.scenario_id) == (
         RISK_ID,
         SNAPSHOT_ID,
