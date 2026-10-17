@@ -342,7 +342,7 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
         with store.read() as db:
             _,org=context(db,request,'consumer',True)
             installed=db.execute('SELECT 1 FROM installations WHERE org_id=?',(org['id'],)).fetchone()
-            return page([{'github_repository_id':'fixture-'+org['id'],'full_name':'local-demo/storefront','default_branch':'main','mode':'fixture'}] if installed else [],request)
+            return page([{'github_repository_id':'fixture-'+org['id'],'full_name':'acme/storefront','default_branch':'main','mode':'fixture'}] if installed else [],request)
     @api.post('/api/v1/repository-connections',status_code=201)
     def repository(body:RepoInput,request:Request):
         with store.tx() as db:
@@ -352,7 +352,7 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             if not demo or not installed or body.github_repository_id!='fixture-'+org['id']: fail(403,'REPOSITORY_OWNERSHIP','Repository is not in the verified installation list')
             r=next((x for x in store.list(db,'repository',org['id']) if x['github_repository_id']==body.github_repository_id and x['status']=='connected'),None)
             if not r:
-                r=dump(RepositoryConnection(id=uid(),consumer_org_id=org['id'],installation_id=installed['installation_id'],github_repository_id=body.github_repository_id,full_name='local-demo/storefront',default_branch='main',status='connected',scan_consent_at=now(),allow_model_processing=body.allow_model_processing,allow_pr_write=body.allow_pr_write))
+                r=dump(RepositoryConnection(id=uid(),consumer_org_id=org['id'],installation_id=installed['installation_id'],github_repository_id=body.github_repository_id,full_name='acme/storefront',default_branch='main',status='connected',scan_consent_at=now(),allow_model_processing=body.allow_model_processing,allow_pr_write=body.allow_pr_write))
                 store.put(db,'repository',org['id'],r)
             db.execute('''INSERT INTO enrollment_repositories(enrollment_id,repository_id,allow_model_processing,allow_pr_write,scan_consent_at)
                 VALUES(?,?,?,?,?) ON CONFLICT(enrollment_id,repository_id) DO UPDATE SET

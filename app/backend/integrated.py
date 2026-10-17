@@ -52,7 +52,7 @@ from verification.scenarios.plans import build_verification_plan as kanishk_buil
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSUMERS = ROOT / "examples" / "consumers"
-DEFAULT_REPOSITORIES = {"local-demo/storefront": CONSUMERS / "python-display"}
+DEFAULT_REPOSITORIES = {"acme/storefront": CONSUMERS / "python-display"}
 FIXTURE_LABEL = "LOCAL TRUSTED TEAM FIXTURE (examples/consumers); not a GitHub snapshot"
 _CONVERSION = re.compile(r"""[A-Za-z_]\w*(?:\[\s*['"]amount['"]\s*\]|\.amount)\s*/\s*100(?:\.0)?""")
 
