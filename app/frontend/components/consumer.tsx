@@ -45,6 +45,7 @@ export function Consumer({w,run}:{w:Workspace;run:(fn:()=>Promise<unknown>)=>voi
   const selected=data.selectedRepos.filter(r=>r.status==='connected');
   const real=w.capabilities?.mode==='integrated';
   return <>
+    {w.capabilities?.reasons.verification&&<div role="status" className="notice">{w.capabilities.reasons.verification}</div>}
     <div className="metric-grid">
       <div className="metric"><span>Selected repositories</span><strong>{selected.length}</strong><small>For this enrollment</small></div>
       <div className="metric"><span>Current risks</span><strong>{data.risks.filter(r=>r.evidence_state.current).length}</strong><small>Private to your organization</small></div>
@@ -75,7 +76,7 @@ export function Consumer({w,run}:{w:Workspace;run:(fn:()=>Promise<unknown>)=>voi
         <div className="section-divider"><h3>Selected for this enrollment</h3>{data.selectedRepos.length?<Table headers={['Repository','Permissions','Status','Actions']}>
           {data.selectedRepos.map(r=><tr key={r.id}><td>{r.full_name}<div className="small-muted">{r.default_branch}</div></td><td>{r.enrollment_permissions.allow_model_processing?'Model allowed':'Model off'} · {r.enrollment_permissions.allow_pr_write?'PR write allowed':'PR write off'}</td><td><Status value={r.status}/></td><td><div className="button-row"><button className="button subtle" disabled={r.status!=='connected'} onClick={()=>run(()=>api(`/repository-connections/${r.id}/scans`,{method:'POST',org:org.id,body:{enrollment_id:enrollment.id}}))}>Scan / retry</button><button className="button danger" disabled={r.status!=='connected'} onClick={()=>run(()=>api(`/repository-connections/${r.id}`,{method:'DELETE',org:org.id}))}>Disconnect</button></div></td></tr>)}
         </Table>:<Empty title="No selected repositories">Connect repositories and choose one to analyze.</Empty>}</div>
-        <div className="section-divider"><button className="button danger" disabled={enrollment.status!=='active'} onClick={()=>run(()=>api(`/enrollments/${enrollment.id}`,{method:'DELETE',org:org.id}))}>Revoke enrollment consent</button><p className="small-muted">Revocation stops new work and removes access to private artifacts.</p></div>
+        <div className="section-divider"><button className="button danger" disabled={enrollment.status!=='active'} onClick={()=>run(()=>api(`/enrollments/${enrollment.id}`,{method:'DELETE',org:org.id}))}>Revoke enrollment consent</button><p className="small-muted">Revocation stops new work, removes access to private artifacts, and deletes this enrollment's copied source snapshots.</p></div>
       </>}
     </section>}
     {(tab==='overview'||tab==='findings')&&<section className="panel"><div className="panel-header"><div><span className="eyebrow">PRIVATE EVIDENCE</span><h2>Impact findings</h2></div><span className="small-muted">Predictions and executed tests are separate.</span></div>
