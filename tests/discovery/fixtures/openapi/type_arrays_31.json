@@ -1,0 +1,36 @@
+{
+  "openapi": "3.1.0",
+  "info": {"title": "Type arrays 3.1 (test fixture)", "version": "1.0.0"},
+  "paths": {
+    "/gadgets": {
+      "get": {
+        "operationId": "listGadgets",
+        "responses": {
+          "200": {
+            "description": "A list of gadgets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {"type": ["integer", "null"]},
+                    "items": {"type": "array", "items": {"$ref": "#/components/schemas/Gadget"}},
+                    "flag": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Gadget": {
+        "type": ["object", "null"],
+        "properties": {"name": {"type": "string", "examples": ["gizmo"]}}
+      }
+    }
+  }
+}

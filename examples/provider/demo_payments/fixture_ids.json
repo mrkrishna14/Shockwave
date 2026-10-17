@@ -1,0 +1,17 @@
+{
+  "note": "Placeholder IDs from discovery.ids.fixture_uuid(<name>) until Ishan's bootstrap publishes canonical fixture IDs. Replace the values, keep the keys; endpoint IDs are derived from snapshot IDs (discovery.ids.endpoint_id).",
+  "provider_org_id": "5486cf6d-7aaf-5dc8-b068-e509926f4dad",
+  "service_id": "demo-payments",
+  "base_url": "http://demo-payments.test",
+  "api_project_id": "3f35ea07-6269-5964-8d65-7a3b7ba36a87",
+  "contract_snapshots": {
+    "v1": "fbda55e7-6c86-5ee6-9ed6-fe9ac0879e15",
+    "v2_proposed": "9f9eed12-9741-5e6c-890d-ab70bc01abaf"
+  },
+  "source_snapshot_id": "7513a35e-c989-5dff-93f0-256a8e0a79f8",
+  "stripe": {
+    "service_id": "stripe",
+    "api_project_id": "81864a08-682c-5e5f-aea4-fe151848243c",
+    "contract_snapshot_id": "96b4a0ec-c3f0-5758-a505-6d72876461c8"
+  }
+}

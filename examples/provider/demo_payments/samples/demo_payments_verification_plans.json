@@ -1,0 +1,58 @@
+{
+  "not_run": [
+    {
+      "artifact_ids": [],
+      "baseline": null,
+      "id": "60bc02ce-968c-5843-a0e4-0c6a21be6d58",
+      "proposed": null,
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "risk_id": "96e3219f-e451-5053-9d3c-d3c16662d267",
+      "scenario_id": "unavailable",
+      "schema_version": "shockwave.v1",
+      "status": "not_run",
+      "summary": "Not run: no executable scenario is bound to risk 96e3219f-e451-5053-9d3c-d3c16662d267 (comparison-only, storage-only or unbound dependency); its verification status stays not_run"
+    },
+    {
+      "artifact_ids": [],
+      "baseline": null,
+      "id": "80488816-7147-5c13-a26a-5032e644b987",
+      "proposed": null,
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "risk_id": "9c72babf-e116-5ff7-a634-68c1cd3ddce0",
+      "scenario_id": "unavailable",
+      "schema_version": "shockwave.v1",
+      "status": "not_run",
+      "summary": "Not run: no executable scenario is bound to risk 9c72babf-e116-5ff7-a634-68c1cd3ddce0 (comparison-only, storage-only or unbound dependency); its verification status stays not_run"
+    }
+  ],
+  "plans": [
+    {
+      "expected_behavior": "GET /v1/charges/{id}: the displayed price is $10.00 for both the current response (amount=1000, USD minor units) and the equivalent proposed response (amount=10, USD major units).",
+      "id": "8a1e7884-b8bf-52f5-8818-7a0a06443dc9",
+      "new_fixture_id": "demo-payments.charge.ch_demo.v2-dollars",
+      "old_fixture_id": "demo-payments.charge.ch_demo.v1-cents",
+      "repository_snapshot_id": "7e9177f2-8efe-520b-995b-e9d91f1b8341",
+      "risk_id": "7ee48ef7-6404-54b8-9944-d56508d4d735",
+      "runner_profile": "trusted_node",
+      "scenario_id": "demo-payments.charge-amount-units.display.typescript",
+      "test_files": [
+        ".shockwave/scenarios/demo-payments.charge-amount-units.display.typescript/shockwave_display_invariant.test.mjs"
+      ],
+      "timeout_seconds": 60
+    },
+    {
+      "expected_behavior": "GET /v1/charges/{id}: the displayed price is $10.00 for both the current response (amount=1000, USD minor units) and the equivalent proposed response (amount=10, USD major units).",
+      "id": "e39e1c17-07f3-5484-a355-1696541d8ecd",
+      "new_fixture_id": "demo-payments.charge.ch_demo.v2-dollars",
+      "old_fixture_id": "demo-payments.charge.ch_demo.v1-cents",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "risk_id": "1dc12d45-43cc-552e-9fda-946f3b048c20",
+      "runner_profile": "trusted_python",
+      "scenario_id": "demo-payments.charge-amount-units.display.python",
+      "test_files": [
+        ".shockwave/scenarios/demo-payments.charge-amount-units.display.python/test_shockwave_display_invariant.py"
+      ],
+      "timeout_seconds": 60
+    }
+  ]
+}

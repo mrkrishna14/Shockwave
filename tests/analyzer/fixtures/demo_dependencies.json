@@ -1,0 +1,285 @@
+{
+  "note": "Contract-shaped stand-ins for Noirit's ScanResult dependencies over consumer_doubles/. Keys are stable test handles.",
+  "dependencies": {
+    "python_display": {
+      "id": "aef326ec-fdc0-5c12-b853-9798c5766c75",
+      "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+      "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "service_id": "demo-payments",
+      "endpoint_id": "0ae014eb-3e86-57b6-9027-77afca1a1d65",
+      "language": "python",
+      "field_path": "response.amount",
+      "origin": {
+        "kind": "http_response",
+        "library": "requests",
+        "call": "requests.get"
+      },
+      "usage": {
+        "operation": "divide",
+        "operand": 100,
+        "destination": null
+      },
+      "confidence": "direct",
+      "evidence": [
+        {
+          "id": "c03a2763-9ff3-54c4-9bd1-2ed00278bcd8",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://da308024-f945-5616-8d29-6889269584e0/storefront/pricing.py",
+          "revision": "ec701e5dd3ef0fd0df052eee08e52e88a64af72e",
+          "file": "storefront/pricing.py",
+          "line_start": 18,
+          "line_end": 18,
+          "json_pointer": null,
+          "excerpt": "return f\"${charge['amount'] / 100:.2f}\""
+        }
+      ]
+    },
+    "typescript_display": {
+      "id": "baab6919-f87e-557d-adca-e0366f1097d1",
+      "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+      "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+      "repository_snapshot_id": "7e9177f2-8efe-520b-995b-e9d91f1b8341",
+      "service_id": "demo-payments",
+      "endpoint_id": "0ae014eb-3e86-57b6-9027-77afca1a1d65",
+      "language": "typescript",
+      "field_path": "response.amount",
+      "origin": {
+        "kind": "http_response",
+        "library": "fetch",
+        "call": "fetch"
+      },
+      "usage": {
+        "operation": "divide",
+        "operand": 100,
+        "destination": null
+      },
+      "confidence": "direct",
+      "evidence": [
+        {
+          "id": "0d826e29-4b1d-5598-b62f-8b6d09ab7c2b",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://7e9177f2-8efe-520b-995b-e9d91f1b8341/src/pricing.ts",
+          "revision": "8fa45b536d7364cda17ad3c9a4dd5d60db5e4727",
+          "file": "src/pricing.ts",
+          "line_start": 20,
+          "line_end": 20,
+          "json_pointer": null,
+          "excerpt": "return `$${(charge.amount / 100).toFixed(2)}`;"
+        }
+      ]
+    },
+    "python_storage": {
+      "id": "a091103e-7d52-50a4-a1d5-8f2efaa6f38e",
+      "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+      "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "service_id": "demo-payments",
+      "endpoint_id": "0ae014eb-3e86-57b6-9027-77afca1a1d65",
+      "language": "python",
+      "field_path": "response.amount",
+      "origin": {
+        "kind": "http_response",
+        "library": "requests",
+        "call": "requests.get"
+      },
+      "usage": {
+        "operation": "store",
+        "operand": null,
+        "destination": "sqlite:ledger.amount_cents"
+      },
+      "confidence": "direct",
+      "evidence": [
+        {
+          "id": "28b16656-bb17-5548-9614-f67a4cf3ee23",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://da308024-f945-5616-8d29-6889269584e0/storefront/ledger.py",
+          "revision": "ec701e5dd3ef0fd0df052eee08e52e88a64af72e",
+          "file": "storefront/ledger.py",
+          "line_start": 10,
+          "line_end": 13,
+          "json_pointer": null,
+          "excerpt": "connection.execute(\"INSERT INTO ledger (charge_id, amount_cents) VALUES (?, ?)\", (charge[\"id\"], charge[\"amount\"]))"
+        }
+      ]
+    },
+    "python_fraud_threshold": {
+      "id": "a56dd734-b2a7-52d7-b80f-6bda1d166792",
+      "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+      "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "service_id": "demo-payments",
+      "endpoint_id": "0ae014eb-3e86-57b6-9027-77afca1a1d65",
+      "language": "python",
+      "field_path": "response.amount",
+      "origin": {
+        "kind": "http_response",
+        "library": "requests",
+        "call": "requests.get"
+      },
+      "usage": {
+        "operation": "compare",
+        "operand": 50000,
+        "destination": null
+      },
+      "confidence": "direct",
+      "evidence": [
+        {
+          "id": "b8cde3f7-7d0c-5559-99de-9a46c4f7124d",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://da308024-f945-5616-8d29-6889269584e0/storefront/fraud.py",
+          "revision": "ec701e5dd3ef0fd0df052eee08e52e88a64af72e",
+          "file": "storefront/fraud.py",
+          "line_start": 10,
+          "line_end": 10,
+          "json_pointer": null,
+          "excerpt": "return charge[\"amount\"] >= REVIEW_THRESHOLD_CENTS"
+        }
+      ]
+    },
+    "python_export_pass_through": {
+      "id": "9fa4c18f-c86e-5260-bea7-95f0d5c32bee",
+      "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+      "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "service_id": "demo-payments",
+      "endpoint_id": "0ae014eb-3e86-57b6-9027-77afca1a1d65",
+      "language": "python",
+      "field_path": "response",
+      "origin": {
+        "kind": "http_response",
+        "library": "requests",
+        "call": "requests.get"
+      },
+      "usage": {
+        "operation": "pass_through",
+        "operand": null,
+        "destination": "analytics queue"
+      },
+      "confidence": "inferred",
+      "evidence": [
+        {
+          "id": "6b141dfb-b949-5ada-9ba0-5feacf3f6d24",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://da308024-f945-5616-8d29-6889269584e0/storefront/export.py",
+          "revision": "ec701e5dd3ef0fd0df052eee08e52e88a64af72e",
+          "file": "storefront/export.py",
+          "line_start": 8,
+          "line_end": 8,
+          "json_pointer": null,
+          "excerpt": "queue.append({\"type\": \"charge\", \"payload\": charge})"
+        }
+      ]
+    },
+    "negative_refund_amount": {
+      "id": "c617f1f7-6d14-5101-8909-3e217bcaefe0",
+      "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+      "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "service_id": "demo-payments",
+      "endpoint_id": "5b261951-d469-552d-9b1c-5d73ec8a11ac",
+      "language": "python",
+      "field_path": "response.amount",
+      "origin": {
+        "kind": "http_response",
+        "library": "requests",
+        "call": "requests.get"
+      },
+      "usage": {
+        "operation": "divide",
+        "operand": 100,
+        "destination": null
+      },
+      "confidence": "direct",
+      "evidence": [
+        {
+          "id": "7302d04f-bfb8-5acf-8c59-a285dffc8bcd",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://da308024-f945-5616-8d29-6889269584e0/storefront/refunds.py",
+          "revision": "ec701e5dd3ef0fd0df052eee08e52e88a64af72e",
+          "file": "storefront/refunds.py",
+          "line_start": 10,
+          "line_end": 10,
+          "json_pointer": null,
+          "excerpt": "return f\"${refund['amount'] / 100:.2f}\""
+        }
+      ]
+    },
+    "negative_stripe_service": {
+      "id": "b340f037-51a1-5f19-a49a-caae205863d9",
+      "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+      "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "service_id": "stripe",
+      "endpoint_id": "4ecac7f9-401c-52c3-b4d8-df555cefef1c",
+      "language": "python",
+      "field_path": "response.amount",
+      "origin": {
+        "kind": "sdk_response",
+        "library": "stripe",
+        "call": "stripe.Charge.retrieve"
+      },
+      "usage": {
+        "operation": "divide",
+        "operand": 100,
+        "destination": null
+      },
+      "confidence": "direct",
+      "evidence": [
+        {
+          "id": "676e920a-b0b0-5379-9b65-507a44d58657",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://da308024-f945-5616-8d29-6889269584e0/storefront/stripe_checkout.py",
+          "revision": "ec701e5dd3ef0fd0df052eee08e52e88a64af72e",
+          "file": "storefront/stripe_checkout.py",
+          "line_start": 8,
+          "line_end": 8,
+          "json_pointer": null,
+          "excerpt": "return f\"${charge.amount / 100:.2f}\""
+        }
+      ]
+    },
+    "negative_local_amount": {
+      "id": "bc63bccb-7cba-5f23-954b-0cf290f92c8a",
+      "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+      "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "service_id": "demo-payments",
+      "endpoint_id": "0ae014eb-3e86-57b6-9027-77afca1a1d65",
+      "language": "python",
+      "field_path": "amount",
+      "origin": {
+        "kind": "http_response",
+        "library": "unknown",
+        "call": "unknown"
+      },
+      "usage": {
+        "operation": "divide",
+        "operand": 100,
+        "destination": null
+      },
+      "confidence": "unresolved",
+      "evidence": [
+        {
+          "id": "9dcc448b-26cd-5872-9ab3-4f6702df195e",
+          "kind": "source",
+          "visibility": "consumer_private",
+          "source_uri": "repository-snapshot://da308024-f945-5616-8d29-6889269584e0/storefront/local_totals.py",
+          "revision": "ec701e5dd3ef0fd0df052eee08e52e88a64af72e",
+          "file": "storefront/local_totals.py",
+          "line_start": 6,
+          "line_end": 6,
+          "json_pointer": null,
+          "excerpt": "return f\"${amount / 100:.2f}\""
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "note": "Placeholder consumer-side IDs (discovery.ids.fixture_uuid) for the contract doubles in consumer_doubles/. Replace with Ishan's canonical IDs when published.",
+  "consumer_org_id": "18eb2ea5-5ddf-5949-8600-329ea7a05def",
+  "enrollment_id": "99675fbc-494d-5b4e-b5dc-1004b21f9b17",
+  "repositories": {
+    "python_storefront": {
+      "repository_connection_id": "c62722a2-a2c4-59f7-8a59-1c720ea2abe0",
+      "repository_snapshot_id": "da308024-f945-5616-8d29-6889269584e0",
+      "commit_sha": "ec701e5dd3ef0fd0df052eee08e52e88a64af72e"
+    },
+    "ts_storefront": {
+      "repository_connection_id": "75ff2d06-1a51-5ec7-8bfd-f338a73cb63c",
+      "repository_snapshot_id": "7e9177f2-8efe-520b-995b-e9d91f1b8341",
+      "commit_sha": "8fa45b536d7364cda17ad3c9a4dd5d60db5e4727"
+    }
+  }
+}
