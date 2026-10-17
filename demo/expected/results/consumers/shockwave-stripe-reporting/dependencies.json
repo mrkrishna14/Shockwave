@@ -1,0 +1,490 @@
+{
+  "audience": {
+    "consumer_org_id": "a54a75e9-ac54-5f1a-b8db-139c53fbc38a",
+    "consumer_org_label": "fictional demo company (team-created; not a real organization; not a Stripe customer)",
+    "consumer_org_name": "Quarry Finance Analytics"
+  },
+  "commit_sha": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+  "dependencies": [
+    {
+      "confidence": "direct",
+      "consumer_org_id": "a54a75e9-ac54-5f1a-b8db-139c53fbc38a",
+      "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+      "enrollment_id": "10ab008d-5029-5c8a-b409-a6b3b95dc41e",
+      "evidence": [
+        {
+          "excerpt": "counts[(payment_intent.currency, payment_intent.status)] += 1",
+          "file": "reporting_app/summary.py",
+          "id": "b52a6fe2-b95b-5ec6-9a04-193ab3361dcb",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 21,
+          "line_start": 21,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "payment_intent = client.v1.payment_intents.retrieve(payment_intent_id)",
+          "file": "reporting_app/summary.py",
+          "id": "a7359de1-f4a3-57a1-9cc1-207321c87a51",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 20,
+          "line_start": 20,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "client = client or create_stripe_client()",
+          "file": "reporting_app/summary.py",
+          "id": "d576ea98-2216-51eb-b8ef-edea8a7ffb7e",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 17,
+          "line_start": 17,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "return StripeClient(",
+          "file": "reporting_app/stripe_client.py",
+          "id": "b8099686-a9f5-5e71-8118-9a8a5d88edfe",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 26,
+          "line_start": 26,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "from stripe import StripeClient",
+          "file": "reporting_app/stripe_client.py",
+          "id": "51dcb8fe-c56b-5550-a5c2-73b3266c2ba4",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 13,
+          "line_start": 13,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        }
+      ],
+      "field_path": "response.currency",
+      "id": "15997709-0f89-5551-97a2-18be60760092",
+      "language": "python",
+      "origin": {
+        "call": "StripeClient.v1.payment_intents.retrieve",
+        "kind": "sdk_response",
+        "library": "stripe"
+      },
+      "repository_snapshot_id": "923a9231-b7cd-5c89-a2ec-a281e98d409e",
+      "service_id": "stripe",
+      "usage": {
+        "destination": null,
+        "operand": null,
+        "operation": "read"
+      }
+    },
+    {
+      "confidence": "direct",
+      "consumer_org_id": "a54a75e9-ac54-5f1a-b8db-139c53fbc38a",
+      "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+      "enrollment_id": "10ab008d-5029-5c8a-b409-a6b3b95dc41e",
+      "evidence": [
+        {
+          "excerpt": "counts[(payment_intent.currency, payment_intent.status)] += 1",
+          "file": "reporting_app/summary.py",
+          "id": "b52a6fe2-b95b-5ec6-9a04-193ab3361dcb",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 21,
+          "line_start": 21,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "payment_intent = client.v1.payment_intents.retrieve(payment_intent_id)",
+          "file": "reporting_app/summary.py",
+          "id": "a7359de1-f4a3-57a1-9cc1-207321c87a51",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 20,
+          "line_start": 20,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "client = client or create_stripe_client()",
+          "file": "reporting_app/summary.py",
+          "id": "d576ea98-2216-51eb-b8ef-edea8a7ffb7e",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 17,
+          "line_start": 17,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "return StripeClient(",
+          "file": "reporting_app/stripe_client.py",
+          "id": "b8099686-a9f5-5e71-8118-9a8a5d88edfe",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 26,
+          "line_start": 26,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "from stripe import StripeClient",
+          "file": "reporting_app/stripe_client.py",
+          "id": "51dcb8fe-c56b-5550-a5c2-73b3266c2ba4",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 13,
+          "line_start": 13,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        }
+      ],
+      "field_path": "response.status",
+      "id": "5a892ad2-4a4f-5267-bfbf-e546a09e5a9c",
+      "language": "python",
+      "origin": {
+        "call": "StripeClient.v1.payment_intents.retrieve",
+        "kind": "sdk_response",
+        "library": "stripe"
+      },
+      "repository_snapshot_id": "923a9231-b7cd-5c89-a2ec-a281e98d409e",
+      "service_id": "stripe",
+      "usage": {
+        "destination": null,
+        "operand": null,
+        "operation": "read"
+      }
+    },
+    {
+      "confidence": "direct",
+      "consumer_org_id": "a54a75e9-ac54-5f1a-b8db-139c53fbc38a",
+      "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+      "enrollment_id": "10ab008d-5029-5c8a-b409-a6b3b95dc41e",
+      "evidence": [
+        {
+          "excerpt": "(payment_intent.id, payment_intent.currency, payment_intent.amount),",
+          "file": "reporting_app/ledger.py",
+          "id": "a79d2986-dbd9-5264-aa02-22e353bfdd07",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 34,
+          "line_start": 34,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "\"INSERT OR REPLACE INTO payments (payment_intent_id, currency, amount_minor) VALUES (?, ?, ?)\",",
+          "file": "reporting_app/ledger.py",
+          "id": "697bd4f5-9b35-5755-90f3-413343a6a85e",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 33,
+          "line_start": 33,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "amount_minor INTEGER NOT NULL  -- smallest currency unit, as Stripe reports it",
+          "file": "reporting_app/ledger.py",
+          "id": "0546ed38-0cea-516e-af40-a4b9da3ad619",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 17,
+          "line_start": 17,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "payment_intent = client.v1.payment_intents.retrieve(payment_intent_id)",
+          "file": "reporting_app/ledger.py",
+          "id": "ae729461-06aa-5401-8101-c09b4f775ffe",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 31,
+          "line_start": 31,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "client = client or create_stripe_client()",
+          "file": "reporting_app/ledger.py",
+          "id": "94a4a1eb-04b7-5698-a304-de0cad0b5840",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 26,
+          "line_start": 26,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "return StripeClient(",
+          "file": "reporting_app/stripe_client.py",
+          "id": "b8099686-a9f5-5e71-8118-9a8a5d88edfe",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 26,
+          "line_start": 26,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "from stripe import StripeClient",
+          "file": "reporting_app/stripe_client.py",
+          "id": "51dcb8fe-c56b-5550-a5c2-73b3266c2ba4",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 13,
+          "line_start": 13,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        }
+      ],
+      "field_path": "response.amount",
+      "id": "8c0d5ac3-4b9e-5edf-86a9-e24687fca1dd",
+      "language": "python",
+      "origin": {
+        "call": "StripeClient.v1.payment_intents.retrieve",
+        "kind": "sdk_response",
+        "library": "stripe"
+      },
+      "repository_snapshot_id": "923a9231-b7cd-5c89-a2ec-a281e98d409e",
+      "service_id": "stripe",
+      "usage": {
+        "destination": "sqlite:payments.amount_minor",
+        "operand": null,
+        "operation": "store"
+      }
+    },
+    {
+      "confidence": "direct",
+      "consumer_org_id": "a54a75e9-ac54-5f1a-b8db-139c53fbc38a",
+      "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+      "enrollment_id": "10ab008d-5029-5c8a-b409-a6b3b95dc41e",
+      "evidence": [
+        {
+          "excerpt": "(payment_intent.id, payment_intent.currency, payment_intent.amount),",
+          "file": "reporting_app/ledger.py",
+          "id": "a79d2986-dbd9-5264-aa02-22e353bfdd07",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 34,
+          "line_start": 34,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "\"INSERT OR REPLACE INTO payments (payment_intent_id, currency, amount_minor) VALUES (?, ?, ?)\",",
+          "file": "reporting_app/ledger.py",
+          "id": "697bd4f5-9b35-5755-90f3-413343a6a85e",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 33,
+          "line_start": 33,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "payment_intent = client.v1.payment_intents.retrieve(payment_intent_id)",
+          "file": "reporting_app/ledger.py",
+          "id": "ae729461-06aa-5401-8101-c09b4f775ffe",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 31,
+          "line_start": 31,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "client = client or create_stripe_client()",
+          "file": "reporting_app/ledger.py",
+          "id": "94a4a1eb-04b7-5698-a304-de0cad0b5840",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 26,
+          "line_start": 26,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "return StripeClient(",
+          "file": "reporting_app/stripe_client.py",
+          "id": "b8099686-a9f5-5e71-8118-9a8a5d88edfe",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 26,
+          "line_start": 26,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "from stripe import StripeClient",
+          "file": "reporting_app/stripe_client.py",
+          "id": "51dcb8fe-c56b-5550-a5c2-73b3266c2ba4",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 13,
+          "line_start": 13,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        }
+      ],
+      "field_path": "response.currency",
+      "id": "eb8e8648-8cdc-5931-ad7c-86c61a9385b9",
+      "language": "python",
+      "origin": {
+        "call": "StripeClient.v1.payment_intents.retrieve",
+        "kind": "sdk_response",
+        "library": "stripe"
+      },
+      "repository_snapshot_id": "923a9231-b7cd-5c89-a2ec-a281e98d409e",
+      "service_id": "stripe",
+      "usage": {
+        "destination": "sqlite:payments.currency",
+        "operand": null,
+        "operation": "store"
+      }
+    },
+    {
+      "confidence": "direct",
+      "consumer_org_id": "a54a75e9-ac54-5f1a-b8db-139c53fbc38a",
+      "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+      "enrollment_id": "10ab008d-5029-5c8a-b409-a6b3b95dc41e",
+      "evidence": [
+        {
+          "excerpt": "(payment_intent.id, payment_intent.currency, payment_intent.amount),",
+          "file": "reporting_app/ledger.py",
+          "id": "a79d2986-dbd9-5264-aa02-22e353bfdd07",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 34,
+          "line_start": 34,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "\"INSERT OR REPLACE INTO payments (payment_intent_id, currency, amount_minor) VALUES (?, ?, ?)\",",
+          "file": "reporting_app/ledger.py",
+          "id": "697bd4f5-9b35-5755-90f3-413343a6a85e",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 33,
+          "line_start": 33,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "payment_intent = client.v1.payment_intents.retrieve(payment_intent_id)",
+          "file": "reporting_app/ledger.py",
+          "id": "ae729461-06aa-5401-8101-c09b4f775ffe",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 31,
+          "line_start": 31,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "client = client or create_stripe_client()",
+          "file": "reporting_app/ledger.py",
+          "id": "94a4a1eb-04b7-5698-a304-de0cad0b5840",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 26,
+          "line_start": 26,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "return StripeClient(",
+          "file": "reporting_app/stripe_client.py",
+          "id": "b8099686-a9f5-5e71-8118-9a8a5d88edfe",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 26,
+          "line_start": 26,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "from stripe import StripeClient",
+          "file": "reporting_app/stripe_client.py",
+          "id": "51dcb8fe-c56b-5550-a5c2-73b3266c2ba4",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 13,
+          "line_start": 13,
+          "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+          "source_uri": "repo://shockwave-stripe-reporting",
+          "visibility": "consumer_private"
+        }
+      ],
+      "field_path": "response.id",
+      "id": "c442453d-c183-596b-90a8-98cc7ce0967f",
+      "language": "python",
+      "origin": {
+        "call": "StripeClient.v1.payment_intents.retrieve",
+        "kind": "sdk_response",
+        "library": "stripe"
+      },
+      "repository_snapshot_id": "923a9231-b7cd-5c89-a2ec-a281e98d409e",
+      "service_id": "stripe",
+      "usage": {
+        "destination": "sqlite:payments.payment_intent_id",
+        "operand": null,
+        "operation": "store"
+      }
+    }
+  ],
+  "fixture": "demo/expected/dependencies.fixture.json",
+  "kind": "shockwave-demo.consumer-dependencies@1",
+  "label": "FIXTURE — contract-shaped expected scanner output prepared by Kanishk; NOT a completed scan. Replace with Noirit's scanner output when integrated.",
+  "negative_controls": [
+    {
+      "file": "reporting_app/budgets.py",
+      "id": "reporting_budget_amount",
+      "line": 15,
+      "reason": "A department Budget entered by finance in the reporting app (whole dollars); it is named amount but has no Stripe SDK response origin, so it is not a dependency.",
+      "symbol": "Budget.amount"
+    }
+  ],
+  "repository": "shockwave-stripe-reporting",
+  "repository_snapshot_id": "923a9231-b7cd-5c89-a2ec-a281e98d409e",
+  "revision_binding": "29 source evidence items verified against commit ba15df9068a555eaf52ea696500841cd7295b9b6 (file, line, excerpt) and bound to it",
+  "source": "fixture (Noirit scanner not integrated)",
+  "visibility": "consumer_private"
+}

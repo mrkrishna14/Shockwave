@@ -1,0 +1,40 @@
+{
+  "assertions": [],
+  "command": {
+    "argv": [
+      "python",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider"
+    ],
+    "cwd": "$WORK_DIR/runs/suite-migration.fraud-threshold-major-units.own-suite/shockwave-stripe-fraud",
+    "declared": "python -m pytest"
+  },
+  "commit_sha": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+  "duration_ms": 0,
+  "exit_code": 0,
+  "failing_tests": [],
+  "fixture": {
+    "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.proposed",
+    "path": "tests/fixtures/payment_intents.json",
+    "sha256": "ad9c29b9aa71e3379c2c3799032a7a5f1b9d6dcf1a019819a1d2b8e9e7731a42",
+    "source": "the consumer's bundled fixture data"
+  },
+  "infrastructure_error": null,
+  "kind": "shockwave-demo.run-record@1",
+  "outcome": "passed",
+  "phase": null,
+  "purpose": "the consumer's own suite on the migrated copy (bundled fixture data = proposed variant via the patch)",
+  "repository": "shockwave-stripe-fraud",
+  "run_id": "migration.fraud-threshold-major-units.own-suite",
+  "runner": "the consumer's own test command, run locally as a plain subprocess on a copy of the prepared repository (trusted local fixtures; not a sandbox, not Sai's runner)",
+  "scenario_id": null,
+  "stage": "validate-migrations",
+  "tests_failed": 0,
+  "tests_passed": 5,
+  "tests_run": 5,
+  "timed_out": false,
+  "timing": "duration_ms is normalized to 0 in results/ (measured durations vary between runs and interpretation never reads them); measured durations are kept in reports/runs/ only"
+}

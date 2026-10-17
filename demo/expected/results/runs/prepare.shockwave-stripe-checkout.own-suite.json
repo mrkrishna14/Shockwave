@@ -1,0 +1,37 @@
+{
+  "assertions": [],
+  "command": {
+    "argv": [
+      "node",
+      "--test",
+      "test/**/*.test.ts"
+    ],
+    "cwd": "$WORK_DIR/runs/suite-prepare.shockwave-stripe-checkout.own-suite/shockwave-stripe-checkout",
+    "declared": "npm test (node --test \"test/**/*.test.ts\")"
+  },
+  "commit_sha": "b3bac57ba74ec4cc6f3c48e3d170efb5a1b10365",
+  "duration_ms": 0,
+  "exit_code": 0,
+  "failing_tests": [],
+  "fixture": {
+    "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.baseline",
+    "path": "test/fixtures/payment_intents.json",
+    "sha256": "f10738d11285948ca52b39db28de382f747b1467d26137aa91937a9e4a4b41ea",
+    "source": "the consumer's bundled fixture data"
+  },
+  "infrastructure_error": null,
+  "kind": "shockwave-demo.run-record@1",
+  "outcome": "passed",
+  "phase": null,
+  "purpose": "the consumer's own test suite on the prepared commit (its bundled baseline fixture data)",
+  "repository": "shockwave-stripe-checkout",
+  "run_id": "prepare.shockwave-stripe-checkout.own-suite",
+  "runner": "the consumer's own test command, run locally as a plain subprocess on a copy of the prepared repository (trusted local fixtures; not a sandbox, not Sai's runner)",
+  "scenario_id": null,
+  "stage": "prepare",
+  "tests_failed": 0,
+  "tests_passed": 4,
+  "tests_run": 4,
+  "timed_out": false,
+  "timing": "duration_ms is normalized to 0 in results/ (measured durations vary between runs and interpretation never reads them); measured durations are kept in reports/runs/ only"
+}

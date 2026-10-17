@@ -1,0 +1,66 @@
+[
+  {
+    "artifact_ids": [],
+    "baseline": {
+      "artifact_ids": [],
+      "duration_ms": 0,
+      "exit_code": 0,
+      "infrastructure_error": null,
+      "tests_run": 1,
+      "timed_out": false
+    },
+    "id": "5f1cdb6e-5108-5511-91ae-cfc1a8311bca",
+    "proposed": {
+      "artifact_ids": [],
+      "duration_ms": 0,
+      "exit_code": 1,
+      "infrastructure_error": null,
+      "tests_run": 1,
+      "timed_out": false
+    },
+    "repository_snapshot_id": "bd623f0f-1656-52f7-88ee-12499ea4fc93",
+    "risk_id": "4a144d3c-4a00-5e53-a3a1-12704955df3f",
+    "scenario_id": "stripe.payment-intent-amount-units.checkout-display.typescript",
+    "schema_version": "shockwave.v1",
+    "status": "verified_regression",
+    "summary": "LOCAL RUNNER DOUBLE (trusted local fixtures; plain subprocess, not a sandbox; not Sai's runner; demo run, duration_ms normalized to 0): Verified regression within scenario stripe.payment-intent-amount-units.checkout-display.typescript: against the current contract fixture stripe.payment_intents.usd-whole-dollars.baseline, all 2 cases passed (relevant case displayed_total_usd: expected $10.00, actual $10.00; guard case(s) tax_note_unchanged passed); against the proposed contract fixture stripe.payment_intents.usd-whole-dollars.proposed, the relevant case displayed_total_usd failed: expected $10.00, actual $0.10, while the guard case(s) tax_note_unchanged passed. Proven for the tested scenario only."
+  },
+  {
+    "artifact_ids": [],
+    "baseline": {
+      "artifact_ids": [],
+      "duration_ms": 0,
+      "exit_code": 0,
+      "infrastructure_error": null,
+      "tests_run": 1,
+      "timed_out": false
+    },
+    "id": "d3afceb9-8491-5087-80a1-306f246be2af",
+    "proposed": {
+      "artifact_ids": [],
+      "duration_ms": 0,
+      "exit_code": 1,
+      "infrastructure_error": null,
+      "tests_run": 1,
+      "timed_out": false
+    },
+    "repository_snapshot_id": "6b6552c2-7344-547b-a011-0293f1556875",
+    "risk_id": "a631215e-438b-524d-b2ba-fd653eb4e399",
+    "scenario_id": "stripe.payment-intent-amount-units.fraud-threshold.python",
+    "schema_version": "shockwave.v1",
+    "status": "verified_regression",
+    "summary": "LOCAL RUNNER DOUBLE (trusted local fixtures; plain subprocess, not a sandbox; not Sai's runner; demo run, duration_ms normalized to 0): Verified regression within scenario stripe.payment-intent-amount-units.fraud-threshold.python: against the current contract fixture stripe.payment_intents.usd-whole-dollars.baseline, all 3 cases passed (relevant case above_threshold_flagged: expected needs_manual_review=True, actual True; guard case(s) below_threshold_not_flagged, at_threshold_not_flagged passed); against the proposed contract fixture stripe.payment_intents.usd-whole-dollars.proposed, the relevant case above_threshold_flagged failed: expected needs_manual_review=True, actual False, while the guard case(s) below_threshold_not_flagged, at_threshold_not_flagged passed. Proven for the tested scenario only."
+  },
+  {
+    "artifact_ids": [],
+    "baseline": null,
+    "id": "9df20e05-a0b0-52e3-a36f-6180365589f2",
+    "proposed": null,
+    "repository_snapshot_id": "923a9231-b7cd-5c89-a2ec-a281e98d409e",
+    "risk_id": "6d11c1a8-aed7-5d68-bdb8-5df3edf9f3bc",
+    "scenario_id": "unavailable",
+    "schema_version": "shockwave.v1",
+    "status": "not_run",
+    "summary": "Not run: no executable scenario is bound to risk 6d11c1a8-aed7-5d68-bdb8-5df3edf9f3bc (comparison-only, storage-only or unbound dependency); its verification status stays not_run. Potential storage risk, not verified: no executable proof ran, so it remains a prediction. Missing evidence: an executable storage scenario; units/schema of the destination; historical records; migration plan."
+  }
+]

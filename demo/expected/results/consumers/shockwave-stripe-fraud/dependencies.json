@@ -1,0 +1,276 @@
+{
+  "audience": {
+    "consumer_org_id": "58503483-d79b-5647-ab0f-790cafe54de5",
+    "consumer_org_label": "fictional demo company (team-created; not a real organization; not a Stripe customer)",
+    "consumer_org_name": "Basalt Risk Desk"
+  },
+  "commit_sha": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+  "dependencies": [
+    {
+      "confidence": "direct",
+      "consumer_org_id": "58503483-d79b-5647-ab0f-790cafe54de5",
+      "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+      "enrollment_id": "2b26426c-d191-5021-8a14-e972e71931a8",
+      "evidence": [
+        {
+          "excerpt": "if payment_intent.amount > 500000:",
+          "file": "fraud_service/review.py",
+          "id": "4bfa8674-fbcd-51af-a677-60186af4079b",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 24,
+          "line_start": 24,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)",
+          "file": "fraud_service/review.py",
+          "id": "ef1ff662-da18-538e-a42d-257396a177ce",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 22,
+          "line_start": 22,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "configure_stripe()",
+          "file": "fraud_service/review.py",
+          "id": "dc4a9a06-fb43-5f92-9f24-33af66b6728d",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 21,
+          "line_start": 21,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "stripe.api_key = api_key",
+          "file": "fraud_service/stripe_setup.py",
+          "id": "3b9f1145-aa6b-5eab-ac54-f9a573b5e5c8",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 25,
+          "line_start": 25,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "import stripe",
+          "file": "fraud_service/review.py",
+          "id": "a2b228d8-e046-5937-bf80-fc1b45d08de0",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 7,
+          "line_start": 7,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        }
+      ],
+      "field_path": "response.amount",
+      "id": "6b5c1e8e-76c3-5378-b90d-c1ecf4cbf73e",
+      "language": "python",
+      "origin": {
+        "call": "stripe.PaymentIntent.retrieve",
+        "kind": "sdk_response",
+        "library": "stripe"
+      },
+      "repository_snapshot_id": "6b6552c2-7344-547b-a011-0293f1556875",
+      "service_id": "stripe",
+      "usage": {
+        "destination": null,
+        "operand": 500000,
+        "operation": "compare"
+      }
+    },
+    {
+      "confidence": "direct",
+      "consumer_org_id": "58503483-d79b-5647-ab0f-790cafe54de5",
+      "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+      "enrollment_id": "2b26426c-d191-5021-8a14-e972e71931a8",
+      "evidence": [
+        {
+          "excerpt": "return ReviewDecision(payment_intent.id, True, \"amount above $5,000.00\")",
+          "file": "fraud_service/review.py",
+          "id": "73d9d5ad-97f9-5271-9434-b845230c292b",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 25,
+          "line_start": 25,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)",
+          "file": "fraud_service/review.py",
+          "id": "ef1ff662-da18-538e-a42d-257396a177ce",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 22,
+          "line_start": 22,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "configure_stripe()",
+          "file": "fraud_service/review.py",
+          "id": "dc4a9a06-fb43-5f92-9f24-33af66b6728d",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 21,
+          "line_start": 21,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "stripe.api_key = api_key",
+          "file": "fraud_service/stripe_setup.py",
+          "id": "3b9f1145-aa6b-5eab-ac54-f9a573b5e5c8",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 25,
+          "line_start": 25,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "import stripe",
+          "file": "fraud_service/review.py",
+          "id": "a2b228d8-e046-5937-bf80-fc1b45d08de0",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 7,
+          "line_start": 7,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        }
+      ],
+      "field_path": "response.id",
+      "id": "f9a0c028-51e8-5dfd-bfd7-d3d867c13374",
+      "language": "python",
+      "origin": {
+        "call": "stripe.PaymentIntent.retrieve",
+        "kind": "sdk_response",
+        "library": "stripe"
+      },
+      "repository_snapshot_id": "6b6552c2-7344-547b-a011-0293f1556875",
+      "service_id": "stripe",
+      "usage": {
+        "destination": null,
+        "operand": null,
+        "operation": "read"
+      }
+    },
+    {
+      "confidence": "direct",
+      "consumer_org_id": "58503483-d79b-5647-ab0f-790cafe54de5",
+      "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+      "enrollment_id": "2b26426c-d191-5021-8a14-e972e71931a8",
+      "evidence": [
+        {
+          "excerpt": "return ReviewDecision(payment_intent.id, False, \"within automatic approval limit\")",
+          "file": "fraud_service/review.py",
+          "id": "cfc7528d-9cd1-57d3-aec2-e747cf2295a7",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 26,
+          "line_start": 26,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)",
+          "file": "fraud_service/review.py",
+          "id": "ef1ff662-da18-538e-a42d-257396a177ce",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 22,
+          "line_start": 22,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "configure_stripe()",
+          "file": "fraud_service/review.py",
+          "id": "dc4a9a06-fb43-5f92-9f24-33af66b6728d",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 21,
+          "line_start": 21,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "stripe.api_key = api_key",
+          "file": "fraud_service/stripe_setup.py",
+          "id": "3b9f1145-aa6b-5eab-ac54-f9a573b5e5c8",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 25,
+          "line_start": 25,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        },
+        {
+          "excerpt": "import stripe",
+          "file": "fraud_service/review.py",
+          "id": "a2b228d8-e046-5937-bf80-fc1b45d08de0",
+          "json_pointer": null,
+          "kind": "source",
+          "line_end": 7,
+          "line_start": 7,
+          "revision": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+          "source_uri": "repo://shockwave-stripe-fraud",
+          "visibility": "consumer_private"
+        }
+      ],
+      "field_path": "response.id",
+      "id": "16e7bc0a-9d2a-5d61-b3be-f0006821582c",
+      "language": "python",
+      "origin": {
+        "call": "stripe.PaymentIntent.retrieve",
+        "kind": "sdk_response",
+        "library": "stripe"
+      },
+      "repository_snapshot_id": "6b6552c2-7344-547b-a011-0293f1556875",
+      "service_id": "stripe",
+      "usage": {
+        "destination": null,
+        "operand": null,
+        "operation": "read"
+      }
+    }
+  ],
+  "fixture": "demo/expected/dependencies.fixture.json",
+  "kind": "shockwave-demo.consumer-dependencies@1",
+  "label": "FIXTURE — contract-shaped expected scanner output prepared by Kanishk; NOT a completed scan. Replace with Noirit's scanner output when integrated.",
+  "negative_controls": [
+    {
+      "file": "fraud_service/velocity.py",
+      "id": "fraud_velocity_limit_amount",
+      "line": 18,
+      "reason": "A local VelocityLimit whose amount is a count of payments per window (not money); it is compared like a threshold but has no Stripe SDK response origin, so it is not a dependency and must stay unchanged.",
+      "symbol": "VelocityLimit.amount"
+    }
+  ],
+  "repository": "shockwave-stripe-fraud",
+  "repository_snapshot_id": "6b6552c2-7344-547b-a011-0293f1556875",
+  "revision_binding": "15 source evidence items verified against commit 91e1d97097bc7253c0ba03f7c7d0a5eddf50137b (file, line, excerpt) and bound to it",
+  "source": "fixture (Noirit scanner not integrated)",
+  "visibility": "consumer_private"
+}

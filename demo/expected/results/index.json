@@ -1,0 +1,181 @@
+{
+  "audiences": {
+    "consumer_private": "visible only to the consumer org that owns the repository",
+    "internal": "backend records (contract-shaped) from which the views are derived",
+    "provider": "visible to the provider (Stripe's view in this demo); never consumer source"
+  },
+  "files": {
+    "change/analysis.json": {
+      "audience": "internal",
+      "description": "Predicted risks (rules mode) for all consumers; never shown to the provider as is",
+      "kind": "shockwave.v1 AnalysisResult"
+    },
+    "change/api-change.json": {
+      "audience": "provider",
+      "description": "The declared SIMULATED change",
+      "kind": "shockwave.v1 APIChange"
+    },
+    "change/detect-changes.json": {
+      "audience": "provider",
+      "description": "detect_changes without (0 structural changes) and with the declaration",
+      "kind": "shockwave-demo.detect-changes@1"
+    },
+    "consumers/shockwave-stripe-checkout/dependencies.json": {
+      "audience": "consumer_private",
+      "description": "Dependency records (shockwave.v1) bound to the prepared commit; source = FIXTURE until Noirit's scanner is integrated",
+      "kind": "shockwave-demo.consumer-dependencies@1"
+    },
+    "consumers/shockwave-stripe-checkout/findings.json": {
+      "audience": "consumer_private",
+      "description": "Risks with evidence, verification, migration, controls and observations; unresolved and unaffected dependencies listed separately",
+      "kind": "shockwave-demo.consumer-findings@1"
+    },
+    "consumers/shockwave-stripe-fraud/dependencies.json": {
+      "audience": "consumer_private",
+      "description": "Dependency records (shockwave.v1) bound to the prepared commit; source = FIXTURE until Noirit's scanner is integrated",
+      "kind": "shockwave-demo.consumer-dependencies@1"
+    },
+    "consumers/shockwave-stripe-fraud/findings.json": {
+      "audience": "consumer_private",
+      "description": "Risks with evidence, verification, migration, controls and observations; unresolved and unaffected dependencies listed separately",
+      "kind": "shockwave-demo.consumer-findings@1"
+    },
+    "consumers/shockwave-stripe-reporting/dependencies.json": {
+      "audience": "consumer_private",
+      "description": "Dependency records (shockwave.v1) bound to the prepared commit; source = FIXTURE until Noirit's scanner is integrated",
+      "kind": "shockwave-demo.consumer-dependencies@1"
+    },
+    "consumers/shockwave-stripe-reporting/findings.json": {
+      "audience": "consumer_private",
+      "description": "Risks with evidence, verification, migration, controls and observations; unresolved and unaffected dependencies listed separately",
+      "kind": "shockwave-demo.consumer-findings@1"
+    },
+    "inventory.json": {
+      "audience": "provider",
+      "description": "Pinned Stripe contract: measured counts, provenance, provider-source-unavailable statement, GET /v1/payment_intents/{intent} record with parameters and amount docs",
+      "kind": "shockwave-demo.inventory@1"
+    },
+    "migrations/validation.json": {
+      "audience": "consumer_private",
+      "description": "Patched-proposed validation, patched-baseline deployment-assumption evidence, own suite and scope checks per migration",
+      "kind": "shockwave-demo.migration-validation@1"
+    },
+    "prepare.json": {
+      "audience": "internal",
+      "description": "Per repository: commit, dependency, own-suite counts",
+      "kind": "shockwave-demo.prepare@1"
+    },
+    "provider/restricted-summary.json": {
+      "audience": "provider",
+      "description": "Counts by category/severity/verification status per pseudonymous consumer; no consumer source, paths, lines, snippets, logs or patches",
+      "kind": "shockwave-demo.provider-restricted-summary@1"
+    },
+    "runs/control.reporting-summary.baseline.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/control.reporting-summary.proposed.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/execute.checkout-display.baseline.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/execute.checkout-display.proposed.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/execute.fraud-threshold.baseline.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/execute.fraud-threshold.proposed.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/execute.shockwave-stripe-reporting.own-suite-proposed-fixture.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/migration.checkout-display-major-units.own-suite.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/migration.checkout-display-major-units.patched-baseline.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/migration.checkout-display-major-units.patched-proposed.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/migration.fraud-threshold-major-units.own-suite.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/migration.fraud-threshold-major-units.patched-baseline.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/migration.fraud-threshold-major-units.patched-proposed.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/prepare.shockwave-stripe-checkout.own-suite.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/prepare.shockwave-stripe-fraud.own-suite.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "runs/prepare.shockwave-stripe-reporting.own-suite.json": {
+      "audience": "consumer_private",
+      "description": "One normalized record per executed run: argv, exit code, tests, assertion evidence, commit, fixture id + sha256 (log tails only in reports/runs)",
+      "kind": "shockwave-demo.run-record@1"
+    },
+    "snapshots.json": {
+      "audience": "internal",
+      "description": "RepositorySnapshot records (shockwave.v1) of the three prepared local commits",
+      "kind": "shockwave-demo.repository-snapshots@1"
+    },
+    "verification/controls.json": {
+      "audience": "consumer_private",
+      "description": "Control results (shockwave.control_result.v1) under both fixture variants; not tied to any risk",
+      "kind": "shockwave-demo.controls@1"
+    },
+    "verification/observations.json": {
+      "audience": "consumer_private",
+      "description": "Supporting observations (the storage-risk consumer's own suite against the simulated fixture)",
+      "kind": "shockwave-demo.observations@1"
+    },
+    "verification/plans.json": {
+      "audience": "internal",
+      "description": "Plans for risks with a bound scenario",
+      "kind": "shockwave.v1 VerificationPlan[]"
+    },
+    "verification/results.json": {
+      "audience": "internal",
+      "description": "LOCAL RUNNER DOUBLE results and not_run results (summary prefixed with the runner label)",
+      "kind": "shockwave.v1 VerificationResult[]"
+    }
+  },
+  "kind": "shockwave-demo.results-index@1",
+  "normalization": "durations 0; no absolute paths ($WORK_DIR/... for scratch paths); no log text; the only timestamp is the fixed snapshot date 2026-10-17T12:00:00Z; keys sorted, 2-space indent"
+}

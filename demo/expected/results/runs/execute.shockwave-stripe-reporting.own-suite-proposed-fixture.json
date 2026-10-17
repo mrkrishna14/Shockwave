@@ -1,0 +1,42 @@
+{
+  "assertions": [],
+  "command": {
+    "argv": [
+      "python",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider"
+    ],
+    "cwd": "$WORK_DIR/runs/suite-execute.shockwave-stripe-reporting.own-suite-proposed-fixture/shockwave-stripe-reporting",
+    "declared": "python -m pytest"
+  },
+  "commit_sha": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+  "duration_ms": 0,
+  "exit_code": 1,
+  "failing_tests": [
+    "tests/test_reporting.py::test_ledger_records_stripe_amounts"
+  ],
+  "fixture": {
+    "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.proposed",
+    "path": "tests/fixtures/payment_intents.json",
+    "sha256": "ad9c29b9aa71e3379c2c3799032a7a5f1b9d6dcf1a019819a1d2b8e9e7731a42",
+    "source": "the consumer's bundled fixture data"
+  },
+  "infrastructure_error": null,
+  "kind": "shockwave-demo.run-record@1",
+  "outcome": "failed",
+  "phase": null,
+  "purpose": "supporting observation: the consumer's own suite with its bundled fixture data replaced by the SIMULATED proposed fixture set (assertions unchanged)",
+  "repository": "shockwave-stripe-reporting",
+  "run_id": "execute.shockwave-stripe-reporting.own-suite-proposed-fixture",
+  "runner": "the consumer's own test command, run locally as a plain subprocess on a copy of the prepared repository (trusted local fixtures; not a sandbox, not Sai's runner)",
+  "scenario_id": null,
+  "stage": "execute",
+  "tests_failed": 1,
+  "tests_passed": 2,
+  "tests_run": 3,
+  "timed_out": false,
+  "timing": "duration_ms is normalized to 0 in results/ (measured durations vary between runs and interpretation never reads them); measured durations are kept in reports/runs/ only"
+}

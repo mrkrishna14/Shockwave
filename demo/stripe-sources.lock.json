@@ -1,0 +1,103 @@
+{
+  "schema": "shockwave-demo.stripe-sources-lock@1",
+  "verified_at": "2026-10-17",
+  "api_version": "2026-09-30.endive",
+  "selection_rationale": "One coherent combination: the pinned public OpenAPI spec, stripe-python 16.0.0 and stripe-node 23.0.0 all target Stripe API version 2026-09-30.endive (spec info.version, stripe/_api_version.py, src/apiVersion.ts). The consumer templates pin these SDK versions and send Stripe-Version 2026-09-30.endive. accept-a-payment pins the older API version 2023-10-16 and older SDKs, so it is used only as an integration-pattern reference, never as a contract snapshot to compare against.",
+  "evidence_boundaries": [
+    "The OpenAPI spec is Stripe's published contract, not Stripe's server implementation.",
+    "The SDKs are outbound clients: their methods map to API operations but are not Stripe server handlers.",
+    "stripe-mock serves spec-driven, hardcoded responses (stateless; no response control); it is not Stripe production behavior.",
+    "accept-a-payment is an official sample application showing integration patterns; it is not a Stripe customer or Stripe source.",
+    "No source in this lock gives access to Stripe's production server implementation; provider source discovery for Stripe is reported as unavailable."
+  ],
+  "sources": [
+    {
+      "key": "openapi",
+      "repository": "https://github.com/stripe/openapi",
+      "role": "authentic public API contract (inventory, parameters, response schemas, documentation strings)",
+      "commit": "969d8c308ea65b6dbdef4b6b4a71904027a010b8",
+      "commit_message": "Update OpenAPI for 2026-09-30.endive",
+      "path": "latest/openapi.spec3.json",
+      "openapi": "3.0.0",
+      "info_version": "2026-09-30.endive",
+      "sha256": "9119e72c7ff8ad142e94f7efa9cf49d8e6eec69df3592e17e8fba15099726ed7",
+      "byte_size": 4663536,
+      "license": "MIT",
+      "vendored_copy": "examples/provider/stripe/openapi.spec3.json.gz",
+      "head_check": {
+        "checked_at": "2026-10-17",
+        "head_commit": "4d2b98a2a17fcd15fa5d95bdfc766fdacf928fe2",
+        "head_message": "Update OpenAPI specification for private preview",
+        "latest_spec_sha256_at_head": "9119e72c7ff8ad142e94f7efa9cf49d8e6eec69df3592e17e8fba15099726ed7",
+        "note": "latest/openapi.spec3.json is byte-identical at HEAD; the newer commit changed other files. The SDK-variant files (openapi.spec3.sdk.*) and preview/ are not used as inventory."
+      },
+      "relevant": {
+        "operation": "GET /v1/payment_intents/{intent}",
+        "operation_id": "GetPaymentIntentsIntent",
+        "json_pointer": "/paths/~1v1~1payment_intents~1{intent}/get",
+        "response_schema": "#/components/schemas/payment_intent",
+        "amount_type": "integer",
+        "amount_documented_unit": "smallest currency unit (e.g., 100 cents to charge $1.00)"
+      }
+    },
+    {
+      "key": "stripe-python",
+      "repository": "https://github.com/stripe/stripe-python",
+      "role": "official Python SDK (outbound client) used by the fraud and reporting templates",
+      "version": "16.0.0",
+      "tag": "v16.0.0",
+      "commit": "29363094b09a67f8b1b50f577b463edbbb27ec9a",
+      "pypi": "stripe==16.0.0",
+      "api_version": "2026-09-30.endive",
+      "license": "MIT",
+      "paths": {
+        "api_version": "stripe/_api_version.py",
+        "payment_intent_resource": "stripe/_payment_intent.py (PaymentIntent.retrieve)",
+        "client_service": "StripeClient.v1.payment_intents.retrieve"
+      },
+      "notes": "Both stripe.PaymentIntent.retrieve(id) and StripeClient(...).v1.payment_intents.retrieve(id) are supported in 16.0.0; StripeClient.payment_intents (without v1) is deprecated. The API base is configurable with stripe.api_base or StripeClient(base_addresses={'api': ...})."
+    },
+    {
+      "key": "stripe-node",
+      "repository": "https://github.com/stripe/stripe-node",
+      "role": "official Node/TypeScript SDK (outbound client) used by the checkout template",
+      "version": "23.0.0",
+      "tag": "v23.0.0",
+      "commit": "fe645f63d645011aca38dff9e245c1cf7b9ae60e",
+      "npm": "stripe@23.0.0",
+      "api_version": "2026-09-30.endive",
+      "license": "MIT",
+      "paths": {
+        "api_version": "src/apiVersion.ts",
+        "payment_intents_resource": "src/resources/PaymentIntents.ts (paymentIntents.retrieve)"
+      },
+      "notes": "new Stripe(key, {host, port, protocol}) points the SDK at another base URL; the package is ESM-first (exports map), and ships its own TypeScript types."
+    },
+    {
+      "key": "stripe-mock",
+      "repository": "https://github.com/stripe/stripe-mock",
+      "role": "evaluated, not used for the simulated change",
+      "version": "v0.206.0",
+      "commit": "98674a1b9d73cf90a8fca732fafdcd185e03db6a",
+      "embedded_spec_version": "2026-09-30.endive",
+      "license": "MIT",
+      "paths": {
+        "embedded_spec": "embedded/openapi/spec3.json",
+        "embedded_fixtures": "embedded/openapi/fixtures3.json"
+      },
+      "decision": "Not used. Its README states responses are hardcoded and stateless, and specific responses cannot be requested; its embedded payment_intent fixture has amount 1099. It cannot return the old/proposed response pair, so the demo uses a focused local fixture server configured through the SDKs' supported base-URL options."
+    },
+    {
+      "key": "accept-a-payment",
+      "repository": "https://github.com/stripe-samples/accept-a-payment",
+      "role": "official sample application (integration-pattern reference only)",
+      "commit": "1a57c3b2f5aaf4ecd8de59ab0b1c3c5638827625",
+      "license": "MIT",
+      "paths": {
+        "node_server": "payment-element/server/node/server.js",
+        "python_server": "payment-element/server/python/server.py"
+      },
+      "version_mismatch": "The sample pins Stripe API version 2023-10-16 (apiVersion in server.js; stripe.api_version in server.py) with stripe ^20.2.0 (Node) and stripe==14.2.0 (Python). The demo templates use 2026-09-30.endive with stripe-node 23.0.0 and stripe-python 16.0.0, so the sample is not compared against the pinned contract snapshot. Its Payment Element servers expose merchant routes (GET /, GET /config, GET /create-payment-intent, POST /webhook); /create-payment-intent calls PaymentIntent create, not retrieve. These are merchant routes, not Stripe API operations."
+    }
+  ]
+}

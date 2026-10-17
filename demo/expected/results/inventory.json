@@ -1,0 +1,155 @@
+{
+  "contract": {
+    "api_version": "2026-09-30.endive",
+    "byte_size": 4663536,
+    "commit": "969d8c308ea65b6dbdef4b6b4a71904027a010b8",
+    "license": "MIT",
+    "lock_consistent": true,
+    "modified": false,
+    "openapi_version": "3.0.0",
+    "path": "latest/openapi.spec3.json",
+    "raw_url": "https://raw.githubusercontent.com/stripe/openapi/969d8c308ea65b6dbdef4b6b4a71904027a010b8/latest/openapi.spec3.json",
+    "repository": "https://github.com/stripe/openapi",
+    "sha256": "9119e72c7ff8ad142e94f7efa9cf49d8e6eec69df3592e17e8fba15099726ed7",
+    "snapshot_id": "7f233b59-9179-5f22-b169-e7645f5cf503",
+    "vendored_copy": "examples/provider/stripe/openapi.spec3.json.gz"
+  },
+  "counts": {
+    "by_method": {
+      "DELETE": 34,
+      "GET": 285,
+      "POST": 325
+    },
+    "by_reconciliation": {
+      "conflict": 0,
+      "documented_and_found": 0,
+      "documented_not_found_in_scan": 0,
+      "implementation_only": 0,
+      "not_compared": 644
+    },
+    "component_schemas": 1701,
+    "documented_operations": 644,
+    "endpoints": 644,
+    "operations": 644,
+    "paths": 454,
+    "source": "computed at run time by discovery.discover from the pinned bytes, and re-checked against a direct parse of the same bytes; never hardcoded"
+  },
+  "discovery": {
+    "coverage": {
+      "files_scanned": 0,
+      "files_skipped": 0,
+      "unsupported_patterns": []
+    },
+    "revision_label": "stripe/openapi@969d8c308ea6",
+    "warning_count": 1,
+    "warnings": [
+      "openapi document stripe/openapi:latest/openapi.spec3.json: 26159 nested schema $ref(s) were kept unexpanded at the 2-hop depth limit"
+    ]
+  },
+  "endpoint": {
+    "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+    "evidence": [
+      {
+        "excerpt": "GET /v1/payment_intents/{intent} - Retrieve a PaymentIntent",
+        "file": null,
+        "id": "346adc33-591d-553e-9cbf-f53833625bdf",
+        "json_pointer": "/paths/~1v1~1payment_intents~1{intent}/get",
+        "kind": "openapi",
+        "line_end": null,
+        "line_start": null,
+        "revision": "sha256:9119e72c7ff8ad142e94f7efa9cf49d8e6eec69df3592e17e8fba15099726ed7",
+        "source_uri": "https://raw.githubusercontent.com/stripe/openapi/969d8c308ea65b6dbdef4b6b4a71904027a010b8/latest/openapi.spec3.json",
+        "visibility": "public"
+      },
+      {
+        "excerpt": "Amount intended to be collected by this PaymentIntent. A positive integer representing how much to charge in the [smallest currency unit](https://docs.stripe.com/currencies#zero-decimal) (e.g., 100 cents to charge $1.00 or 100 to charge ¥100, a zero-decimal currency). The minimum amount is $0.50 US or [equivalent in charge currency](https://docs.stripe.com/currencies#minimum-and-maximum-charge-amounts). The amount value supports up to eight digits (e.g., a value of 99999999 for a USD charge of $999,999.99).",
+        "file": null,
+        "id": "174b3163-1f64-5edb-8ddf-c83fabdd579c",
+        "json_pointer": "/components/schemas/payment_intent/properties/amount",
+        "kind": "docs",
+        "line_end": null,
+        "line_start": null,
+        "revision": "969d8c308ea65b6dbdef4b6b4a71904027a010b8",
+        "source_uri": "https://raw.githubusercontent.com/stripe/openapi/969d8c308ea65b6dbdef4b6b4a71904027a010b8/latest/openapi.spec3.json",
+        "visibility": "public"
+      }
+    ],
+    "json_pointer": "/paths/~1v1~1payment_intents~1{intent}/get",
+    "method": "GET",
+    "operation_id": "GetPaymentIntentsIntent",
+    "parameters": [
+      {
+        "description": "The client secret of the PaymentIntent. We require it if you use a publishable key to retrieve the source.",
+        "in": "query",
+        "items_type": null,
+        "max_length": 5000,
+        "name": "client_secret",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "description": "Specifies which fields in the response should be expanded.",
+        "in": "query",
+        "items_type": "string",
+        "max_length": null,
+        "name": "expand",
+        "required": false,
+        "type": "array"
+      },
+      {
+        "description": null,
+        "in": "path",
+        "items_type": null,
+        "max_length": 5000,
+        "name": "intent",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "path": "/v1/payment_intents/{intent}",
+    "reconciliation": "not_compared",
+    "response": {
+      "amount": {
+        "description": "Amount intended to be collected by this PaymentIntent. A positive integer representing how much to charge in the [smallest currency unit](https://docs.stripe.com/currencies#zero-decimal) (e.g., 100 cents to charge $1.00 or 100 to charge ¥100, a zero-decimal currency). The minimum amount is $0.50 US or [equivalent in charge currency](https://docs.stripe.com/currencies#minimum-and-maximum-charge-amounts). The amount value supports up to eight digits (e.g., a value of 99999999 for a USD charge of $999,999.99).",
+        "json_pointer": "/components/schemas/payment_intent/properties/amount",
+        "type": "integer"
+      },
+      "property_count": 46,
+      "required": [
+        "created",
+        "id",
+        "livemode",
+        "object",
+        "status"
+      ],
+      "schema": "#/components/schemas/payment_intent",
+      "title": "PaymentIntent"
+    },
+    "service_id": "stripe",
+    "snapshot_id": "7f233b59-9179-5f22-b169-e7645f5cf503"
+  },
+  "evidence_boundaries": [
+    "The OpenAPI spec is Stripe's published contract, not Stripe's server implementation.",
+    "The SDKs are outbound clients: their methods map to API operations but are not Stripe server handlers.",
+    "stripe-mock serves spec-driven, hardcoded responses (stateless; no response control); it is not Stripe production behavior.",
+    "accept-a-payment is an official sample application showing integration patterns; it is not a Stripe customer or Stripe source.",
+    "No source in this lock gives access to Stripe's production server implementation; provider source discovery for Stripe is reported as unavailable."
+  ],
+  "kind": "shockwave-demo.inventory@1",
+  "label": "authentic pinned public Stripe OpenAPI contract (unmodified); public contract discovery, not Stripe production source",
+  "provider": "Stripe",
+  "provider_note": "Stripe is the API provider whose public contract is analyzed. Stripe is not a Shockwave customer and has not endorsed Shockwave.",
+  "provider_source_access": {
+    "statement": "provider source access: unavailable (Stripe's server implementation is not accessible; SDKs, stripe-mock and samples are not provider source)",
+    "status": "unavailable"
+  },
+  "reconciliation_note": "Every operation is not_compared: no Stripe server source was scanned (it is unavailable), so documented operations are neither confirmed nor contradicted by an implementation.",
+  "selected_versions": {
+    "api_version": "2026-09-30.endive",
+    "rationale": "One coherent combination: the pinned public OpenAPI spec, stripe-python 16.0.0 and stripe-node 23.0.0 all target Stripe API version 2026-09-30.endive (spec info.version, stripe/_api_version.py, src/apiVersion.ts). The consumer templates pin these SDK versions and send Stripe-Version 2026-09-30.endive. accept-a-payment pins the older API version 2023-10-16 and older SDKs, so it is used only as an integration-pattern reference, never as a contract snapshot to compare against.",
+    "stripe_mock": "Not used. Its README states responses are hardcoded and stateless, and specific responses cannot be requested; its embedded payment_intent fixture has amount 1099. It cannot return the old/proposed response pair, so the demo uses a focused local fixture server configured through the SDKs' supported base-URL options.",
+    "stripe_node": "23.0.0",
+    "stripe_python": "16.0.0",
+    "version_mismatch": "The sample pins Stripe API version 2023-10-16 (apiVersion in server.js; stripe.api_version in server.py) with stripe ^20.2.0 (Node) and stripe==14.2.0 (Python). The demo templates use 2026-09-30.endive with stripe-node 23.0.0 and stripe-python 16.0.0, so the sample is not compared against the pinned contract snapshot. Its Payment Element servers expose merchant routes (GET /, GET /config, GET /create-payment-intent, POST /webhook); /create-payment-intent calls PaymentIntent create, not retrieve. These are merchant routes, not Stripe API operations."
+  }
+}

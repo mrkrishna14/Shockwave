@@ -1,0 +1,30 @@
+[
+  {
+    "expected_behavior": "GET /v1/payment_intents/{intent} through the official stripe-node SDK: getOrderSummary('pi_demo_10usd') displays $10.00 for both the baseline response (amount=1000, USD minor units) and the equivalent SIMULATED proposed response (amount=10, USD major units); guard: the unrelated basis-points tax note stays 'Includes 8.25% sales tax'.",
+    "id": "ede0760e-814e-5fc2-9aa7-4c541999bc05",
+    "new_fixture_id": "stripe.payment_intents.usd-whole-dollars.proposed",
+    "old_fixture_id": "stripe.payment_intents.usd-whole-dollars.baseline",
+    "repository_snapshot_id": "bd623f0f-1656-52f7-88ee-12499ea4fc93",
+    "risk_id": "4a144d3c-4a00-5e53-a3a1-12704955df3f",
+    "runner_profile": "trusted_node",
+    "scenario_id": "stripe.payment-intent-amount-units.checkout-display.typescript",
+    "test_files": [
+      ".shockwave/scenarios/stripe.payment-intent-amount-units.checkout-display.typescript/shockwave_stripe_cases.test.mjs"
+    ],
+    "timeout_seconds": 60
+  },
+  {
+    "expected_behavior": "GET /v1/payment_intents/{intent} through the official stripe-python SDK: review_payment flags USD $6,000.00 (pi_demo_6000usd) for manual review and flags neither $4,000.00 nor exactly $5,000.00, for both the baseline responses (USD minor units: 600000/400000/500000) and the equivalent SIMULATED proposed responses (USD major units: 6000/4000/5000).",
+    "id": "c945993e-6075-53ac-8e27-2765fb6f1165",
+    "new_fixture_id": "stripe.payment_intents.usd-whole-dollars.proposed",
+    "old_fixture_id": "stripe.payment_intents.usd-whole-dollars.baseline",
+    "repository_snapshot_id": "6b6552c2-7344-547b-a011-0293f1556875",
+    "risk_id": "a631215e-438b-524d-b2ba-fd653eb4e399",
+    "runner_profile": "trusted_python",
+    "scenario_id": "stripe.payment-intent-amount-units.fraud-threshold.python",
+    "test_files": [
+      ".shockwave/scenarios/stripe.payment-intent-amount-units.fraud-threshold.python/test_shockwave_stripe_cases.py"
+    ],
+    "timeout_seconds": 60
+  }
+]

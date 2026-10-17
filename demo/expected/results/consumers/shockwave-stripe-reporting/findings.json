@@ -1,0 +1,419 @@
+{
+  "analysis": {
+    "label": "deterministic rules (analysis_mode=rules): no LLM, no model inference, nothing executed",
+    "mode": "rules",
+    "warnings": [
+      "predictions only: no tests have run (deterministic rules, not model inference)"
+    ]
+  },
+  "audience": {
+    "consumer_org_id": "a54a75e9-ac54-5f1a-b8db-139c53fbc38a",
+    "consumer_org_label": "fictional demo company (team-created; not a real organization; not a Stripe customer)",
+    "consumer_org_name": "Quarry Finance Analytics"
+  },
+  "change": {
+    "change_id": "9425e6bc-f891-540c-b87d-e6cd1fe8240b",
+    "endpoint": "GET /v1/payment_intents/{intent}",
+    "endpoint_id": "2fd913f8-c6ae-5cf1-8b54-bc54e02de591",
+    "field_path": "response.amount",
+    "kind": "units_changed",
+    "new_semantics": "USD amount in major currency units (dollars): 10 represents $10.00",
+    "old_semantics": "USD amount in minor currency units (cents): 1000 represents $10.00",
+    "provider": "Stripe",
+    "service_id": "stripe",
+    "status": "SIMULATED change: hypothetical, not announced by Stripe. Stripe is not a Shockwave customer and has not endorsed Shockwave.",
+    "structural_breaking": false
+  },
+  "controls": [
+    {
+      "cases": [
+        {
+          "actual": {
+            "eur": {
+              "requires_capture": 1
+            },
+            "usd": {
+              "processing": 1,
+              "succeeded": 3
+            }
+          },
+          "case_id": "summary_counts_by_currency_and_status",
+          "detail": "expected {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}, actual {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}",
+          "expected": {
+            "eur": {
+              "requires_capture": 1
+            },
+            "usd": {
+              "processing": 1,
+              "succeeded": 3
+            }
+          },
+          "requests": [
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_10usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_4000usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_5000usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_6000usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_25eur",
+              "stripe_version": "2026-09-30.endive"
+            }
+          ],
+          "role": "control",
+          "status": "passed"
+        }
+      ],
+      "fixture_id": "stripe.payment_intents.usd-whole-dollars.baseline",
+      "fixture_sha256": "f10738d11285948ca52b39db28de382f747b1467d26137aa91937a9e4a4b41ea",
+      "note": "Control scenario: not tied to any risk; no Risk, VerificationPlan or VerificationResult is recorded for it. A pass shows the tested path is unaffected within the tested scope only.",
+      "reason": "Control passed against the baseline fixture stripe.payment_intents.usd-whole-dollars.baseline: all 1 case(s) passed (summary_counts_by_currency_and_status: expected {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}, actual {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}). Control scenario: not tied to any risk; no Risk, VerificationPlan or VerificationResult is recorded for it. A pass shows the tested path is unaffected within the tested scope only.",
+      "run_id": "control.reporting-summary.baseline",
+      "scenario_id": "stripe.payment-intent.reporting-summary.control.python",
+      "status": "passed",
+      "tests_run": 1,
+      "variant": "baseline"
+    },
+    {
+      "cases": [
+        {
+          "actual": {
+            "eur": {
+              "requires_capture": 1
+            },
+            "usd": {
+              "processing": 1,
+              "succeeded": 3
+            }
+          },
+          "case_id": "summary_counts_by_currency_and_status",
+          "detail": "expected {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}, actual {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}",
+          "expected": {
+            "eur": {
+              "requires_capture": 1
+            },
+            "usd": {
+              "processing": 1,
+              "succeeded": 3
+            }
+          },
+          "requests": [
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_10usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_4000usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_5000usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_6000usd",
+              "stripe_version": "2026-09-30.endive"
+            },
+            {
+              "authorization": "test_mode_bearer",
+              "method": "GET",
+              "path": "/v1/payment_intents/pi_demo_25eur",
+              "stripe_version": "2026-09-30.endive"
+            }
+          ],
+          "role": "control",
+          "status": "passed"
+        }
+      ],
+      "fixture_id": "stripe.payment_intents.usd-whole-dollars.proposed",
+      "fixture_sha256": "ad9c29b9aa71e3379c2c3799032a7a5f1b9d6dcf1a019819a1d2b8e9e7731a42",
+      "note": "Control scenario: not tied to any risk; no Risk, VerificationPlan or VerificationResult is recorded for it. A pass shows the tested path is unaffected within the tested scope only.",
+      "reason": "Control passed against the proposed fixture stripe.payment_intents.usd-whole-dollars.proposed: all 1 case(s) passed (summary_counts_by_currency_and_status: expected {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}, actual {\"eur\":{\"requires_capture\":1},\"usd\":{\"processing\":1,\"succeeded\":3}}). Control scenario: not tied to any risk; no Risk, VerificationPlan or VerificationResult is recorded for it. A pass shows the tested path is unaffected within the tested scope only.",
+      "run_id": "control.reporting-summary.proposed",
+      "scenario_id": "stripe.payment-intent.reporting-summary.control.python",
+      "status": "passed",
+      "tests_run": 1,
+      "variant": "proposed"
+    }
+  ],
+  "dependency_source": "fixture (Noirit scanner not integrated)",
+  "kind": "shockwave-demo.consumer-findings@1",
+  "labels": [
+    "SIMULATED change: hypothetical, not announced by Stripe. Stripe is not a Shockwave customer and has not endorsed Shockwave.",
+    "deterministic rules (analysis_mode=rules): no LLM, no model inference, nothing executed",
+    "LOCAL RUNNER DOUBLE — trusted local fixtures; plain subprocess, not a sandbox, not Sai's runner",
+    "Local single-machine demo: three fictional consumer organizations share one machine and one process. This does not prove cross-company identity isolation, which the backend (Ishan) must enforce."
+  ],
+  "negative_controls": [
+    {
+      "file": "reporting_app/budgets.py",
+      "id": "reporting_budget_amount",
+      "line": 15,
+      "reason": "A department Budget entered by finance in the reporting app (whole dollars); it is named amount but has no Stripe SDK response origin, so it is not a dependency.",
+      "symbol": "Budget.amount"
+    }
+  ],
+  "observations": [
+    {
+      "failing_tests": [
+        "tests/test_reporting.py::test_ledger_records_stripe_amounts"
+      ],
+      "fixture": {
+        "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.proposed",
+        "path": "tests/fixtures/payment_intents.json",
+        "sha256": "ad9c29b9aa71e3379c2c3799032a7a5f1b9d6dcf1a019819a1d2b8e9e7731a42",
+        "source": "the consumer's bundled fixture data"
+      },
+      "outcome": "failed",
+      "repository": "shockwave-stripe-reporting",
+      "risk_id": "6d11c1a8-aed7-5d68-bdb8-5df3edf9f3bc",
+      "run_id": "execute.shockwave-stripe-reporting.own-suite-proposed-fixture",
+      "statement": "Supporting observation only: the consumer's own suite was run with its bundled fixture data replaced by the simulated proposed fixture set. 1 own test failed (tests/test_reporting.py::test_ledger_records_stripe_amounts). Shockwave has no executable storage scenario, so the storage risk's verification status stays not_run (a potential risk); whether this observation upgrades it is a product decision.",
+      "tests_failed": 1,
+      "tests_run": 3
+    }
+  ],
+  "repository": {
+    "commit_sha": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+    "enrollment_id": "10ab008d-5029-5c8a-b409-a6b3b95dc41e",
+    "name": "shockwave-stripe-reporting",
+    "repository_connection_id": "f54ebfe3-6b0c-56a5-9c74-48c8344fc789",
+    "repository_snapshot_id": "923a9231-b7cd-5c89-a2ec-a281e98d409e"
+  },
+  "risks": [
+    {
+      "category": "storage",
+      "confidence": "inferred",
+      "explanation": "reporting_app/ledger.py:34 stores response.amount (destination: sqlite:payments.amount_minor). After cutover new values would be in dollars while earlier ones are in cents, so mixed units become possible. Potential risk, not confirmed: the destination's units, historical records and any migration plan were not examined. Prediction from code evidence; not executed. Missing evidence: units/schema of the destination; historical records; migration plan.",
+      "locations": [
+        "reporting_app/ledger.py:34"
+      ],
+      "migration": null,
+      "risk": {
+        "change_id": "9425e6bc-f891-540c-b87d-e6cd1fe8240b",
+        "confidence": "inferred",
+        "consumer_org_id": "a54a75e9-ac54-5f1a-b8db-139c53fbc38a",
+        "dependency_ids": [
+          "8c0d5ac3-4b9e-5edf-86a9-e24687fca1dd"
+        ],
+        "enrollment_id": "10ab008d-5029-5c8a-b409-a6b3b95dc41e",
+        "evidence": [
+          {
+            "excerpt": "(payment_intent.id, payment_intent.currency, payment_intent.amount),",
+            "file": "reporting_app/ledger.py",
+            "id": "a79d2986-dbd9-5264-aa02-22e353bfdd07",
+            "json_pointer": null,
+            "kind": "source",
+            "line_end": 34,
+            "line_start": 34,
+            "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+            "source_uri": "repo://shockwave-stripe-reporting",
+            "visibility": "consumer_private"
+          },
+          {
+            "excerpt": "\"INSERT OR REPLACE INTO payments (payment_intent_id, currency, amount_minor) VALUES (?, ?, ?)\",",
+            "file": "reporting_app/ledger.py",
+            "id": "697bd4f5-9b35-5755-90f3-413343a6a85e",
+            "json_pointer": null,
+            "kind": "source",
+            "line_end": 33,
+            "line_start": 33,
+            "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+            "source_uri": "repo://shockwave-stripe-reporting",
+            "visibility": "consumer_private"
+          },
+          {
+            "excerpt": "amount_minor INTEGER NOT NULL  -- smallest currency unit, as Stripe reports it",
+            "file": "reporting_app/ledger.py",
+            "id": "0546ed38-0cea-516e-af40-a4b9da3ad619",
+            "json_pointer": null,
+            "kind": "source",
+            "line_end": 17,
+            "line_start": 17,
+            "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+            "source_uri": "repo://shockwave-stripe-reporting",
+            "visibility": "consumer_private"
+          },
+          {
+            "excerpt": "payment_intent = client.v1.payment_intents.retrieve(payment_intent_id)",
+            "file": "reporting_app/ledger.py",
+            "id": "ae729461-06aa-5401-8101-c09b4f775ffe",
+            "json_pointer": null,
+            "kind": "source",
+            "line_end": 31,
+            "line_start": 31,
+            "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+            "source_uri": "repo://shockwave-stripe-reporting",
+            "visibility": "consumer_private"
+          },
+          {
+            "excerpt": "client = client or create_stripe_client()",
+            "file": "reporting_app/ledger.py",
+            "id": "94a4a1eb-04b7-5698-a304-de0cad0b5840",
+            "json_pointer": null,
+            "kind": "source",
+            "line_end": 26,
+            "line_start": 26,
+            "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+            "source_uri": "repo://shockwave-stripe-reporting",
+            "visibility": "consumer_private"
+          },
+          {
+            "excerpt": "return StripeClient(",
+            "file": "reporting_app/stripe_client.py",
+            "id": "b8099686-a9f5-5e71-8118-9a8a5d88edfe",
+            "json_pointer": null,
+            "kind": "source",
+            "line_end": 26,
+            "line_start": 26,
+            "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+            "source_uri": "repo://shockwave-stripe-reporting",
+            "visibility": "consumer_private"
+          },
+          {
+            "excerpt": "from stripe import StripeClient",
+            "file": "reporting_app/stripe_client.py",
+            "id": "51dcb8fe-c56b-5550-a5c2-73b3266c2ba4",
+            "json_pointer": null,
+            "kind": "source",
+            "line_end": 13,
+            "line_start": 13,
+            "revision": "ba15df9068a555eaf52ea696500841cd7295b9b6",
+            "source_uri": "repo://shockwave-stripe-reporting",
+            "visibility": "consumer_private"
+          },
+          {
+            "excerpt": "SIMULATED, not announced by Stripe: GET /v1/payment_intents/{intent} response.amount (units_changed, currency scope USD): USD amount in minor currency units (cents): 1000 represents $10.00 -> USD amount in major currency units (dollars): 10 represents $10.00. Published schema unchanged (integer).",
+            "file": null,
+            "id": "86f92c04-850b-5467-9c35-b7176e4a6283",
+            "json_pointer": "",
+            "kind": "declared_change",
+            "line_end": null,
+            "line_start": null,
+            "revision": "sha256:d4e7bcf92b553b8a4d52cea2573d789977e05621acd762153524b97f1186f647",
+            "source_uri": "demo/scenarios/stripe-payment-intent-amount-usd-major-units.manifest.json",
+            "visibility": "provider_owned"
+          },
+          {
+            "excerpt": "Equivalent fixtures stripe.payment_intents.usd-whole-dollars.baseline -> stripe.payment_intents.usd-whole-dollars.proposed: pi_demo_10usd 1000 -> 10 (USD $10.00); pi_demo_4000usd 400000 -> 4000 (USD $4,000.00); pi_demo_5000usd 500000 -> 5000 (USD $5,000.00); pi_demo_6000usd 600000 -> 6000 (USD $6,000.00); pi_demo_25eur 2500 -> 2500 (EUR 25.00 (outside the USD scope; unchanged))",
+            "file": null,
+            "id": "197525b8-679d-5848-ab45-f5ed203ee4b8",
+            "json_pointer": "/fixtures/equivalences",
+            "kind": "declared_change",
+            "line_end": null,
+            "line_start": null,
+            "revision": "sha256:d4e7bcf92b553b8a4d52cea2573d789977e05621acd762153524b97f1186f647",
+            "source_uri": "demo/scenarios/stripe-payment-intent-amount-usd-major-units.manifest.json",
+            "visibility": "provider_owned"
+          },
+          {
+            "excerpt": "GET /v1/payment_intents/{intent} - Retrieve a PaymentIntent",
+            "file": null,
+            "id": "346adc33-591d-553e-9cbf-f53833625bdf",
+            "json_pointer": "/paths/~1v1~1payment_intents~1{intent}/get",
+            "kind": "openapi",
+            "line_end": null,
+            "line_start": null,
+            "revision": "sha256:9119e72c7ff8ad142e94f7efa9cf49d8e6eec69df3592e17e8fba15099726ed7",
+            "source_uri": "https://raw.githubusercontent.com/stripe/openapi/969d8c308ea65b6dbdef4b6b4a71904027a010b8/latest/openapi.spec3.json",
+            "visibility": "public"
+          },
+          {
+            "excerpt": "Amount intended to be collected by this PaymentIntent. A positive integer representing how much to charge in the [smallest currency unit](https://docs.stripe.com/currencies#zero-decimal) (e.g., 100 cents to charge $1.00 or 100 to charge ¥100, a zero-decimal currency). The minimum amount is $0.50 US or [equivalent in charge currency](https://docs.stripe.com/currencies#minimum-and-maximum-charge-amounts). The amount value supports up to eight digits (e.g., a value of 99999999 for a USD charge of $999,999.99).",
+            "file": null,
+            "id": "174b3163-1f64-5edb-8ddf-c83fabdd579c",
+            "json_pointer": "/components/schemas/payment_intent/properties/amount",
+            "kind": "docs",
+            "line_end": null,
+            "line_start": null,
+            "revision": "969d8c308ea65b6dbdef4b6b4a71904027a010b8",
+            "source_uri": "https://raw.githubusercontent.com/stripe/openapi/969d8c308ea65b6dbdef4b6b4a71904027a010b8/latest/openapi.spec3.json",
+            "visibility": "public"
+          }
+        ],
+        "explanation": "reporting_app/ledger.py:34 stores response.amount (destination: sqlite:payments.amount_minor). After cutover new values would be in dollars while earlier ones are in cents, so mixed units become possible. Potential risk, not confirmed: the destination's units, historical records and any migration plan were not examined. Prediction from code evidence; not executed. Missing evidence: units/schema of the destination; historical records; migration plan.",
+        "id": "6d11c1a8-aed7-5d68-bdb8-5df3edf9f3bc",
+        "repository_snapshot_id": "923a9231-b7cd-5c89-a2ec-a281e98d409e",
+        "severity": "medium",
+        "suggested_action": "Check the units of the destination at reporting_app/ledger.py:34 and its existing rows; convert at the write boundary or plan a backfill/unit marker before cutover so cents and dollars do not mix."
+      },
+      "risk_id": "6d11c1a8-aed7-5d68-bdb8-5df3edf9f3bc",
+      "severity": "medium",
+      "state": "predicted",
+      "suggested_action": "Check the units of the destination at reporting_app/ledger.py:34 and its existing rows; convert at the write boundary or plan a backfill/unit marker before cutover so cents and dollars do not mix.",
+      "verification": {
+        "baseline": null,
+        "plan_id": null,
+        "proposed": null,
+        "result_id": "9df20e05-a0b0-52e3-a36f-6180365589f2",
+        "runner": null,
+        "runner_profile": null,
+        "runs": [],
+        "scenario_id": "unavailable",
+        "status": "not_run",
+        "summary": "Not run: no executable scenario is bound to risk 6d11c1a8-aed7-5d68-bdb8-5df3edf9f3bc (comparison-only, storage-only or unbound dependency); its verification status stays not_run. Potential storage risk, not verified: no executable proof ran, so it remains a prediction. Missing evidence: an executable storage scenario; units/schema of the destination; historical records; migration plan."
+      }
+    }
+  ],
+  "unaffected": [
+    {
+      "dependency_id": "15997709-0f89-5551-97a2-18be60760092",
+      "field_path": "response.currency",
+      "location": "reporting_app/summary.py:21",
+      "reason": "uses response.currency; the simulated change affects response.amount only",
+      "usage": "read"
+    },
+    {
+      "dependency_id": "5a892ad2-4a4f-5267-bfbf-e546a09e5a9c",
+      "field_path": "response.status",
+      "location": "reporting_app/summary.py:21",
+      "reason": "uses response.status; the simulated change affects response.amount only",
+      "usage": "read"
+    },
+    {
+      "dependency_id": "eb8e8648-8cdc-5931-ad7c-86c61a9385b9",
+      "field_path": "response.currency",
+      "location": "reporting_app/ledger.py:34",
+      "reason": "uses response.currency; the simulated change affects response.amount only",
+      "usage": "store"
+    },
+    {
+      "dependency_id": "c442453d-c183-596b-90a8-98cc7ce0967f",
+      "field_path": "response.id",
+      "location": "reporting_app/ledger.py:34",
+      "reason": "uses response.id; the simulated change affects response.amount only",
+      "usage": "store"
+    }
+  ],
+  "unresolved": [],
+  "visibility": "consumer_private",
+  "visibility_note": "Private to this consumer organization: it contains the repository's source locations, excerpts, run evidence and migration references. The provider sees only the restricted summary."
+}

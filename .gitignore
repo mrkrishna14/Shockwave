@@ -1,0 +1,16 @@
+# Local environments and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+node_modules/
+.DS_Store
+
+# Generated demo state (recreate with demo/scripts/demo.py)
+demo/.work/
+demo/.cache/
+# Generated reports: only the README and .gitkeep are checked in (demo.py reset keeps them)
+demo/reports/*
+!demo/reports/README.md
+!demo/reports/.gitkeep

@@ -1,0 +1,45 @@
+{
+  "schema": "shockwave-demo.consumer-repos-manifest@1",
+  "note": "Team-created demo consumer applications prepared for private GitHub repositories. They are not Stripe customers or Stripe applications. Nothing here has been created, pushed or installed on GitHub; destination owner is set only when the operating user authorizes publication (see demo/GITHUB_SETUP.md).",
+  "github_owner": null,
+  "visibility": "private",
+  "default_branch": "main",
+  "repositories": [
+    {
+      "name": "shockwave-stripe-checkout",
+      "template": "demo/templates/checkout",
+      "language": "typescript",
+      "runtime": "node>=22.18 (type stripping; no build step)",
+      "stripe_sdk": "stripe@23.0.0 (npm, package-lock.json)",
+      "install": "npm ci",
+      "test": "npm test",
+      "stripe_call": "stripe.paymentIntents.retrieve(paymentIntentId) in src/checkout.ts",
+      "demonstrates": "USD display divides response.amount by 100 (affected); basis-points / 100 tax note and a local loyalty reward amount (unrelated controls)",
+      "scenarios": ["stripe.payment-intent-amount-units.checkout-display.typescript"]
+    },
+    {
+      "name": "shockwave-stripe-fraud",
+      "template": "demo/templates/fraud",
+      "language": "python",
+      "runtime": "python>=3.11",
+      "stripe_sdk": "stripe==16.0.0 (PyPI)",
+      "install": "python -m pip install -r requirements.txt",
+      "test": "python -m pytest",
+      "stripe_call": "stripe.PaymentIntent.retrieve(payment_intent_id) in fraud_service/review.py",
+      "demonstrates": "manual review when response.amount > 500000 (USD $5,000 in cents; affected); velocity limit with a local 'amount' count (unrelated control)",
+      "scenarios": ["stripe.payment-intent-amount-units.fraud-threshold.python"]
+    },
+    {
+      "name": "shockwave-stripe-reporting",
+      "template": "demo/templates/reporting",
+      "language": "python",
+      "runtime": "python>=3.11",
+      "stripe_sdk": "stripe==16.0.0 (PyPI)",
+      "install": "python -m pip install -r requirements.txt",
+      "test": "python -m pytest",
+      "stripe_call": "StripeClient(...).v1.payment_intents.retrieve(payment_intent_id) in reporting_app/summary.py and reporting_app/ledger.py",
+      "demonstrates": "currency/status summary (unaffected control, executed against both variants); ledger stores response.amount in an amount_minor column (potential storage risk, not executed); local Budget.amount (unrelated control)",
+      "scenarios": ["stripe.payment-intent.reporting-summary.control.python"]
+    }
+  ]
+}

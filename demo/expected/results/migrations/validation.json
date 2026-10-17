@@ -1,0 +1,298 @@
+{
+  "deployment_assumption": "A migration validated against proposed responses is not automatically safe to deploy before the provider change: against baseline (current-contract) responses the migrated code fails the same unchanged business assertion. That run is recorded as deployment-assumption evidence, never as a regression.",
+  "deployment_caveat": "The patch is pinned to the proposed contract: it is not backward compatible with current-contract responses unless made version-aware, so its deployment must be coordinated with the provider's cutover.",
+  "kind": "shockwave-demo.migration-validation@1",
+  "label": "prepared migration artifact (Kanishk); Sai's migration generator not integrated",
+  "migrations": [
+    {
+      "commit_sha": "b3bac57ba74ec4cc6f3c48e3d170efb5a1b10365",
+      "deployment_assumption": {
+        "expected_failure_observed": true,
+        "failed_cases": [
+          {
+            "actual": "$1000.00",
+            "case_id": "displayed_total_usd",
+            "detail": "expected $10.00, actual $1000.00",
+            "expected": "$10.00",
+            "requests": [
+              {
+                "authorization": "test_mode_bearer",
+                "method": "GET",
+                "path": "/v1/payment_intents/pi_demo_10usd",
+                "stripe_version": "2026-09-30.endive"
+              }
+            ],
+            "role": "relevant",
+            "status": "failed"
+          }
+        ],
+        "is_regression": false,
+        "outcome": "relevant_fail",
+        "reason": "the relevant case displayed_total_usd failed: expected $10.00, actual $1000.00, while the guard case(s) tax_note_unchanged passed",
+        "recorded_as": "deployment-assumption evidence: the migrated code run against current-contract (baseline) responses; the patch is pinned to the proposed contract, so this failure is expected and is never a regression",
+        "run_id": "migration.checkout-display-major-units.patched-baseline"
+      },
+      "deployment_caveat": "The patch is pinned to the proposed contract: it is not backward compatible with current-contract responses unless made version-aware, so its deployment must be coordinated with the provider's cutover.",
+      "label": "prepared migration artifact (Kanishk); Sai's migration generator not integrated",
+      "migration_id": "checkout-display-major-units",
+      "own_suite": {
+        "command": "npm test (node --test \"test/**/*.test.ts\")",
+        "failing_tests": [],
+        "fixture": {
+          "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.proposed",
+          "path": "test/fixtures/payment_intents.json",
+          "sha256": "ad9c29b9aa71e3379c2c3799032a7a5f1b9d6dcf1a019819a1d2b8e9e7731a42",
+          "source": "the consumer's bundled fixture data"
+        },
+        "outcome": "passed",
+        "run_id": "migration.checkout-display-major-units.own-suite",
+        "tests_failed": 0,
+        "tests_passed": 4,
+        "tests_run": 4
+      },
+      "patch": {
+        "applied_with": "git apply --check <patch>; git apply <patch> (in the run's copy only)",
+        "migration_id": "checkout-display-major-units",
+        "patch": "demo/migrations/checkout-display-major-units.patch",
+        "sha256": "c738d282bdbd0b0a32d5adb9cd14c2ece4b2040d9a088145cf3ba103ca12a8d9"
+      },
+      "patched_proposed": {
+        "assertions": [
+          {
+            "actual": "$10.00",
+            "case_id": "displayed_total_usd",
+            "detail": "expected $10.00, actual $10.00",
+            "expected": "$10.00",
+            "requests": [
+              {
+                "authorization": "test_mode_bearer",
+                "method": "GET",
+                "path": "/v1/payment_intents/pi_demo_10usd",
+                "stripe_version": "2026-09-30.endive"
+              }
+            ],
+            "role": "relevant",
+            "status": "passed"
+          },
+          {
+            "actual": "Includes 8.25% sales tax",
+            "case_id": "tax_note_unchanged",
+            "detail": "expected Includes 8.25% sales tax, actual Includes 8.25% sales tax",
+            "expected": "Includes 8.25% sales tax",
+            "requests": [
+              {
+                "authorization": "test_mode_bearer",
+                "method": "GET",
+                "path": "/v1/payment_intents/pi_demo_10usd",
+                "stripe_version": "2026-09-30.endive"
+              }
+            ],
+            "role": "guard",
+            "status": "passed"
+          }
+        ],
+        "reason": "Validated within the tested scope only: against the proposed contract fixture stripe.payment_intents.usd-whole-dollars.proposed, all 2 cases passed (relevant case displayed_total_usd: expected $10.00, actual $10.00; guard case(s) tax_note_unchanged passed) with the unchanged invariant expectation. The patch is pinned to the proposed contract: it is not backward compatible with current-contract responses unless made version-aware, so its deployment must be coordinated with the provider's cutover.",
+        "run_id": "migration.checkout-display-major-units.patched-proposed",
+        "status": "validated"
+      },
+      "plan_id": "ede0760e-814e-5fc2-9aa7-4c541999bc05",
+      "repository": "shockwave-stripe-checkout",
+      "risk_id": "4a144d3c-4a00-5e53-a3a1-12704955df3f",
+      "scenario_id": "stripe.payment-intent-amount-units.checkout-display.typescript",
+      "scope": {
+        "edits_verified": [
+          "src/checkout.ts:21 (comment)",
+          "src/checkout.ts:22 (affected_line)"
+        ],
+        "files_changed": [
+          "src/checkout.ts",
+          "test/fixtures/payment_intents.json"
+        ],
+        "files_declared": [
+          "src/checkout.ts",
+          "test/fixtures/payment_intents.json"
+        ],
+        "negative_controls_verified": [
+          "src/tax.ts:6 (checkout_tax_basis_points)",
+          "src/rewards.ts:11 (checkout_loyalty_reward_amount)"
+        ],
+        "unchanged_verified": [
+          "src/tax.ts",
+          "src/rewards.ts",
+          "test/checkout.test.ts"
+        ]
+      },
+      "status": "validated",
+      "verification_result_id": "5f1cdb6e-5108-5511-91ae-cfc1a8311bca"
+    },
+    {
+      "commit_sha": "91e1d97097bc7253c0ba03f7c7d0a5eddf50137b",
+      "deployment_assumption": {
+        "expected_failure_observed": true,
+        "failed_cases": [
+          {
+            "actual": true,
+            "case_id": "below_threshold_not_flagged",
+            "detail": "expected needs_manual_review=False, actual True",
+            "expected": false,
+            "requests": [
+              {
+                "authorization": "test_mode_bearer",
+                "method": "GET",
+                "path": "/v1/payment_intents/pi_demo_4000usd",
+                "stripe_version": "2026-09-30.endive"
+              }
+            ],
+            "role": "guard",
+            "status": "failed"
+          },
+          {
+            "actual": true,
+            "case_id": "at_threshold_not_flagged",
+            "detail": "expected needs_manual_review=False, actual True",
+            "expected": false,
+            "requests": [
+              {
+                "authorization": "test_mode_bearer",
+                "method": "GET",
+                "path": "/v1/payment_intents/pi_demo_5000usd",
+                "stripe_version": "2026-09-30.endive"
+              }
+            ],
+            "role": "guard",
+            "status": "failed"
+          }
+        ],
+        "is_regression": false,
+        "outcome": "inconclusive",
+        "reason": "unrelated failure: the guard case below_threshold_not_flagged failed (expected needs_manual_review=False, actual True); the guard case at_threshold_not_flagged failed (expected needs_manual_review=False, actual True); a failing guard case means the run is not the isolated relevant failure the scenario tests",
+        "recorded_as": "deployment-assumption evidence: the migrated code run against current-contract (baseline) responses; the patch is pinned to the proposed contract, so this failure is expected and is never a regression",
+        "run_id": "migration.fraud-threshold-major-units.patched-baseline"
+      },
+      "deployment_caveat": "The patch is pinned to the proposed contract: it is not backward compatible with current-contract responses unless made version-aware, so its deployment must be coordinated with the provider's cutover.",
+      "label": "prepared migration artifact (Kanishk); Sai's migration generator not integrated",
+      "migration_id": "fraud-threshold-major-units",
+      "own_suite": {
+        "command": "python -m pytest",
+        "failing_tests": [],
+        "fixture": {
+          "fixture_set_id": "stripe.payment_intents.usd-whole-dollars.proposed",
+          "path": "tests/fixtures/payment_intents.json",
+          "sha256": "ad9c29b9aa71e3379c2c3799032a7a5f1b9d6dcf1a019819a1d2b8e9e7731a42",
+          "source": "the consumer's bundled fixture data"
+        },
+        "outcome": "passed",
+        "run_id": "migration.fraud-threshold-major-units.own-suite",
+        "tests_failed": 0,
+        "tests_passed": 5,
+        "tests_run": 5
+      },
+      "patch": {
+        "applied_with": "git apply --check <patch>; git apply <patch> (in the run's copy only)",
+        "migration_id": "fraud-threshold-major-units",
+        "patch": "demo/migrations/fraud-threshold-major-units.patch",
+        "sha256": "8b8bdc52ff9981cace72fa1ddc7d074d94ed26e43c12dfa689999a926053bd90"
+      },
+      "patched_proposed": {
+        "assertions": [
+          {
+            "actual": false,
+            "case_id": "below_threshold_not_flagged",
+            "detail": "expected needs_manual_review=False, actual False",
+            "expected": false,
+            "requests": [
+              {
+                "authorization": "test_mode_bearer",
+                "method": "GET",
+                "path": "/v1/payment_intents/pi_demo_4000usd",
+                "stripe_version": "2026-09-30.endive"
+              }
+            ],
+            "role": "guard",
+            "status": "passed"
+          },
+          {
+            "actual": false,
+            "case_id": "at_threshold_not_flagged",
+            "detail": "expected needs_manual_review=False, actual False",
+            "expected": false,
+            "requests": [
+              {
+                "authorization": "test_mode_bearer",
+                "method": "GET",
+                "path": "/v1/payment_intents/pi_demo_5000usd",
+                "stripe_version": "2026-09-30.endive"
+              }
+            ],
+            "role": "guard",
+            "status": "passed"
+          },
+          {
+            "actual": true,
+            "case_id": "above_threshold_flagged",
+            "detail": "expected needs_manual_review=True, actual True",
+            "expected": true,
+            "requests": [
+              {
+                "authorization": "test_mode_bearer",
+                "method": "GET",
+                "path": "/v1/payment_intents/pi_demo_6000usd",
+                "stripe_version": "2026-09-30.endive"
+              }
+            ],
+            "role": "relevant",
+            "status": "passed"
+          }
+        ],
+        "reason": "Validated within the tested scope only: against the proposed contract fixture stripe.payment_intents.usd-whole-dollars.proposed, all 3 cases passed (relevant case above_threshold_flagged: expected needs_manual_review=True, actual True; guard case(s) below_threshold_not_flagged, at_threshold_not_flagged passed) with the unchanged invariant expectation. The patch is pinned to the proposed contract: it is not backward compatible with current-contract responses unless made version-aware, so its deployment must be coordinated with the provider's cutover.",
+        "run_id": "migration.fraud-threshold-major-units.patched-proposed",
+        "status": "validated"
+      },
+      "plan_id": "c945993e-6075-53ac-8e27-2765fb6f1165",
+      "repository": "shockwave-stripe-fraud",
+      "risk_id": "a631215e-438b-524d-b2ba-fd653eb4e399",
+      "scenario_id": "stripe.payment-intent-amount-units.fraud-threshold.python",
+      "scope": {
+        "edits_verified": [
+          "fraud_service/review.py:23 (comment)",
+          "fraud_service/review.py:24 (affected_line)"
+        ],
+        "files_changed": [
+          "fraud_service/review.py",
+          "tests/fixtures/payment_intents.json"
+        ],
+        "files_declared": [
+          "fraud_service/review.py",
+          "tests/fixtures/payment_intents.json"
+        ],
+        "negative_controls_verified": [
+          "fraud_service/velocity.py:18 (fraud_velocity_limit_amount)"
+        ],
+        "unchanged_verified": [
+          "fraud_service/velocity.py",
+          "tests/test_review.py"
+        ]
+      },
+      "status": "validated",
+      "verification_result_id": "d3afceb9-8491-5087-80a1-306f246be2af"
+    }
+  ],
+  "not_prepared": [
+    {
+      "reason": "No migration artifact. The currency/status summary is unaffected (the control scenario passes against both variants), and the ledger's amount storage is a potential risk only: no executable scenario demonstrates a storage regression, and a fix depends on the destination's units, its historical rows and a backfill or unit-marker plan, which a code patch alone cannot settle.",
+      "repository": "shockwave-stripe-reporting"
+    }
+  ],
+  "runner": "LOCAL RUNNER DOUBLE — trusted local fixtures; plain subprocess, not a sandbox, not Sai's runner",
+  "simulated_change": {
+    "currency_scope": [
+      "usd"
+    ],
+    "endpoint": "GET /v1/payment_intents/{intent}",
+    "field_path": "response.amount",
+    "manifest": "demo/scenarios/stripe-payment-intent-amount-usd-major-units.manifest.json",
+    "manifest_id": "sim-stripe-pi-amount-usd-major-units",
+    "status": "SIMULATED: hypothetical, not announced by Stripe. Stripe is not a Shockwave customer and has not endorsed Shockwave."
+  },
+  "validation_scope": "Validated within the tested scope only: the consumer's own suite with its bundled USD whole-dollar fixtures (baseline and proposed variants). This does not establish correctness for other amounts, currencies or code paths."
+}
