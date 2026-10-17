@@ -1,0 +1,15 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+___________________________ test_display_ten_dollars ___________________________
+
+    def test_display_ten_dollars():
+>       assert display(json.loads(os.environ['SW_RESPONSE'])) == '$10.00'
+E       AssertionError: assert '$0.10' == '$10.00'
+E         
+E         - $10.00
+E         + $0.10
+
+test_display.py:7: AssertionError
+=========================== short test summary info ============================
+FAILED test_display.py::test_display_ten_dollars - AssertionError: assert '$0...
+1 failed, 1 passed in 0.09s
