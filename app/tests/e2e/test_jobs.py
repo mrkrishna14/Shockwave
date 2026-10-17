@@ -82,7 +82,7 @@ def test_upgrade_keeps_old_records(tmp_path):
     db.commit();db.close()
     store=Store(path)
     with store.read() as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==4
+        assert db.execute('PRAGMA user_version').fetchone()[0]==5
         assert store.get(db,old['id'],'job')==old
     assert JobQueue(store).claim(old['id'])
 
@@ -99,7 +99,7 @@ def test_ambiguous_delivery_is_not_retried(tmp_path):
         invitation={'id':'invite','api_project_id':'project','recipient_email':'person@example.test',
                     'status':'pending','delivery_status':'pending'}
         store.put(db,'invitation','org',invitation)
-        op=outbox.queue_invitation(db,invitation,'/?invite=private-token','invite-operation')
+        op=outbox.queue_invitation(db,invitation,{'provider_name':'Provider','api_name':'API'},'invite-operation')
     assert not outbox.dispatch(op)
     assert not outbox.dispatch(op)
     assert len(sent)==1
@@ -117,7 +117,7 @@ def test_crashed_dispatch_is_reconciled_without_resend(tmp_path):
         db.execute("INSERT INTO organizations VALUES('org','Provider','provider')")
         invitation={'id':'invite','recipient_email':'person@example.test','status':'pending'}
         store.put(db,'invitation','org',invitation)
-        op=outbox.queue_invitation(db,invitation,'/?invite=private-token','stable-operation')
+        op=outbox.queue_invitation(db,invitation,{'provider_name':'Provider','api_name':'API'},'stable-operation')
         db.execute("UPDATE outbox SET status='dispatching',updated_at='2000-01-01T00:00:00+00:00' WHERE id=?",(op,))
     outbox.reconcile_abandoned()
     assert not outbox.dispatch(op)

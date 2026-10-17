@@ -64,7 +64,7 @@ class DemoAdapters:
         if commit_sha != COMMIT: raise ValueError('Demo adapter supports only the pinned fixture revision')
         import hashlib
         return RepositorySnapshot(id=uid(),repository_connection_id=connection.id,commit_sha=COMMIT,fetched_at=now(),content_hash=hashlib.sha256(SOURCE.encode()).hexdigest())
-    def send_invitation(self, recipient_email, acceptance_url, idempotency_key):
+    def send_invitation(self, recipient_email, notice, idempotency_key):
         return DeliveryResult(status='development_inbox',message_id=idempotency_key,error=None)
     def scan_repository(self, request, snapshot, repo_root):
         deps=[]

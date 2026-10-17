@@ -156,6 +156,15 @@ tbody tr:hover td{background:rgba(255,255,255,.015)}
 .persona:hover:not(:disabled){border-color:var(--blue);transform:translateY(-2px)}
 .persona h2{font-size:20px}.persona p{margin:0;font-size:13.5px}
 .persona .go{margin-top:6px;color:var(--blue-ink);font-weight:650;font-size:13px}
+.auth-panel{margin-top:40px;max-width:720px}
+.auth-tabs{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:11px;background:rgba(22,31,44,.85);margin-bottom:18px}
+.auth-tabs button{background:transparent;border:0;color:var(--muted);padding:8px 16px;border-radius:8px;font-weight:650;font-size:13px}
+.auth-tabs button.active{background:var(--surface-3);color:var(--ink)}
+.auth-form{display:flex;flex-direction:column;gap:14px}.auth-form .field{max-width:420px}.auth-form .button{align-self:flex-start}
+.persona-grid.compact{margin-top:0}.persona-grid.compact .persona{padding:18px}
+.persona.selected{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
+.demo-shortcuts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
+.mail-body{white-space:pre-wrap;font-size:12.5px;color:var(--muted);margin:6px 0 0}
 .login-footer{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:22px 28px 30px;width:min(100%,1080px);margin:0 auto;font-size:13px}
 .login-footer .rfs{color:var(--ink);font-weight:700}
 .login-footer .mode{color:var(--faint)}

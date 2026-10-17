@@ -18,24 +18,21 @@ function ArtifactView({content}:{content:string}){
   const diff=content.startsWith('--- ')||content.includes('\n@@ ');
   return <pre className="code-block" aria-label="Private artifact">{diff?content.split('\n').map((line,i)=><div key={i} className={line.startsWith('+')&&!line.startsWith('+++')?'diff-add':line.startsWith('-')&&!line.startsWith('---')?'diff-del':line.startsWith('@@')?'diff-hunk':undefined}>{line||' '}</div>):content}</pre>;
 }
-type Preview={provider_name:string;api_name:string;processing:string;consent_version:string;expires_at:string};
 export function Consumer({w,run}:{w:Workspace;run:(fn:()=>Promise<unknown>)=>void}){
   const data=w.data,org=w.org!,tab=w.location.tab;
-  const [token,setToken]=useState('');const [preview,setPreview]=useState<Preview|null>(null);const [previewError,setPreviewError]=useState('');
+  const [reviewing,setReviewing]=useState('');
   const [consent,setConsent]=useState(false);const [share,setShare]=useState(true);
   const [repoIds,setRepoIds]=useState<string[]>([]);const [model,setModel]=useState(false);const [write,setWrite]=useState(false);
   const [artifact,setArtifact]=useState('');const [publishConsent,setPublishConsent]=useState(false);
   const [snapshotSha,setSnapshotSha]=useState('');
   const enrollment=data.enrollments.find(e=>e.id===w.enrollment)||data.enrollments.find(e=>e.status==='active');
   const risk=data.risks.find(r=>r.id===w.location.risk);
-  useEffect(()=>{setToken(new URLSearchParams(window.location.search).get('invite')||'')},[]);
-  useEffect(()=>{if(!token){setPreview(null);return}let active=true;api<Preview>('/invitations/preview',{method:'POST',body:{token}}).then(x=>{if(active){setPreview(x);setPreviewError('')}}).catch(e=>{if(active){setPreview(null);setPreviewError(e instanceof Error?e.message:'Invitation unavailable')}});return()=>{active=false}},[token]);
   useEffect(()=>{setArtifact('');setSnapshotSha('');if(!risk)return;let active=true;
     api<{commit_sha:string}>(`/risks/${risk.id}/snapshot`,{org:org.id}).then(x=>{if(active)setSnapshotSha(x.commit_sha)}).catch(()=>{});
     return()=>{active=false}
   },[risk?.id,org.id]);
-  function accept(){if(!preview||!enrollment)return;}
-  function review(link:string){const value=new URL(link,window.location.origin).searchParams.get('invite')||'';setToken(value);setConsent(false);w.navigate({tab:'invitations'})}
+  const preview=data.incoming.find(i=>i.invitation_id===reviewing);
+  function review(id:string){setReviewing(id);setConsent(false);w.navigate({tab:'invitations'})}
   const selected=data.selectedRepos.filter(r=>r.status==='connected');
   const real=w.capabilities?.mode==='integrated';
   return <>
@@ -44,16 +41,17 @@ export function Consumer({w,run}:{w:Workspace;run:(fn:()=>Promise<unknown>)=>voi
       <div className="metric"><span>Current risks</span><strong>{data.risks.filter(r=>r.evidence_state.current).length}</strong><small>Private to your organization</small></div>
       <div className="metric"><span>Current validated patches</span><strong>{data.risks.filter(r=>r.evidence_state.validated).length}</strong><small>Tested and passing</small></div>
     </div>
-    {(token||previewError)&&(tab==='overview'||tab==='invitations')&&<section className="panel invitation" aria-live="polite">
+    {preview&&(tab==='overview'||tab==='invitations')&&<section className="panel invitation" aria-live="polite">
       <span className="eyebrow">INVITATION REVIEW</span>
-      {preview?<><h2>{preview.provider_name} invited you to {preview.api_name}</h2><p>{preview.processing}</p><p className="small-muted">Expires {new Date(preview.expires_at).toLocaleString()} · terms {preview.consent_version}</p>
+      <h2>{preview.provider_name} invited you to {preview.api_name}</h2><p>{preview.processing}</p><p className="small-muted">Expires {new Date(preview.expires_at).toLocaleString()} · terms {preview.consent_version}</p>
         <label className="check"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>I consent to central processing of repositories I select.</label>
         <label className="check"><input type="checkbox" checked={share} onChange={e=>setShare(e.target.checked)}/>Share summary counts and readiness with this provider.</label>
-        <button className="button primary" disabled={!consent} onClick={()=>run(async()=>{await api('/invitations/accept',{method:'POST',org:org.id,body:{token,consumer_org_id:org.id,consent_version:preview.consent_version,share_summary:share}});setToken('');setPreview(null);setConsent(false);const url=new URL(window.location.href);url.searchParams.delete('invite');window.history.replaceState({},'',url);w.navigate({tab:'repositories'})})}>Accept invitation</button>
-      </>:<div role="alert" className="notice danger">{previewError}</div>}
+        <button className="button primary" disabled={!consent} onClick={()=>run(async()=>{await api('/invitations/accept',{method:'POST',org:org.id,body:{invitation_id:preview.invitation_id,consumer_org_id:org.id,consent_version:preview.consent_version,share_summary:share}});setReviewing('');setConsent(false);w.navigate({tab:'repositories'})})}>Accept invitation</button>
+      <button className="button subtle" onClick={()=>setReviewing('')}>Not now</button>
     </section>}
-    {(tab==='overview'||tab==='invitations')&&<section className="panel"><div className="panel-header"><div><span className="eyebrow">ONBOARDING</span><h2>Invitations and enrollments</h2></div><Status value={w.capabilities?.email==='development_inbox'?'in-app inbox':w.capabilities?.email??'unavailable'}/></div>
-      {data.mail.length?<Table headers={['Recipient','Delivery','Action']}>{data.mail.map(m=><tr key={m.id}><td>{m.recipient_email}</td><td><Status value="in-app inbox"/></td><td><button className="button subtle" onClick={()=>review(m.acceptance_url)}>Review invitation</button></td></tr>)}</Table>:<Empty title="No invitations">The provider can invite your verified email.</Empty>}
+    {(tab==='overview'||tab==='invitations')&&<section className="panel"><div className="panel-header"><div><span className="eyebrow">ONBOARDING</span><h2>Invitations and enrollments</h2></div><Status value={data.incoming.length+' pending'}/></div>
+      {data.incoming.length?<Table headers={['Provider','API','Expires','Action']}>{data.incoming.map(i=><tr key={i.invitation_id}><td>{i.provider_name}</td><td>{i.api_name}</td><td>{new Date(i.expires_at).toLocaleDateString()}</td><td><button className="button subtle" onClick={()=>review(i.invitation_id)}>Review invitation</button></td></tr>)}</Table>:<Empty title="No pending invitations">Providers invite you by email address. Invitations sent to {w.session?.user.email} appear here.</Empty>}
+      {data.mail.length>0&&<details className="section-divider"><summary>Development inbox ({data.mail.length}) · emails that would be sent without SMTP</summary>{data.mail.map(m=><div key={m.id} className="section-divider"><strong>{m.subject}</strong><p className="mail-body">{m.body}</p></div>)}</details>}
       {data.enrollments.length>0&&<div className="section-divider"><label className="field">Active enrollment<select value={enrollment?.id||''} onChange={e=>w.navigate({enrollment:e.target.value,risk:''})}>{data.enrollments.map(e=><option key={e.id} value={e.id}>{e.api_project_id.slice(0,8)} · {e.status}</option>)}</select></label></div>}
     </section>}
     {(tab==='overview'||tab==='repositories')&&<section className="panel"><div className="panel-header"><div><span className="eyebrow">SOURCE CONSENT</span><h2>Repository selection</h2></div><Status value={w.capabilities?.repository_access==='fixture'?'ready':w.capabilities?.repository_access??'unavailable'}/></div>

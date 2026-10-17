@@ -22,12 +22,12 @@ def project(c):
     r=post(c,'/api-projects',{'name':'Demo Payments','service_id':'demo-payments','base_urls':['http://demo-payments.test']});assert r.status_code==201,r.text;return r.json()
 def invitation(p,c,project_id,email='consumer@example.test'):
     r=post(p,f'/api-projects/{project_id}/invitations',{'recipient_email':email});assert r.status_code==201,r.text
-    mails=get(c,'/demo/inbox').json()['items']; token=mails[-1]['acceptance_url'].split('=')[1]
-    return r.json(),token
+    mails=get(c,'/demo/inbox').json()['items']; assert mails[-1]['invitation_id']==r.json()['id']
+    return r.json(),r.json()['id']
 
 def onboard(env, share=True, write=True):
     app,cs=env;p=cs['provider'];c=cs['consumer'];pr=project(p);inv,token=invitation(p,c,pr['id'])
-    r=post(c,'/invitations/accept',{'token':token,'consumer_org_id':stable('consumer'),'consent_version':CONSENT,'share_summary':share});assert r.status_code==200,r.text;e=r.json()
+    r=post(c,'/invitations/accept',{'invitation_id':token,'consumer_org_id':stable('consumer'),'consent_version':CONSENT,'share_summary':share});assert r.status_code==200,r.text;e=r.json()
     connect=post(c,'/github/connect',{'return_route':'/'}).json();assert c.get(connect['installation_url']).status_code==200
     repos=get(c,'/github/repositories').json()['items'];r=post(c,'/repository-connections',{'github_repository_id':repos[0]['github_repository_id'],'enrollment_id':e['id'],'scan_consent':True,'allow_pr_write':write});assert r.status_code==201,r.text
     return pr,e,r.json(),token
@@ -80,8 +80,9 @@ def test_invitation_security_and_idempotency(env):
     duplicate=post(p,f"/api-projects/{pr['id']}/invitations",{'recipient_email':'consumer@example.test'},'new-key')
     assert first.json()['id']==duplicate.json()['id'];assert len(get(c,'/demo/inbox').json()['items'])==1
     assert post(p,f"/api-projects/{pr['id']}/invitations",{'recipient_email':'other@example.test'},'invite-once').status_code==409
-    token=get(c,'/demo/inbox').json()['items'][0]['acceptance_url'].split('=')[1]
-    payload={'token':token,'consumer_org_id':stable('consumer'),'consent_version':CONSENT,'share_summary':True}
+    mail=get(c,'/demo/inbox').json()['items'][0]
+    assert 'invite=' not in mail['body'] and 'Invitations' in mail['body'] and 'acceptance_url' not in mail
+    payload={'invitation_id':first.json()['id'],'consumer_org_id':stable('consumer'),'consent_version':CONSENT,'share_summary':True}
     assert post(cs['other'],'/invitations/accept',payload).status_code==403
     assert post(cs['unverified'],'/invitations/accept',payload).status_code==403
     assert post(c,'/invitations/accept',{**payload,'consumer_org_id':stable('other')}).status_code==403
@@ -93,9 +94,12 @@ def test_expired_and_revoked_invitations(env):
     app,cs=env;p,c=cs['provider'],cs['consumer'];pr=project(p);inv,token=invitation(p,c,pr['id'])
     with app.state.store.tx() as db:
         value=app.state.store.get(db,inv['id']);value['expires_at']='2000-01-01T00:00:00+00:00';app.state.store.update(db,value)
-    assert post(c,'/invitations/preview',{'token':token}).status_code==409
+    accept={'consumer_org_id':stable('consumer'),'consent_version':CONSENT,'share_summary':True}
+    assert get(c,'/invitations/incoming').json()['items']==[]
+    assert post(c,'/invitations/accept',{**accept,'invitation_id':token}).status_code==409
     inv,token=invitation(p,c,pr['id']);assert p.delete('/api/v1/invitations/'+inv['id']).status_code==200
-    assert post(c,'/invitations/preview',{'token':token}).status_code==409
+    assert get(c,'/invitations/incoming').json()['items']==[]
+    assert post(c,'/invitations/accept',{**accept,'invitation_id':token}).status_code==409
 
 def test_installation_forgery_and_selected_repo(env):
     app,cs=env;c=cs['consumer'];pr,e,r,_=onboard(env)
@@ -215,7 +219,7 @@ def test_rescan_invalidates_previous_readiness(env):
 def test_repository_permissions_are_per_enrollment(env):
     app,cs=env;p,c=cs['provider'],cs['consumer'];first,e,repo,_=onboard(env,write=True)
     second=project(p);inv,token=invitation(p,c,second['id'])
-    accepted=post(c,'/invitations/accept',{'token':token,'consumer_org_id':stable('consumer'),
+    accepted=post(c,'/invitations/accept',{'invitation_id':token,'consumer_org_id':stable('consumer'),
         'consent_version':CONSENT,'share_summary':True}).json()
     selected=post(c,'/repository-connections',{'github_repository_id':'fixture-'+stable('consumer'),
         'enrollment_id':accepted['id'],'scan_consent':True,'allow_pr_write':False}).json()

@@ -22,9 +22,8 @@ def main():
         post(p,'/demo/session',{'persona':'provider'});post(c,'/demo/session',{'persona':'consumer'})
         project=post(p,'/api-projects',{'name':'Demo Payments','service_id':'demo-payments','base_urls':['http://demo-payments.test']});pid=project['id']
         run(p,f'/api-projects/{pid}/discoveries',{})
-        post(p,f'/api-projects/{pid}/invitations',{'recipient_email':'consumer@example.test'})
-        token=get(c,'/demo/inbox')['items'][0]['acceptance_url'].split('=')[1]
-        e=post(c,'/invitations/accept',{'token':token,'consumer_org_id':stable('consumer'),'consent_version':CONSENT,'share_summary':True})
+        invite=post(p,f'/api-projects/{pid}/invitations',{'recipient_email':'consumer@example.test'})
+        e=post(c,'/invitations/accept',{'invitation_id':invite['id'],'consumer_org_id':stable('consumer'),'consent_version':CONSENT,'share_summary':True})
         url=post(c,'/github/connect',{'return_route':'/'})['installation_url'];c.get(url).raise_for_status()
         selected=get(c,'/github/repositories')['items'][0]
         repo=post(c,'/repository-connections',{'github_repository_id':selected['github_repository_id'],'enrollment_id':e['id'],'scan_consent':True})

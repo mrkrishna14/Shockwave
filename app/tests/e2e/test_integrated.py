@@ -49,9 +49,9 @@ def onboard(p, c):
                                   'base_urls': ['http://demo-payments.test']})
     assert r.status_code == 201, r.text
     project = r.json()
-    assert post(p, f"/api-projects/{project['id']}/invitations", {'recipient_email': 'consumer@example.test'}).status_code == 201
-    token = get(c, '/demo/inbox').json()['items'][-1]['acceptance_url'].split('=')[1]
-    r = post(c, '/invitations/accept', {'token': token, 'consumer_org_id': stable('consumer'),
+    invite = post(p, f"/api-projects/{project['id']}/invitations", {'recipient_email': 'consumer@example.test'})
+    assert invite.status_code == 201
+    r = post(c, '/invitations/accept', {'invitation_id': invite.json()['id'], 'consumer_org_id': stable('consumer'),
                                         'consent_version': CONSENT, 'share_summary': True})
     assert r.status_code == 200, r.text
     enrollment = r.json()

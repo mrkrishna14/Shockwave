@@ -1,6 +1,6 @@
 # Shockwave platform
 
-The platform is a permissioned, local fixture demonstration of API change impact. It stores provider projects, invitations, consumer enrollment and repository consent, jobs, private evidence, and provider summaries. Python and JavaScript assertions really run against embedded trusted fixture code. It does **not** scan arbitrary repositories, send live email, connect GitHub, publish a PR, import Stripe, or provide production authentication.
+The platform is a permissioned, local fixture demonstration of API change impact. It stores provider projects, invitations, consumer enrollment and repository consent, jobs, private evidence, and provider summaries. Python and JavaScript assertions really run against embedded trusted fixture code. It does **not** scan arbitrary repositories, connect GitHub, publish a PR, import Stripe, or provide production authentication. Email/password accounts and SMTP invitation notices are available (see [Accounts and email](#accounts-and-email)).
 
 ## Install
 
@@ -34,11 +34,32 @@ Open `http://127.0.0.1:3000`; API documentation is at `http://127.0.0.1:8000/doc
 
 The worker uses SQLite leases and fencing. A second worker may run against the same database. A healthy lease is not reclaimed; an abandoned lease can be reclaimed up to three attempts. Job completion, cancellation, and consent checks happen in short transactions. Adapter calls run outside those transactions. A new worker may repeat local computation after a crash, so external effects require their own idempotency and reconciliation.
 
+## Accounts and email
+
+Anyone can create a **provider** or **consumer** account at the sign-in screen. Each sign-up creates a user (email + scrypt-hashed password) and a new organization of that type, with the user as admin. Emails are unique, so you can test with as many distinct providers and consumers as you like. The one-click demo personas are still offered when `SHOCKWAVE_DEMO=1`.
+
+Invitations are addressed to an email. The invitation email is a **notification only**. It names the provider and API and tells the recipient to sign in. It never contains an acceptance link or token. The invited consumer signs in (or signs up) with that exact email and accepts under **Invitations**. Other accounts cannot see or accept it.
+
+To send real email, set the SMTP variables (see `.env.example`):
+
+```sh
+SHOCKWAVE_SMTP_HOST=smtp.example.com
+SHOCKWAVE_SMTP_PORT=587            # 465 uses implicit TLS; otherwise STARTTLS unless SHOCKWAVE_SMTP_STARTTLS=0
+SHOCKWAVE_SMTP_USERNAME=...
+SHOCKWAVE_SMTP_PASSWORD=...
+SHOCKWAVE_SMTP_FROM="Shockwave <noreply@example.com>"
+SHOCKWAVE_APP_URL=http://127.0.0.1:3000   # link to the app shown in the email; defaults to SHOCKWAVE_ORIGIN
+```
+
+Without SMTP, demo mode puts the message in the development inbox. The consumer can read it under Invitations → Development inbox.
+
+Limits: sign-up does not yet send an email-verification message. The first person to register an address owns it, which is fine for local testing but not for a public deployment. There is no password reset. Sign-in and sign-up are rate-limited per client IP.
+
 ## Fixture walkthrough
 
-1. Sign in as Provider. Create Demo Payments and load its fixture endpoint.
-2. Invite `consumer@example.test`. Delivery appears in the simulated recipient's development inbox.
-3. Sign out and use Consumer. Review the invitation and grant enrollment consent.
+1. Sign in as Provider (demo persona or a new provider account). Create Demo Payments and load its fixture endpoint.
+2. Invite the consumer's email (`consumer@example.test` for the demo persona). They get a notification email, or a development inbox entry without SMTP.
+3. Sign out and sign in as that consumer. Review the invitation under Invitations and grant enrollment consent.
 4. Connect the fixture installation, select a repository, and grant its separate processing permission. Scan it.
 5. Return to Provider and assess the fictional cents-to-dollars change. It is **not** a Stripe change.
 6. Return to Consumer. Inspect a finding, run old/new verification, and generate a patch. Old tests pass, proposed tests fail on `$0.10`, and the validated patch passes two fixture tests.

@@ -2,17 +2,19 @@ import type {APIProject, Endpoint, Invitation, Enrollment, RepositoryConnection,
 export type {APIProject, Endpoint, Invitation, Enrollment, RepositoryConnection, Risk, VerificationResult, MigrationResult, Readiness, Job, ProviderImpactSummary, APIChange} from '../contracts';
 
 export type Organization={id:string;name:string;kind:'provider'|'consumer';role:'admin'|'member'};
-export type Session={user:{email:string};organizations:Organization[];mode:string;consent_version:string};
+export type Session={user:{id:string;email:string;verified:number};organizations:Organization[];mode:string;consent_version:string};
 export type Capabilities={mode:string;discovery:string;repository_access:string;scanner:string;verification:string;migration:string;email:string;publication:string;reasons:Record<string,string>};
 export type JobView=Job&{attempts:number;cancel_requested:boolean};
 export type DetailedRisk=Risk&{verifications:VerificationResult[];migrations:MigrationResult[];readiness:Readiness[];evidence_state:{current:boolean;verified:boolean;validated:boolean}};
 export type RepoOption={github_repository_id:string;full_name:string;default_branch:string;mode:string};
 export type SelectedRepo=RepositoryConnection&{enrollment_permissions:{enrollment_id:string;allow_model_processing:boolean;allow_pr_write:boolean;scan_consent_at:string}};
-export type Mail={id:string;acceptance_url:string;recipient_email:string};
+export type Mail={id:string;recipient_email:string;subject:string;body:string;invitation_id:string;created_at?:string};
+export type IncomingInvitation={invitation_id:string;provider_name:string;api_name:string;consent_version:string;expires_at:string;processing:string};
+export type Health={demo_sessions:boolean;password_auth:boolean;integration_mode:string};
 export type ConsumerRow={invitation_id:string;recipient_email:string;invitation_status:string;delivery_status:string;enrollment_status:string;share_summary:boolean;delivery_attention:boolean};
-export type PlatformData={projects:APIProject[];endpoints:Endpoint[];invitations:Invitation[];consumers:ConsumerRow[];changes:APIChange[];impact:ProviderImpactSummary[];enrollments:Enrollment[];repos:RepositoryConnection[];selectedRepos:SelectedRepo[];repoOptions:RepoOption[];risks:DetailedRisk[];mail:Mail[];jobs:JobView[]};
+export type PlatformData={projects:APIProject[];endpoints:Endpoint[];invitations:Invitation[];consumers:ConsumerRow[];changes:APIChange[];impact:ProviderImpactSummary[];enrollments:Enrollment[];repos:RepositoryConnection[];selectedRepos:SelectedRepo[];repoOptions:RepoOption[];risks:DetailedRisk[];mail:Mail[];incoming:IncomingInvitation[];jobs:JobView[]};
 type Page<T>={items:T[];next_cursor:string|null};
-export const emptyData=():PlatformData=>({projects:[],endpoints:[],invitations:[],consumers:[],changes:[],impact:[],enrollments:[],repos:[],selectedRepos:[],repoOptions:[],risks:[],mail:[],jobs:[]});
+export const emptyData=():PlatformData=>({projects:[],endpoints:[],invitations:[],consumers:[],changes:[],impact:[],enrollments:[],repos:[],selectedRepos:[],repoOptions:[],risks:[],mail:[],incoming:[],jobs:[]});
 
 const pendingKeys=new Map<string,string>();
 export class ApiError extends Error{constructor(message:string,public status:number,public code:string){super(message)}}
