@@ -110,7 +110,7 @@ def build_verification_plan(
         repository_snapshot_id=str(snapshot.id),
         scenario_id=spec.scenario_id,
         runner_profile=spec.trusted_profile if trusted else spec.sandbox_profile,
-        test_files=[spec.staged_test_file],
+        test_files=[spec.staged_test_file, *spec.additional_test_files],
         old_fixture_id=spec.old_fixture_id,
         new_fixture_id=spec.new_fixture_id,
         expected_behavior=spec.expected_behavior,

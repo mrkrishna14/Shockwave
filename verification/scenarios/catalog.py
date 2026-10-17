@@ -201,6 +201,35 @@ SCENARIOS: dict[str, ScenarioSpec] = {
 }
 
 
+# Hypothetical demo change. These fixtures do not describe an announced Stripe change.
+for _contract, _suffix in [('current', 'current-cents'), ('proposed', 'simulated-dollars')]:
+    _id = f'stripe.payment-intent.pi_demo.{_suffix}'
+    FIXTURES[_id] = ResponseFixture(_id, 'stripe', 'GET', '/v1/payment_intents/{intent}',
+                                   _contract, _id + '.json')
+
+_STRIPE = ScenarioSpec(
+    scenario_id='stripe.payment-intent-amount-units.simulated.typescript',
+    title='SIMULATED Stripe amount-unit change breaks a TypeScript checkout',
+    service_id='stripe', method='GET', path='/v1/payment_intents/{intent}',
+    field_path='response.amount', change_kind='units_changed', old_unit='minor',
+    new_unit='major', currency='usd', usage_operation='divide', usage_operand=100,
+    binding=ConsumerBinding(language='typescript', consumer_file='src/checkout.ts',
+        module='src/checkout.ts', function='displayPaymentIntent', args=('pi_demo',),
+        http_injection='js_global_fetch'),
+    old_fixture_id='stripe.payment-intent.pi_demo.current-cents',
+    new_fixture_id='stripe.payment-intent.pi_demo.simulated-dollars',
+    assertion_id='displayed_price_usd', expected_display='$10.00',
+    expected_behavior='SIMULATED change: the official Stripe SDK retrieves a PaymentIntent; '
+        'the checkout must display $10.00 for current amount=1000 and hypothetical amount=10. '
+        'This is not an announced Stripe API change.',
+    harness_asset='node_display_harness.mjs',
+    staged_test_name='shockwave_display_invariant.test.mjs',
+    trusted_profile='trusted_node', sandbox_profile='sandbox_node', timeout_seconds=30,
+    additional_test_files=('test/local.test.mjs',),
+)
+SCENARIOS[_STRIPE.scenario_id] = _STRIPE
+
+
 def get_scenario(scenario_id: str) -> ScenarioSpec:
     try:
         return SCENARIOS[scenario_id]

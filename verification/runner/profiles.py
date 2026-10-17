@@ -27,6 +27,19 @@ class Scenario:
     test_files: tuple[str, ...]
     assertion_names: frozenset[str]
     target_contract_snapshot_id: str
+    catalog: bool = False
+
+    @classmethod
+    def from_catalog(cls, plan, target_contract_snapshot_id):
+        """Register a backend-selected catalog plan; never infer trust from a request."""
+        from verification.scenarios.staging import validated_spec
+        from verification.scenarios.catalog import load_fixture
+        spec = validated_spec(plan)
+        return cls(spec.scenario_id, spec.old_fixture_id, spec.new_fixture_id,
+            load_fixture(spec.old_fixture_id)['response']['body'],
+            load_fixture(spec.new_fixture_id)['response']['body'],
+            tuple(plan.test_files), frozenset([spec.assertion_id]),
+            target_contract_snapshot_id, catalog=True)
 
 
 def command(profile: str, tests: list[str], report: Path, python: str = sys.executable):

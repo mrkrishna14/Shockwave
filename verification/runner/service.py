@@ -67,6 +67,11 @@ class RunnerService:
                     if relative in scenario.test_files:
                         return self._error('test_mutation_rejected')
                     safe_path(work, relative).write_text(content)
+                staged = None
+                phase = 'patched' if proposed and edits else ('proposed' if proposed else 'baseline')
+                if scenario.catalog:
+                    from verification.scenarios.staging import stage_scenario
+                    staged = stage_scenario(plan, work, phase, Path(temp) / 'scenario')
                 for relative in plan.test_files:
                     if not safe_path(work, relative).is_file():
                         return self._error('test_file_missing')
@@ -76,6 +81,12 @@ class RunnerService:
                 env = {'PATH': os.defpath, 'HOME': temp, 'TMPDIR': temp,
                        'PYTHONDONTWRITEBYTECODE': '1', 'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1',
                        'SW_RESPONSE': json.dumps(scenario.new_response if proposed else scenario.old_response)}
+                if staged:
+                    env.update(staged.env)
+                    if plan.runner_profile == 'trusted_python':
+                        # Keep the catalog's pytest isolation and our native JUnit report.
+                        from verification.scenarios.staging import runner_argv_hint
+                        argv = [argv[0], *runner_argv_hint(plan)[1:], f'--junitxml={report}']
                 started = time.monotonic()
                 proc = subprocess.Popen(argv, cwd=work, env=env, stdout=subprocess.PIPE,
                                         stderr=subprocess.STDOUT, start_new_session=True)
@@ -143,6 +154,24 @@ class RunnerService:
                 result = self.factory('ExecutionResult', exit_code=proc.returncode,
                     timed_out=timed_out, infrastructure_error=error, artifact_ids=[artifact],
                     duration_ms=duration, tests_run=tests_run)
+                if staged and not timed_out and not error:
+                    from verification.scenarios.interpret import PhaseRun, classify_phase
+                    from verification.scenarios.staging import MAX_REPORT_BYTES
+                    try:
+                        with staged.report_path.open('rb') as handle:
+                            raw = handle.read(MAX_REPORT_BYTES + 1)
+                        if len(raw) > MAX_REPORT_BYTES:
+                            raise ValueError('scenario_report_too_large')
+                        report_artifact = self.artifacts.put(raw)
+                        result.artifact_ids.append(report_artifact)
+                        classification = classify_phase(plan, phase, PhaseRun(result, raw))
+                        relevant = classification.outcome == 'relevant_fail'
+                        seen = classification.outcome in ('passed', 'relevant_fail')
+                        if not seen:
+                            result.infrastructure_error = 'scenario_inconclusive: ' + classification.reason
+                    except (OSError, ValueError):
+                        result.infrastructure_error = 'missing_or_invalid_scenario_report'
+                        relevant, seen = False, False
                 return RunEvidence(result, relevant, seen)
         except (KeyError, ValueError, OSError):
             return self._error('invalid_runner_configuration_or_source')
