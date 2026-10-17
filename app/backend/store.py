@@ -28,7 +28,7 @@ class Store:
         # preserve its rows and add worker coordination without resetting state.
         with self.tx() as db:
             version = db.execute('PRAGMA user_version').fetchone()[0]
-            if version > 4:
+            if version > 6:
                 raise RuntimeError(f'Unsupported Shockwave database version {version}')
             if version < 1:
                 db.executescript('''
@@ -86,6 +86,14 @@ class Store:
                 );
                 ''')
                 db.execute('PRAGMA user_version=4')
+            if version < 5:
+                db.execute("""CREATE INDEX IF NOT EXISTS jobs_claim_status
+                    ON records(kind, json_extract(payload,'$.status')) WHERE kind='job'""")
+                db.execute('PRAGMA user_version=5')
+            if version < 6:
+                db.execute('''CREATE TABLE IF NOT EXISTS snapshot_cleanup(
+                    snapshot_id TEXT PRIMARY KEY, requested_at TEXT NOT NULL)''')
+                db.execute('PRAGMA user_version=6')
             # Legacy jobs predate the lease table. They remain claimable after an
             # upgrade; an active lease from another worker is never discarded.
             for row in db.execute("SELECT id,payload FROM records WHERE kind='job'"):

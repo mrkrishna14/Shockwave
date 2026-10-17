@@ -82,9 +82,23 @@ def test_upgrade_keeps_old_records(tmp_path):
     db.commit();db.close()
     store=Store(path)
     with store.read() as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==4
+        assert db.execute('PRAGMA user_version').fetchone()[0]==6
         assert store.get(db,old['id'],'job')==old
     assert JobQueue(store).claim(old['id'])
+
+
+def test_worker_claims_jobs_after_completed_history(tmp_path):
+    store=Store(tmp_path/'backlog.db');queue=JobQueue(store)
+    with store.tx() as db:
+        db.execute("INSERT INTO organizations VALUES('org','Example','consumer')")
+        for index in range(101):
+            job={'id':uid(),'owner_org_id':'org','kind':'scan',
+                 'status':'succeeded' if index<100 else 'queued',
+                 'stage':'completed' if index<100 else 'queued',
+                 'created_at':now(),'updated_at':now(),'result_id':None,'error':None}
+            queue.enqueue(db,job)
+            if index==100: queued_id=job['id']
+    assert queue.claim().job_id==queued_id
 
 
 def test_ambiguous_delivery_is_not_retried(tmp_path):
