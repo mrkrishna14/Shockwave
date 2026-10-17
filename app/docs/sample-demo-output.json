@@ -1,0 +1,41 @@
+{
+  "mode": "fixture",
+  "source": "trusted embedded platform fixture",
+  "results": [
+    {
+      "language_fixture": "display.py",
+      "verification": "verified_regression",
+      "baseline_exit": 0,
+      "proposed_exit": 1,
+      "migration": "patch_validated",
+      "validation_exit": 0,
+      "tests_run": 2,
+      "pr_url": null
+    },
+    {
+      "language_fixture": "display.cjs",
+      "verification": "verified_regression",
+      "baseline_exit": 0,
+      "proposed_exit": 1,
+      "migration": "patch_validated",
+      "validation_exit": 0,
+      "tests_run": 2,
+      "pr_url": null
+    }
+  ],
+  "provider_summary": [
+    {
+      "api_project_id": "7606ffb9-0059-46ce-b769-e09cd72aea01",
+      "change_id": "139c3b9f-8aeb-4013-a77f-47345219bc9c",
+      "enrollment_id": "6462856a-776d-4104-89e9-48b3acab58c0",
+      "consumer_display_name": "Acme storefront",
+      "coverage": "partial",
+      "predicted_risk_count": 2,
+      "verified_regression_count": 2,
+      "validated_fix_count": 2,
+      "pending_approval_count": 2,
+      "deployment": "unknown"
+    }
+  ],
+  "live_integrations": "not connected"
+}

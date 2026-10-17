@@ -1,0 +1,3566 @@
+{
+  "APIChange": {
+    "$defs": {
+      "Evidence": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "openapi",
+              "source",
+              "docs",
+              "declared_change",
+              "test"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "consumer_private",
+              "provider_owned",
+              "public"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          },
+          "source_uri": {
+            "title": "Source Uri",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "File"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line Start"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line End"
+          },
+          "json_pointer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Json Pointer"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Excerpt"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "visibility",
+          "source_uri",
+          "revision"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "api_project_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Api Project Id",
+        "type": "string"
+      },
+      "service_id": {
+        "title": "Service Id",
+        "type": "string"
+      },
+      "endpoint_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Endpoint Id",
+        "type": "string"
+      },
+      "old_snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Old Snapshot Id",
+        "type": "string"
+      },
+      "new_snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "New Snapshot Id",
+        "type": "string"
+      },
+      "field_path": {
+        "title": "Field Path",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "field_removed",
+          "type_changed",
+          "enum_changed",
+          "units_changed",
+          "behavior_changed"
+        ],
+        "title": "Kind",
+        "type": "string"
+      },
+      "old_semantics": {
+        "title": "Old Semantics",
+        "type": "string"
+      },
+      "new_semantics": {
+        "title": "New Semantics",
+        "type": "string"
+      },
+      "structural_breaking": {
+        "title": "Structural Breaking",
+        "type": "boolean"
+      },
+      "evidence": {
+        "items": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "title": "Evidence",
+        "type": "array"
+      }
+    },
+    "required": [
+      "id",
+      "api_project_id",
+      "service_id",
+      "endpoint_id",
+      "old_snapshot_id",
+      "new_snapshot_id",
+      "field_path",
+      "kind",
+      "old_semantics",
+      "new_semantics",
+      "structural_breaking",
+      "evidence"
+    ],
+    "title": "APIChange",
+    "type": "object"
+  },
+  "APIProject": {
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "provider_org_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Provider Org Id",
+        "type": "string"
+      },
+      "service_id": {
+        "title": "Service Id",
+        "type": "string"
+      },
+      "name": {
+        "title": "Name",
+        "type": "string"
+      },
+      "base_urls": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Base Urls",
+        "type": "array"
+      },
+      "created_at": {
+        "format": "date-time",
+        "title": "Created At",
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "provider_org_id",
+      "service_id",
+      "name",
+      "base_urls",
+      "created_at"
+    ],
+    "title": "APIProject",
+    "type": "object"
+  },
+  "AnalysisResult": {
+    "$defs": {
+      "Evidence": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "openapi",
+              "source",
+              "docs",
+              "declared_change",
+              "test"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "consumer_private",
+              "provider_owned",
+              "public"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          },
+          "source_uri": {
+            "title": "Source Uri",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "File"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line Start"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line End"
+          },
+          "json_pointer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Json Pointer"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Excerpt"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "visibility",
+          "source_uri",
+          "revision"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "Risk": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "change_id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Change Id",
+            "type": "string"
+          },
+          "consumer_org_id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Consumer Org Id",
+            "type": "string"
+          },
+          "enrollment_id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Enrollment Id",
+            "type": "string"
+          },
+          "repository_snapshot_id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Repository Snapshot Id",
+            "type": "string"
+          },
+          "dependency_ids": {
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "title": "Dependency Ids",
+            "type": "array"
+          },
+          "severity": {
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low",
+              "unknown"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "confidence": {
+            "enum": [
+              "direct",
+              "inferred",
+              "unresolved"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          },
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "suggested_action": {
+            "title": "Suggested Action",
+            "type": "string"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/$defs/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "change_id",
+          "consumer_org_id",
+          "enrollment_id",
+          "repository_snapshot_id",
+          "dependency_ids",
+          "severity",
+          "confidence",
+          "explanation",
+          "suggested_action",
+          "evidence"
+        ],
+        "title": "Risk",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "const": "shockwave.v1",
+        "default": "shockwave.v1",
+        "title": "Schema Version",
+        "type": "string"
+      },
+      "change_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Change Id",
+        "type": "string"
+      },
+      "risks": {
+        "items": {
+          "$ref": "#/$defs/Risk"
+        },
+        "title": "Risks",
+        "type": "array"
+      },
+      "unresolved_dependency_ids": {
+        "items": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "title": "Unresolved Dependency Ids",
+        "type": "array"
+      },
+      "warnings": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Warnings",
+        "type": "array"
+      },
+      "analysis_mode": {
+        "enum": [
+          "rules",
+          "model",
+          "fixture"
+        ],
+        "title": "Analysis Mode",
+        "type": "string"
+      }
+    },
+    "required": [
+      "change_id",
+      "risks",
+      "unresolved_dependency_ids",
+      "warnings",
+      "analysis_mode"
+    ],
+    "title": "AnalysisResult",
+    "type": "object"
+  },
+  "Coverage": {
+    "additionalProperties": false,
+    "properties": {
+      "files_scanned": {
+        "minimum": 0,
+        "title": "Files Scanned",
+        "type": "integer"
+      },
+      "files_skipped": {
+        "minimum": 0,
+        "title": "Files Skipped",
+        "type": "integer"
+      },
+      "unsupported_patterns": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Unsupported Patterns",
+        "type": "array"
+      }
+    },
+    "required": [
+      "files_scanned",
+      "files_skipped",
+      "unsupported_patterns"
+    ],
+    "title": "Coverage",
+    "type": "object"
+  },
+  "DeliveryResult": {
+    "additionalProperties": false,
+    "properties": {
+      "status": {
+        "enum": [
+          "sent",
+          "failed",
+          "development_inbox"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "message_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Message Id"
+      },
+      "error": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Error"
+      }
+    },
+    "required": [
+      "status",
+      "message_id",
+      "error"
+    ],
+    "title": "DeliveryResult",
+    "type": "object"
+  },
+  "Dependency": {
+    "$defs": {
+      "Evidence": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "openapi",
+              "source",
+              "docs",
+              "declared_change",
+              "test"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "consumer_private",
+              "provider_owned",
+              "public"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          },
+          "source_uri": {
+            "title": "Source Uri",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "File"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line Start"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line End"
+          },
+          "json_pointer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Json Pointer"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Excerpt"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "visibility",
+          "source_uri",
+          "revision"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "Origin": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "sdk_response",
+              "http_response"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "library": {
+            "title": "Library",
+            "type": "string"
+          },
+          "call": {
+            "title": "Call",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "library",
+          "call"
+        ],
+        "title": "Origin",
+        "type": "object"
+      },
+      "Usage": {
+        "additionalProperties": false,
+        "properties": {
+          "operation": {
+            "enum": [
+              "read",
+              "divide",
+              "multiply",
+              "compare",
+              "store",
+              "pass_through",
+              "unknown"
+            ],
+            "title": "Operation",
+            "type": "string"
+          },
+          "operand": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operand"
+          },
+          "destination": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination"
+          }
+        },
+        "required": [
+          "operation",
+          "operand",
+          "destination"
+        ],
+        "title": "Usage",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "consumer_org_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Consumer Org Id",
+        "type": "string"
+      },
+      "enrollment_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Enrollment Id",
+        "type": "string"
+      },
+      "repository_snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Repository Snapshot Id",
+        "type": "string"
+      },
+      "service_id": {
+        "title": "Service Id",
+        "type": "string"
+      },
+      "endpoint_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Endpoint Id",
+        "type": "string"
+      },
+      "language": {
+        "enum": [
+          "python",
+          "javascript",
+          "typescript"
+        ],
+        "title": "Language",
+        "type": "string"
+      },
+      "field_path": {
+        "title": "Field Path",
+        "type": "string"
+      },
+      "origin": {
+        "$ref": "#/$defs/Origin"
+      },
+      "usage": {
+        "$ref": "#/$defs/Usage"
+      },
+      "confidence": {
+        "enum": [
+          "direct",
+          "inferred",
+          "unresolved"
+        ],
+        "title": "Confidence",
+        "type": "string"
+      },
+      "evidence": {
+        "items": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "title": "Evidence",
+        "type": "array"
+      }
+    },
+    "required": [
+      "id",
+      "consumer_org_id",
+      "enrollment_id",
+      "repository_snapshot_id",
+      "service_id",
+      "endpoint_id",
+      "language",
+      "field_path",
+      "origin",
+      "usage",
+      "confidence",
+      "evidence"
+    ],
+    "title": "Dependency",
+    "type": "object"
+  },
+  "DiscoveryInput": {
+    "additionalProperties": false,
+    "properties": {
+      "service_id": {
+        "title": "Service Id",
+        "type": "string"
+      },
+      "snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Snapshot Id",
+        "type": "string"
+      },
+      "openapi_documents": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Openapi Documents",
+        "type": "array"
+      },
+      "source_snapshot_id": {
+        "anyOf": [
+          {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Source Snapshot Id"
+      },
+      "frameworks": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Frameworks",
+        "type": "array"
+      }
+    },
+    "required": [
+      "service_id",
+      "snapshot_id",
+      "openapi_documents",
+      "frameworks"
+    ],
+    "title": "DiscoveryInput",
+    "type": "object"
+  },
+  "DiscoveryResult": {
+    "$defs": {
+      "Coverage": {
+        "additionalProperties": false,
+        "properties": {
+          "files_scanned": {
+            "minimum": 0,
+            "title": "Files Scanned",
+            "type": "integer"
+          },
+          "files_skipped": {
+            "minimum": 0,
+            "title": "Files Skipped",
+            "type": "integer"
+          },
+          "unsupported_patterns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unsupported Patterns",
+            "type": "array"
+          }
+        },
+        "required": [
+          "files_scanned",
+          "files_skipped",
+          "unsupported_patterns"
+        ],
+        "title": "Coverage",
+        "type": "object"
+      },
+      "Endpoint": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "service_id": {
+            "title": "Service Id",
+            "type": "string"
+          },
+          "method": {
+            "enum": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE",
+              "HEAD",
+              "OPTIONS",
+              "TRACE"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "operation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Operation Id"
+          },
+          "request_schema": {
+            "additionalProperties": true,
+            "title": "Request Schema",
+            "type": "object"
+          },
+          "response_schema": {
+            "additionalProperties": true,
+            "title": "Response Schema",
+            "type": "object"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/$defs/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "reconciliation": {
+            "enum": [
+              "documented_and_found",
+              "implementation_only",
+              "documented_not_found_in_scan",
+              "conflict",
+              "not_compared"
+            ],
+            "title": "Reconciliation",
+            "type": "string"
+          },
+          "confidence": {
+            "enum": [
+              "direct",
+              "inferred",
+              "unresolved"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "service_id",
+          "method",
+          "path",
+          "snapshot_id",
+          "request_schema",
+          "response_schema",
+          "evidence",
+          "reconciliation",
+          "confidence"
+        ],
+        "title": "Endpoint",
+        "type": "object"
+      },
+      "Evidence": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "openapi",
+              "source",
+              "docs",
+              "declared_change",
+              "test"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "consumer_private",
+              "provider_owned",
+              "public"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          },
+          "source_uri": {
+            "title": "Source Uri",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "File"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line Start"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line End"
+          },
+          "json_pointer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Json Pointer"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Excerpt"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "visibility",
+          "source_uri",
+          "revision"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "const": "shockwave.v1",
+        "default": "shockwave.v1",
+        "title": "Schema Version",
+        "type": "string"
+      },
+      "service_id": {
+        "title": "Service Id",
+        "type": "string"
+      },
+      "snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Snapshot Id",
+        "type": "string"
+      },
+      "endpoints": {
+        "items": {
+          "$ref": "#/$defs/Endpoint"
+        },
+        "title": "Endpoints",
+        "type": "array"
+      },
+      "coverage": {
+        "$ref": "#/$defs/Coverage"
+      },
+      "warnings": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Warnings",
+        "type": "array"
+      }
+    },
+    "required": [
+      "service_id",
+      "snapshot_id",
+      "endpoints",
+      "coverage",
+      "warnings"
+    ],
+    "title": "DiscoveryResult",
+    "type": "object"
+  },
+  "Endpoint": {
+    "$defs": {
+      "Evidence": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "openapi",
+              "source",
+              "docs",
+              "declared_change",
+              "test"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "consumer_private",
+              "provider_owned",
+              "public"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          },
+          "source_uri": {
+            "title": "Source Uri",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "File"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line Start"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line End"
+          },
+          "json_pointer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Json Pointer"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Excerpt"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "visibility",
+          "source_uri",
+          "revision"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "service_id": {
+        "title": "Service Id",
+        "type": "string"
+      },
+      "method": {
+        "enum": [
+          "GET",
+          "POST",
+          "PUT",
+          "PATCH",
+          "DELETE",
+          "HEAD",
+          "OPTIONS",
+          "TRACE"
+        ],
+        "title": "Method",
+        "type": "string"
+      },
+      "path": {
+        "title": "Path",
+        "type": "string"
+      },
+      "snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Snapshot Id",
+        "type": "string"
+      },
+      "operation_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Operation Id"
+      },
+      "request_schema": {
+        "additionalProperties": true,
+        "title": "Request Schema",
+        "type": "object"
+      },
+      "response_schema": {
+        "additionalProperties": true,
+        "title": "Response Schema",
+        "type": "object"
+      },
+      "evidence": {
+        "items": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "title": "Evidence",
+        "type": "array"
+      },
+      "reconciliation": {
+        "enum": [
+          "documented_and_found",
+          "implementation_only",
+          "documented_not_found_in_scan",
+          "conflict",
+          "not_compared"
+        ],
+        "title": "Reconciliation",
+        "type": "string"
+      },
+      "confidence": {
+        "enum": [
+          "direct",
+          "inferred",
+          "unresolved"
+        ],
+        "title": "Confidence",
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "service_id",
+      "method",
+      "path",
+      "snapshot_id",
+      "request_schema",
+      "response_schema",
+      "evidence",
+      "reconciliation",
+      "confidence"
+    ],
+    "title": "Endpoint",
+    "type": "object"
+  },
+  "Enrollment": {
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "api_project_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Api Project Id",
+        "type": "string"
+      },
+      "consumer_org_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Consumer Org Id",
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "active",
+          "revoked"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "share_summary": {
+        "title": "Share Summary",
+        "type": "boolean"
+      },
+      "consent_version": {
+        "title": "Consent Version",
+        "type": "string"
+      },
+      "accepted_at": {
+        "format": "date-time",
+        "title": "Accepted At",
+        "type": "string"
+      },
+      "revoked_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Revoked At"
+      }
+    },
+    "required": [
+      "id",
+      "api_project_id",
+      "consumer_org_id",
+      "status",
+      "share_summary",
+      "consent_version",
+      "accepted_at"
+    ],
+    "title": "Enrollment",
+    "type": "object"
+  },
+  "EnrollmentRepository": {
+    "additionalProperties": false,
+    "properties": {
+      "enrollment_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Enrollment Id",
+        "type": "string"
+      },
+      "repository_connection_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Repository Connection Id",
+        "type": "string"
+      }
+    },
+    "required": [
+      "enrollment_id",
+      "repository_connection_id"
+    ],
+    "title": "EnrollmentRepository",
+    "type": "object"
+  },
+  "Error": {
+    "additionalProperties": false,
+    "properties": {
+      "code": {
+        "title": "Code",
+        "type": "string"
+      },
+      "message": {
+        "title": "Message",
+        "type": "string"
+      },
+      "retryable": {
+        "title": "Retryable",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "code",
+      "message",
+      "retryable"
+    ],
+    "title": "Error",
+    "type": "object"
+  },
+  "Evidence": {
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "openapi",
+          "source",
+          "docs",
+          "declared_change",
+          "test"
+        ],
+        "title": "Kind",
+        "type": "string"
+      },
+      "visibility": {
+        "enum": [
+          "consumer_private",
+          "provider_owned",
+          "public"
+        ],
+        "title": "Visibility",
+        "type": "string"
+      },
+      "source_uri": {
+        "title": "Source Uri",
+        "type": "string"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "string"
+      },
+      "file": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "File"
+      },
+      "line_start": {
+        "anyOf": [
+          {
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Line Start"
+      },
+      "line_end": {
+        "anyOf": [
+          {
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Line End"
+      },
+      "json_pointer": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Json Pointer"
+      },
+      "excerpt": {
+        "anyOf": [
+          {
+            "maxLength": 4000,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Excerpt"
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "visibility",
+      "source_uri",
+      "revision"
+    ],
+    "title": "Evidence",
+    "type": "object"
+  },
+  "ExecutionResult": {
+    "additionalProperties": false,
+    "properties": {
+      "exit_code": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Exit Code"
+      },
+      "timed_out": {
+        "title": "Timed Out",
+        "type": "boolean"
+      },
+      "infrastructure_error": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Infrastructure Error"
+      },
+      "artifact_ids": {
+        "items": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "title": "Artifact Ids",
+        "type": "array"
+      },
+      "duration_ms": {
+        "minimum": 0,
+        "title": "Duration Ms",
+        "type": "integer"
+      },
+      "tests_run": {
+        "minimum": 0,
+        "title": "Tests Run",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "exit_code",
+      "timed_out",
+      "infrastructure_error",
+      "artifact_ids",
+      "duration_ms",
+      "tests_run"
+    ],
+    "title": "ExecutionResult",
+    "type": "object"
+  },
+  "Invitation": {
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "api_project_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Api Project Id",
+        "type": "string"
+      },
+      "recipient_email": {
+        "title": "Recipient Email",
+        "type": "string"
+      },
+      "token_hash": {
+        "title": "Token Hash",
+        "type": "string"
+      },
+      "expires_at": {
+        "format": "date-time",
+        "title": "Expires At",
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "pending",
+          "accepted",
+          "revoked",
+          "expired"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "delivery_status": {
+        "enum": [
+          "pending",
+          "sent",
+          "failed",
+          "development_inbox"
+        ],
+        "title": "Delivery Status",
+        "type": "string"
+      },
+      "accepted_by_user_id": {
+        "anyOf": [
+          {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Accepted By User Id"
+      },
+      "consumer_org_id": {
+        "anyOf": [
+          {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Consumer Org Id"
+      }
+    },
+    "required": [
+      "id",
+      "api_project_id",
+      "recipient_email",
+      "token_hash",
+      "expires_at",
+      "status",
+      "delivery_status"
+    ],
+    "title": "Invitation",
+    "type": "object"
+  },
+  "Job": {
+    "$defs": {
+      "Error": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "title": "Retryable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "retryable"
+        ],
+        "title": "Error",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "const": "shockwave.v1",
+        "default": "shockwave.v1",
+        "title": "Schema Version",
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "owner_org_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Owner Org Id",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "discovery",
+          "scan",
+          "analysis",
+          "verification",
+          "migration"
+        ],
+        "title": "Kind",
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "stage": {
+        "title": "Stage",
+        "type": "string"
+      },
+      "created_at": {
+        "format": "date-time",
+        "title": "Created At",
+        "type": "string"
+      },
+      "updated_at": {
+        "format": "date-time",
+        "title": "Updated At",
+        "type": "string"
+      },
+      "result_id": {
+        "anyOf": [
+          {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Result Id"
+      },
+      "error": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Error"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "id",
+      "owner_org_id",
+      "kind",
+      "status",
+      "stage",
+      "created_at",
+      "updated_at",
+      "result_id",
+      "error"
+    ],
+    "title": "Job",
+    "type": "object"
+  },
+  "Membership": {
+    "additionalProperties": false,
+    "properties": {
+      "user_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "User Id",
+        "type": "string"
+      },
+      "organization_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Organization Id",
+        "type": "string"
+      },
+      "role": {
+        "enum": [
+          "admin",
+          "member"
+        ],
+        "title": "Role",
+        "type": "string"
+      }
+    },
+    "required": [
+      "user_id",
+      "organization_id",
+      "role"
+    ],
+    "title": "Membership",
+    "type": "object"
+  },
+  "MigrationRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "risk_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Risk Id",
+        "type": "string"
+      },
+      "verification_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Verification Id",
+        "type": "string"
+      },
+      "repository_snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Repository Snapshot Id",
+        "type": "string"
+      },
+      "target_contract_snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Target Contract Snapshot Id",
+        "type": "string"
+      },
+      "mode": {
+        "enum": [
+          "preview",
+          "publish_pr"
+        ],
+        "title": "Mode",
+        "type": "string"
+      }
+    },
+    "required": [
+      "risk_id",
+      "verification_id",
+      "repository_snapshot_id",
+      "target_contract_snapshot_id",
+      "mode"
+    ],
+    "title": "MigrationRequest",
+    "type": "object"
+  },
+  "MigrationResult": {
+    "$defs": {
+      "ExecutionResult": {
+        "additionalProperties": false,
+        "properties": {
+          "exit_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Code"
+          },
+          "timed_out": {
+            "title": "Timed Out",
+            "type": "boolean"
+          },
+          "infrastructure_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Infrastructure Error"
+          },
+          "artifact_ids": {
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "title": "Artifact Ids",
+            "type": "array"
+          },
+          "duration_ms": {
+            "minimum": 0,
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "tests_run": {
+            "minimum": 0,
+            "title": "Tests Run",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "exit_code",
+          "timed_out",
+          "infrastructure_error",
+          "artifact_ids",
+          "duration_ms",
+          "tests_run"
+        ],
+        "title": "ExecutionResult",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "const": "shockwave.v1",
+        "default": "shockwave.v1",
+        "title": "Schema Version",
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "risk_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Risk Id",
+        "type": "string"
+      },
+      "repository_snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Repository Snapshot Id",
+        "type": "string"
+      },
+      "target_contract_snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Target Contract Snapshot Id",
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "patch_proposed",
+          "patch_validated",
+          "validation_failed",
+          "blocked",
+          "pr_opened"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "generation_mode": {
+        "enum": [
+          "rule",
+          "model",
+          "fixture"
+        ],
+        "title": "Generation Mode",
+        "type": "string"
+      },
+      "patch_artifact_id": {
+        "anyOf": [
+          {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Patch Artifact Id"
+      },
+      "changed_files": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Changed Files",
+        "type": "array"
+      },
+      "validation": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ExecutionResult"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "pr_url": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Pr Url"
+      },
+      "branch": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Branch"
+      },
+      "warnings": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Warnings",
+        "type": "array"
+      }
+    },
+    "required": [
+      "id",
+      "risk_id",
+      "repository_snapshot_id",
+      "target_contract_snapshot_id",
+      "status",
+      "generation_mode",
+      "patch_artifact_id",
+      "changed_files",
+      "validation",
+      "pr_url",
+      "branch",
+      "warnings"
+    ],
+    "title": "MigrationResult",
+    "type": "object"
+  },
+  "Model": {
+    "additionalProperties": false,
+    "properties": {},
+    "title": "Model",
+    "type": "object"
+  },
+  "Organization": {
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "name": {
+        "title": "Name",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "provider",
+          "consumer"
+        ],
+        "title": "Kind",
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "kind"
+    ],
+    "title": "Organization",
+    "type": "object"
+  },
+  "Origin": {
+    "additionalProperties": false,
+    "properties": {
+      "kind": {
+        "enum": [
+          "sdk_response",
+          "http_response"
+        ],
+        "title": "Kind",
+        "type": "string"
+      },
+      "library": {
+        "title": "Library",
+        "type": "string"
+      },
+      "call": {
+        "title": "Call",
+        "type": "string"
+      }
+    },
+    "required": [
+      "kind",
+      "library",
+      "call"
+    ],
+    "title": "Origin",
+    "type": "object"
+  },
+  "ProviderImpactSummary": {
+    "additionalProperties": false,
+    "properties": {
+      "api_project_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Api Project Id",
+        "type": "string"
+      },
+      "change_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Change Id",
+        "type": "string"
+      },
+      "enrollment_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Enrollment Id",
+        "type": "string"
+      },
+      "consumer_display_name": {
+        "title": "Consumer Display Name",
+        "type": "string"
+      },
+      "coverage": {
+        "enum": [
+          "unscanned",
+          "partial",
+          "scanned"
+        ],
+        "title": "Coverage",
+        "type": "string"
+      },
+      "predicted_risk_count": {
+        "minimum": 0,
+        "title": "Predicted Risk Count",
+        "type": "integer"
+      },
+      "verified_regression_count": {
+        "minimum": 0,
+        "title": "Verified Regression Count",
+        "type": "integer"
+      },
+      "validated_fix_count": {
+        "minimum": 0,
+        "title": "Validated Fix Count",
+        "type": "integer"
+      },
+      "pending_approval_count": {
+        "minimum": 0,
+        "title": "Pending Approval Count",
+        "type": "integer"
+      },
+      "deployment": {
+        "enum": [
+          "unknown",
+          "partially_reported",
+          "all_reported"
+        ],
+        "title": "Deployment",
+        "type": "string"
+      }
+    },
+    "required": [
+      "api_project_id",
+      "change_id",
+      "enrollment_id",
+      "consumer_display_name",
+      "coverage",
+      "predicted_risk_count",
+      "verified_regression_count",
+      "validated_fix_count",
+      "pending_approval_count",
+      "deployment"
+    ],
+    "title": "ProviderImpactSummary",
+    "type": "object"
+  },
+  "PublicationAuthorization": {
+    "additionalProperties": false,
+    "properties": {
+      "user_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "User Id",
+        "type": "string"
+      },
+      "consumer_org_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Consumer Org Id",
+        "type": "string"
+      },
+      "repository_connection_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Repository Connection Id",
+        "type": "string"
+      },
+      "expected_commit": {
+        "title": "Expected Commit",
+        "type": "string"
+      },
+      "consent_timestamp": {
+        "format": "date-time",
+        "title": "Consent Timestamp",
+        "type": "string"
+      }
+    },
+    "required": [
+      "user_id",
+      "consumer_org_id",
+      "repository_connection_id",
+      "expected_commit",
+      "consent_timestamp"
+    ],
+    "title": "PublicationAuthorization",
+    "type": "object"
+  },
+  "Readiness": {
+    "additionalProperties": false,
+    "properties": {
+      "risk_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Risk Id",
+        "type": "string"
+      },
+      "migration_id": {
+        "anyOf": [
+          {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Migration Id"
+      },
+      "approval": {
+        "enum": [
+          "unknown",
+          "pending",
+          "approved",
+          "rejected"
+        ],
+        "title": "Approval",
+        "type": "string"
+      },
+      "merge": {
+        "enum": [
+          "unknown",
+          "not_merged",
+          "merged"
+        ],
+        "title": "Merge",
+        "type": "string"
+      },
+      "deployment": {
+        "enum": [
+          "unknown",
+          "reported_deployed"
+        ],
+        "title": "Deployment",
+        "type": "string"
+      },
+      "deployment_evidence": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Deployment Evidence"
+      }
+    },
+    "required": [
+      "risk_id",
+      "migration_id",
+      "approval",
+      "merge",
+      "deployment",
+      "deployment_evidence"
+    ],
+    "title": "Readiness",
+    "type": "object"
+  },
+  "RepositoryConnection": {
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "consumer_org_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Consumer Org Id",
+        "type": "string"
+      },
+      "installation_id": {
+        "title": "Installation Id",
+        "type": "string"
+      },
+      "github_repository_id": {
+        "title": "Github Repository Id",
+        "type": "string"
+      },
+      "full_name": {
+        "title": "Full Name",
+        "type": "string"
+      },
+      "default_branch": {
+        "title": "Default Branch",
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "connected",
+          "revoked",
+          "error"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "scan_consent_at": {
+        "format": "date-time",
+        "title": "Scan Consent At",
+        "type": "string"
+      },
+      "allow_model_processing": {
+        "title": "Allow Model Processing",
+        "type": "boolean"
+      },
+      "allow_pr_write": {
+        "title": "Allow Pr Write",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "id",
+      "consumer_org_id",
+      "installation_id",
+      "github_repository_id",
+      "full_name",
+      "default_branch",
+      "status",
+      "scan_consent_at",
+      "allow_model_processing",
+      "allow_pr_write"
+    ],
+    "title": "RepositoryConnection",
+    "type": "object"
+  },
+  "RepositorySnapshot": {
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "repository_connection_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Repository Connection Id",
+        "type": "string"
+      },
+      "commit_sha": {
+        "title": "Commit Sha",
+        "type": "string"
+      },
+      "fetched_at": {
+        "format": "date-time",
+        "title": "Fetched At",
+        "type": "string"
+      },
+      "content_hash": {
+        "title": "Content Hash",
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "repository_connection_id",
+      "commit_sha",
+      "fetched_at",
+      "content_hash"
+    ],
+    "title": "RepositorySnapshot",
+    "type": "object"
+  },
+  "Result": {
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "const": "shockwave.v1",
+        "default": "shockwave.v1",
+        "title": "Schema Version",
+        "type": "string"
+      }
+    },
+    "title": "Result",
+    "type": "object"
+  },
+  "Risk": {
+    "$defs": {
+      "Evidence": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "openapi",
+              "source",
+              "docs",
+              "declared_change",
+              "test"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "consumer_private",
+              "provider_owned",
+              "public"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          },
+          "source_uri": {
+            "title": "Source Uri",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "File"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line Start"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line End"
+          },
+          "json_pointer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Json Pointer"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Excerpt"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "visibility",
+          "source_uri",
+          "revision"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "change_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Change Id",
+        "type": "string"
+      },
+      "consumer_org_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Consumer Org Id",
+        "type": "string"
+      },
+      "enrollment_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Enrollment Id",
+        "type": "string"
+      },
+      "repository_snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Repository Snapshot Id",
+        "type": "string"
+      },
+      "dependency_ids": {
+        "items": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "title": "Dependency Ids",
+        "type": "array"
+      },
+      "severity": {
+        "enum": [
+          "critical",
+          "high",
+          "medium",
+          "low",
+          "unknown"
+        ],
+        "title": "Severity",
+        "type": "string"
+      },
+      "confidence": {
+        "enum": [
+          "direct",
+          "inferred",
+          "unresolved"
+        ],
+        "title": "Confidence",
+        "type": "string"
+      },
+      "explanation": {
+        "title": "Explanation",
+        "type": "string"
+      },
+      "suggested_action": {
+        "title": "Suggested Action",
+        "type": "string"
+      },
+      "evidence": {
+        "items": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "title": "Evidence",
+        "type": "array"
+      }
+    },
+    "required": [
+      "id",
+      "change_id",
+      "consumer_org_id",
+      "enrollment_id",
+      "repository_snapshot_id",
+      "dependency_ids",
+      "severity",
+      "confidence",
+      "explanation",
+      "suggested_action",
+      "evidence"
+    ],
+    "title": "Risk",
+    "type": "object"
+  },
+  "ScanRequest": {
+    "$defs": {
+      "Endpoint": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "service_id": {
+            "title": "Service Id",
+            "type": "string"
+          },
+          "method": {
+            "enum": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE",
+              "HEAD",
+              "OPTIONS",
+              "TRACE"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "operation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Operation Id"
+          },
+          "request_schema": {
+            "additionalProperties": true,
+            "title": "Request Schema",
+            "type": "object"
+          },
+          "response_schema": {
+            "additionalProperties": true,
+            "title": "Response Schema",
+            "type": "object"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/$defs/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "reconciliation": {
+            "enum": [
+              "documented_and_found",
+              "implementation_only",
+              "documented_not_found_in_scan",
+              "conflict",
+              "not_compared"
+            ],
+            "title": "Reconciliation",
+            "type": "string"
+          },
+          "confidence": {
+            "enum": [
+              "direct",
+              "inferred",
+              "unresolved"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "service_id",
+          "method",
+          "path",
+          "snapshot_id",
+          "request_schema",
+          "response_schema",
+          "evidence",
+          "reconciliation",
+          "confidence"
+        ],
+        "title": "Endpoint",
+        "type": "object"
+      },
+      "Evidence": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "openapi",
+              "source",
+              "docs",
+              "declared_change",
+              "test"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "consumer_private",
+              "provider_owned",
+              "public"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          },
+          "source_uri": {
+            "title": "Source Uri",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "File"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line Start"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line End"
+          },
+          "json_pointer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Json Pointer"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Excerpt"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "visibility",
+          "source_uri",
+          "revision"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "repository_snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Repository Snapshot Id",
+        "type": "string"
+      },
+      "enrollment_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Enrollment Id",
+        "type": "string"
+      },
+      "service_id": {
+        "title": "Service Id",
+        "type": "string"
+      },
+      "endpoint_catalog": {
+        "items": {
+          "$ref": "#/$defs/Endpoint"
+        },
+        "title": "Endpoint Catalog",
+        "type": "array"
+      },
+      "supported_languages": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Supported Languages",
+        "type": "array"
+      }
+    },
+    "required": [
+      "repository_snapshot_id",
+      "enrollment_id",
+      "service_id",
+      "endpoint_catalog",
+      "supported_languages"
+    ],
+    "title": "ScanRequest",
+    "type": "object"
+  },
+  "ScanResult": {
+    "$defs": {
+      "Coverage": {
+        "additionalProperties": false,
+        "properties": {
+          "files_scanned": {
+            "minimum": 0,
+            "title": "Files Scanned",
+            "type": "integer"
+          },
+          "files_skipped": {
+            "minimum": 0,
+            "title": "Files Skipped",
+            "type": "integer"
+          },
+          "unsupported_patterns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unsupported Patterns",
+            "type": "array"
+          }
+        },
+        "required": [
+          "files_scanned",
+          "files_skipped",
+          "unsupported_patterns"
+        ],
+        "title": "Coverage",
+        "type": "object"
+      },
+      "Dependency": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "consumer_org_id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Consumer Org Id",
+            "type": "string"
+          },
+          "enrollment_id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Enrollment Id",
+            "type": "string"
+          },
+          "repository_snapshot_id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Repository Snapshot Id",
+            "type": "string"
+          },
+          "service_id": {
+            "title": "Service Id",
+            "type": "string"
+          },
+          "endpoint_id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Endpoint Id",
+            "type": "string"
+          },
+          "language": {
+            "enum": [
+              "python",
+              "javascript",
+              "typescript"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
+          "field_path": {
+            "title": "Field Path",
+            "type": "string"
+          },
+          "origin": {
+            "$ref": "#/$defs/Origin"
+          },
+          "usage": {
+            "$ref": "#/$defs/Usage"
+          },
+          "confidence": {
+            "enum": [
+              "direct",
+              "inferred",
+              "unresolved"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/$defs/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "consumer_org_id",
+          "enrollment_id",
+          "repository_snapshot_id",
+          "service_id",
+          "endpoint_id",
+          "language",
+          "field_path",
+          "origin",
+          "usage",
+          "confidence",
+          "evidence"
+        ],
+        "title": "Dependency",
+        "type": "object"
+      },
+      "Evidence": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "openapi",
+              "source",
+              "docs",
+              "declared_change",
+              "test"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "consumer_private",
+              "provider_owned",
+              "public"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          },
+          "source_uri": {
+            "title": "Source Uri",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "File"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line Start"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line End"
+          },
+          "json_pointer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Json Pointer"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Excerpt"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "visibility",
+          "source_uri",
+          "revision"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "Origin": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "sdk_response",
+              "http_response"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "library": {
+            "title": "Library",
+            "type": "string"
+          },
+          "call": {
+            "title": "Call",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "library",
+          "call"
+        ],
+        "title": "Origin",
+        "type": "object"
+      },
+      "Usage": {
+        "additionalProperties": false,
+        "properties": {
+          "operation": {
+            "enum": [
+              "read",
+              "divide",
+              "multiply",
+              "compare",
+              "store",
+              "pass_through",
+              "unknown"
+            ],
+            "title": "Operation",
+            "type": "string"
+          },
+          "operand": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operand"
+          },
+          "destination": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination"
+          }
+        },
+        "required": [
+          "operation",
+          "operand",
+          "destination"
+        ],
+        "title": "Usage",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "const": "shockwave.v1",
+        "default": "shockwave.v1",
+        "title": "Schema Version",
+        "type": "string"
+      },
+      "repository_snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Repository Snapshot Id",
+        "type": "string"
+      },
+      "dependencies": {
+        "items": {
+          "$ref": "#/$defs/Dependency"
+        },
+        "title": "Dependencies",
+        "type": "array"
+      },
+      "coverage": {
+        "$ref": "#/$defs/Coverage"
+      },
+      "warnings": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Warnings",
+        "type": "array"
+      }
+    },
+    "required": [
+      "repository_snapshot_id",
+      "dependencies",
+      "coverage",
+      "warnings"
+    ],
+    "title": "ScanResult",
+    "type": "object"
+  },
+  "Usage": {
+    "additionalProperties": false,
+    "properties": {
+      "operation": {
+        "enum": [
+          "read",
+          "divide",
+          "multiply",
+          "compare",
+          "store",
+          "pass_through",
+          "unknown"
+        ],
+        "title": "Operation",
+        "type": "string"
+      },
+      "operand": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Operand"
+      },
+      "destination": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Destination"
+      }
+    },
+    "required": [
+      "operation",
+      "operand",
+      "destination"
+    ],
+    "title": "Usage",
+    "type": "object"
+  },
+  "VerificationPlan": {
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "risk_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Risk Id",
+        "type": "string"
+      },
+      "repository_snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Repository Snapshot Id",
+        "type": "string"
+      },
+      "scenario_id": {
+        "title": "Scenario Id",
+        "type": "string"
+      },
+      "runner_profile": {
+        "enum": [
+          "trusted_python",
+          "trusted_node",
+          "sandbox_python",
+          "sandbox_node"
+        ],
+        "title": "Runner Profile",
+        "type": "string"
+      },
+      "test_files": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Test Files",
+        "type": "array"
+      },
+      "old_fixture_id": {
+        "title": "Old Fixture Id",
+        "type": "string"
+      },
+      "new_fixture_id": {
+        "title": "New Fixture Id",
+        "type": "string"
+      },
+      "expected_behavior": {
+        "title": "Expected Behavior",
+        "type": "string"
+      },
+      "timeout_seconds": {
+        "maximum": 120,
+        "minimum": 1,
+        "title": "Timeout Seconds",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "risk_id",
+      "repository_snapshot_id",
+      "scenario_id",
+      "runner_profile",
+      "test_files",
+      "old_fixture_id",
+      "new_fixture_id",
+      "expected_behavior",
+      "timeout_seconds"
+    ],
+    "title": "VerificationPlan",
+    "type": "object"
+  },
+  "VerificationResult": {
+    "$defs": {
+      "ExecutionResult": {
+        "additionalProperties": false,
+        "properties": {
+          "exit_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Code"
+          },
+          "timed_out": {
+            "title": "Timed Out",
+            "type": "boolean"
+          },
+          "infrastructure_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Infrastructure Error"
+          },
+          "artifact_ids": {
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "title": "Artifact Ids",
+            "type": "array"
+          },
+          "duration_ms": {
+            "minimum": 0,
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "tests_run": {
+            "minimum": 0,
+            "title": "Tests Run",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "exit_code",
+          "timed_out",
+          "infrastructure_error",
+          "artifact_ids",
+          "duration_ms",
+          "tests_run"
+        ],
+        "title": "ExecutionResult",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "const": "shockwave.v1",
+        "default": "shockwave.v1",
+        "title": "Schema Version",
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "risk_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Risk Id",
+        "type": "string"
+      },
+      "repository_snapshot_id": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "title": "Repository Snapshot Id",
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "verified_regression",
+          "compatible_within_tested_scope",
+          "inconclusive",
+          "not_run"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "baseline": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ExecutionResult"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "proposed": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ExecutionResult"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "scenario_id": {
+        "title": "Scenario Id",
+        "type": "string"
+      },
+      "summary": {
+        "title": "Summary",
+        "type": "string"
+      },
+      "artifact_ids": {
+        "items": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "title": "Artifact Ids",
+        "type": "array"
+      }
+    },
+    "required": [
+      "id",
+      "risk_id",
+      "repository_snapshot_id",
+      "status",
+      "baseline",
+      "proposed",
+      "scenario_id",
+      "summary",
+      "artifact_ids"
+    ],
+    "title": "VerificationResult",
+    "type": "object"
+  }
+}

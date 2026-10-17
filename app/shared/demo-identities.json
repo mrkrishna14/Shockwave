@@ -1,0 +1,39 @@
+{
+  "service_id": "demo-payments",
+  "old_snapshot_id": "d436f0c4-ffaa-533d-bf59-c278b8ecc621",
+  "new_snapshot_id": "06d77e1d-ec2b-54ad-b8fb-232a1c88537d",
+  "endpoint_id": "425f1317-d3a8-5b99-bd66-9cf7f9f93612",
+  "endpoint": {
+    "id": "425f1317-d3a8-5b99-bd66-9cf7f9f93612",
+    "service_id": "demo-payments",
+    "method": "GET",
+    "path": "/v1/charges/{id}",
+    "snapshot_id": "d436f0c4-ffaa-533d-bf59-c278b8ecc621",
+    "operation_id": "get_charge",
+    "request_schema": {},
+    "response_schema": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "id": "b0ded5dd-f717-5f43-9fe8-7a376aaa94cd",
+        "kind": "openapi",
+        "visibility": "provider_owned",
+        "source_uri": "fixture://demo-payments",
+        "revision": "dddddddddddddddddddddddddddddddddddddddd",
+        "file": null,
+        "line_start": 1,
+        "line_end": 2,
+        "json_pointer": null,
+        "excerpt": "Platform fixture; not a discovery scan"
+      }
+    ],
+    "reconciliation": "not_compared",
+    "confidence": "direct"
+  }
+}
