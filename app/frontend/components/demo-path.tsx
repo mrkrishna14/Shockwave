@@ -16,9 +16,9 @@ function providerSteps(d:PlatformData):Step[]{
 function consumerSteps(d:PlatformData):Step[]{
   return [
     {title:'Accept the invitation',hint:'Invitations → Review → Accept',done:d.enrollments.some(e=>e.status==='active')},
-    {title:'Connect GitHub',hint:'Repositories → Connect installation',done:d.repoOptions.length>0||d.selectedRepos.length>0},
-    {title:'Select a repository',hint:'Tick it, consent, Select',done:d.selectedRepos.some(r=>r.status==='connected')},
-    {title:'Scan it',hint:'Repositories → Scan',done:d.jobs.some(j=>j.kind==='scan'&&j.status==='succeeded')},
+    {title:'Connect GitHub',hint:'Repositories → Connect repositories',done:d.repoOptions.length>0||d.selectedRepos.length>0},
+    {title:'Select a repository',hint:'Tick it, consent, select',done:d.selectedRepos.some(r=>r.status==='connected')},
+    {title:'Scan it',hint:'Repositories → Scan / retry',done:d.jobs.some(j=>j.kind==='scan'&&j.status==='succeeded')},
     {title:'Review the finding',hint:'After the provider assesses → Findings',done:d.risks.length>0},
     {title:'Prove the regression',hint:'Inspect → Run verification',done:d.risks.some(r=>r.evidence_state.verified)},
     {title:'Validate a fix',hint:'Generate migration patch',done:d.risks.some(r=>r.evidence_state.validated)},
@@ -28,12 +28,10 @@ function consumerSteps(d:PlatformData):Step[]{
 export function DemoPath({role,data}:{role:'provider'|'consumer';data:PlatformData}){
   const steps=role==='provider'?providerSteps(data):consumerSteps(data);
   const next=steps.findIndex(s=>!s.done);
-  return <section className="panel" aria-label="Demo path">
-    <div className="panel-header"><div><span className="eyebrow">Demo path · {role}</span><h2>{next===-1?'All steps complete':`Next: ${steps[next].title}`}</h2></div>
-      <span className="small-muted">{steps.filter(s=>s.done).length}/{steps.length} done</span></div>
-    <ol className="demo-path">{steps.map((s,i)=><li key={s.title} className={'demo-step'+(s.done?' done':i===next?' next':'')}>
-      <span className="dot" aria-hidden="true">{s.done?'✓':i+1}</span>
-      <div><strong>{s.title}</strong><span>{s.done?'Done':s.hint}</span></div>
+  return <section className="section" aria-label="Demo path">
+    <div className="section-head"><div><h2>{next===-1?'All steps complete':`Next: ${steps[next].title}`}</h2><p className="section-sub">Demo path · {steps.filter(s=>s.done).length} of {steps.length} done</p></div></div>
+    <ol className="steps">{steps.map((s,i)=><li key={s.title} className={'step'+(s.done?' done':i===next?' next':'')}>
+      <span className="n">Step {i+1}</span><strong>{s.title}</strong><span>{s.done?'Done':s.hint}</span>
     </li>)}</ol>
   </section>;
 }
