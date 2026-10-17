@@ -51,6 +51,9 @@ class Orchestrator:
         # adapters receive validated typed inputs through the shared protocols.
         if self.adapters_factory is DemoAdapters:
             return DemoAdapters(consumer_org_id=org)
+        if getattr(self.adapters_factory, 'accepts_consumer_org_id', False):
+            # Real-module adapters (backend.integrated) also need the consumer identity.
+            return self.adapters_factory(consumer_org_id=org)
         return self.adapters_factory()
 
     def run(self, claim):
@@ -139,7 +142,8 @@ class Orchestrator:
                 raise ValueError('ADAPTER_FAILED')
             result=ScanResult.model_validate(adapters.scan_repository(
                 ScanRequest(repository_snapshot_id=snapshot.id,enrollment_id=enrollment['id'],
-                            service_id=project['service_id'],endpoint_catalog=[endpoint()],
+                            service_id=project['service_id'],
+                            endpoint_catalog=adapters.endpoint_catalog(project) if hasattr(adapters,'endpoint_catalog') else [endpoint()],
                             supported_languages=['python','javascript']),snapshot,Path('.')))
             if result.repository_snapshot_id!=snapshot.id or any(
                 d.consumer_org_id!=org or d.enrollment_id!=enrollment['id'] or
@@ -148,7 +152,15 @@ class Orchestrator:
             return {'id':uid(),'snapshot':dump(snapshot),'scan':dump(result)}
         if kind=='analysis':
             project=prepared['project']
-            changes=[APIChange.model_validate(c) for c in task['declared_changes']] or [APIChange(
+            declared=[APIChange.model_validate(c) for c in task['declared_changes']]
+            if hasattr(adapters,'contract_snapshots'):
+                # Real-module adapters: discovery snapshots + detect_changes publish the change
+                # (with its openapi evidence) instead of trusting the declaration verbatim.
+                old,new=adapters.contract_snapshots(project)
+                changes=adapters.detect_changes(old,new,declared or adapters.declared_changes(project,old,new),
+                                                api_project_id=project['id'])
+            else:
+                changes=declared or [APIChange(
                 id=uid(),api_project_id=project['id'],service_id=project['service_id'],endpoint_id=ENDPOINT,
                 old_snapshot_id=OLD,new_snapshot_id=NEW,field_path='response.amount',kind='units_changed',
                 old_semantics='USD cents; 1000 = $10',new_semantics='USD dollars; 10 = $10',
