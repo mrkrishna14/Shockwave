@@ -91,6 +91,8 @@ class GitHubAdapter:
         self.consent_check, self.factory = consent_check, factory
         self.cache.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.snapshot_roots = {}
+        self.snapshot_hashes = {}
+        self.snapshot_repositories = {}
         self.cache_hashes = {}
 
     def request(self, method, path, token, body=None):
@@ -177,13 +179,46 @@ class GitHubAdapter:
                 staged.rename(root)
             self.cache_hashes[key] = tree_hash(root)
         self.check_connection(connection)
-        snapshot = self.factory('RepositorySnapshot', id=str(uuid4()), repository_connection_id=connection.id,
-            commit_sha=commit_sha, fetched_at=datetime.now(timezone.utc).isoformat(), content_hash=tree_hash(root))
-        self.snapshot_roots[snapshot.id] = root
+        snapshot_id = str(uuid4())
+        snapshot_dir = self.cache / 'snapshots'
+        snapshot_dir.mkdir(exist_ok=True, mode=0o700)
+        copy = snapshot_dir / f'{int(connection.github_repository_id)}-{snapshot_id}'
+        try:
+            shutil.copytree(root, copy, symlinks=True)
+            content_hash = tree_hash(copy)
+        except BaseException:
+            if copy.exists():
+                shutil.rmtree(copy)
+            raise
+        snapshot = self.factory('RepositorySnapshot', id=snapshot_id, repository_connection_id=connection.id,
+            commit_sha=commit_sha, fetched_at=datetime.now(timezone.utc).isoformat(), content_hash=content_hash)
+        self.snapshot_roots[snapshot.id] = copy
+        self.snapshot_hashes[snapshot.id] = content_hash
+        self.snapshot_repositories[snapshot.id] = int(connection.github_repository_id)
         return snapshot
+
+    def snapshot_root(self, snapshot_id: str) -> Path:
+        root = self.snapshot_roots[snapshot_id]
+        if tree_hash(root) != self.snapshot_hashes[snapshot_id]:
+            raise GitHubError('snapshot_changed')
+        return root
 
     def purge_repository(self, repository_id):
         for path in self.cache.glob(f'{int(repository_id)}-*'):
             shutil.rmtree(path)
             self.cache_hashes.pop(path.name, None)
-        self.snapshot_roots = {k: v for k, v in self.snapshot_roots.items() if v.exists()}
+        for snapshot_id, owner in list(self.snapshot_repositories.items()):
+            if owner != int(repository_id):
+                continue
+            root = self.snapshot_roots.pop(snapshot_id)
+            if root.exists():
+                shutil.rmtree(root)
+            self.snapshot_hashes.pop(snapshot_id, None)
+            self.snapshot_repositories.pop(snapshot_id, None)
+        snapshots = self.cache / 'snapshots'
+        if snapshots.is_dir():
+            for path in snapshots.glob(f'{int(repository_id)}-*'):
+                if path.is_dir() and not path.is_symlink():
+                    shutil.rmtree(path)
+        if snapshots.is_dir() and not any(snapshots.iterdir()):
+            snapshots.rmdir()
