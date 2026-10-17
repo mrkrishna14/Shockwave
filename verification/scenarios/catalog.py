@@ -86,6 +86,7 @@ class ScenarioSpec:
     trusted_profile: RunnerProfile
     sandbox_profile: RunnerProfile
     timeout_seconds: int
+    additional_test_files: tuple[str, ...] = ()
 
     @property
     def staged_dir(self) -> str:
