@@ -49,6 +49,13 @@ def execute(amount, patched=False, language='python'):
 
 class DemoAdapters:
     mode='fixture'
+    def __init__(self, consumer_org_id=None):
+        self.consumer_org_id=consumer_org_id
+        self.logs=''
+        self.patch=''
+    def private_artifacts(self):
+        """Fixture-only bounded output; live adapters return artifact references."""
+        return {'logs': self.logs, 'patch': self.patch}
     def discover_endpoints(self, request, fetched_inputs, source_root):
         if request.service_id != 'demo-payments': raise ValueError('Live discovery adapter not connected; Stripe inventory unavailable')
         return DiscoveryResult(service_id=request.service_id,snapshot_id=OLD,endpoints=[endpoint()],coverage=COVERAGE,warnings=['Fixture inventory; not real Stripe or server-source discovery'])

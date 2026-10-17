@@ -1,4 +1,6 @@
 import hashlib
+import base64
+import binascii
 import json
 import os
 import secrets
@@ -12,12 +14,29 @@ from pydantic import BaseModel, ConfigDict, Field
 from shared.schemas import *
 from backend.store import Store, now, uid, stable
 from backend.demo import DemoAdapters, OLD, NEW, ENDPOINT, COMMIT, endpoint, evidence
+from backend.jobs import JobQueue
+from backend.orchestration import Orchestrator
+from backend.readiness import evidence_state
+from backend.settings import Settings
+from backend.outbox import Outbox
 
 CONSENT='2026-10-16.v1'
 def digest(s): return hashlib.sha256(s.encode()).hexdigest()
 def later(hours=24): return (datetime.now(timezone.utc)+timedelta(hours=hours)).isoformat()
 def dump(model): return model.model_dump(mode='json')
-def page(items): return {'items':items,'next_cursor':None}
+def page(items,request=None):
+    if request is None: return {'items':items,'next_cursor':None}
+    try:
+        limit=int(request.query_params.get('limit','50'))
+        if not 1<=limit<=100: raise ValueError()
+        token=request.query_params.get('cursor')
+        offset=int(base64.urlsafe_b64decode(token+'===').decode()) if token else 0
+        if offset<0 or offset>len(items): raise ValueError()
+    except (ValueError,UnicodeDecodeError,binascii.Error):
+        fail(422,'INVALID_PAGE','Use a valid cursor and limit from 1 to 100')
+    end=offset+limit
+    next_cursor=base64.urlsafe_b64encode(str(end).encode()).decode().rstrip('=') if end<len(items) else None
+    return {'items':items[offset:end],'next_cursor':next_cursor}
 
 class Problem(Exception):
     def __init__(self, status, code, message, retryable=False):
@@ -44,11 +63,19 @@ class PublishInput(Input): explicit_consent: bool; expected_commit: str
 
 
 def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
-    demo = os.getenv('SHOCKWAVE_DEMO')=='1' if demo is None else demo
-    store=Store(db_path or os.getenv('SHOCKWAVE_DB','shockwave.db'))
+    settings=Settings.from_env()
+    demo = settings.demo if demo is None else demo
+    store=Store(db_path or settings.database)
     api=FastAPI(title='Shockwave',version='0.1.0')
     api.state.store=store
     api.state.demo=demo
+    api.state.settings=settings
+    queue=JobQueue(store)
+    orchestrator=Orchestrator(store,queue,adapters_factory,demo)
+    outbox=Outbox(store,adapters_factory,demo)
+    api.state.queue=queue
+    api.state.orchestrator=orchestrator
+    api.state.outbox=outbox
     if demo:
         with store.tx() as db:
             for kind,name in [('provider','Demo API team'),('consumer','Acme storefront'),('other','Other consumer')]:
@@ -70,7 +97,7 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
     async def origin_guard(request, call_next):
         # Same-origin frontend proxy. Reject browser cross-site mutations.
         origin=request.headers.get('origin')
-        allowed=os.getenv('SHOCKWAVE_ORIGIN','http://127.0.0.1:3000')
+        allowed=settings.origin
         if request.method not in ('GET','HEAD','OPTIONS') and (request.headers.get('sec-fetch-site')=='cross-site' or (origin and origin!=allowed)):
             return JSONResponse(status_code=403,content={'error':{'code':'BAD_ORIGIN','message':'Cross-origin mutation rejected','retryable':False},'request_id':uid()})
         response=await call_next(request)
@@ -102,7 +129,7 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
         if r['status']!='connected': fail(409,'CONSENT_REVOKED','Repository access was revoked')
         if enrollment_id:
             active(db,enrollment_id,org)
-            if not db.execute('SELECT 1 FROM enrollment_repositories WHERE enrollment_id=? AND repository_id=?',(enrollment_id,repo_id)).fetchone(): fail(404,'NOT_FOUND','Repository is not selected for this enrollment')
+            if not db.execute('SELECT scan_consent_at FROM enrollment_repositories WHERE enrollment_id=? AND repository_id=?',(enrollment_id,repo_id)).fetchone(): fail(404,'NOT_FOUND','Repository is not selected for this enrollment')
         return r
     def private_risk(db,id,org):
         risk=required(store.get(db,id,'risk',org)); active(db,risk['enrollment_id'],org)
@@ -120,6 +147,11 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
         return key,fingerprint,None
     def remember(db,scope,key,fingerprint,id): db.execute('INSERT INTO idempotency VALUES(?,?,?,?)',(scope,key,fingerprint,id))
     def sanitized_invitation(inv): return {k:v for k,v in inv.items() if k!='token_hash'}
+    def delivery_attention(db,invitation_id):
+        for row in db.execute("SELECT payload,status FROM outbox WHERE kind='invitation' ORDER BY rowid DESC"):
+            if json.loads(row['payload'])['invitation_id']==invitation_id:
+                return row['status']=='needs_reconciliation'
+        return False
     def find_token(db,token):
         h=digest(token)
         found=next((x for x in store.list(db,'invitation') if secrets.compare_digest(x['token_hash'],h)),None)
@@ -135,6 +167,18 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
 
     @api.get('/api/v1/health')
     def health(): return {'status':'ok','integration_mode':'fixture' if demo else 'unconfigured','production_auth':False}
+    @api.get('/api/v1/capabilities')
+    def capabilities(request:Request):
+        with store.read() as db: identity(db,request)
+        return {'mode':'fixture' if demo else 'unconfigured',
+                'discovery':'fixture' if demo else 'unavailable',
+                'repository_access':'fixture' if demo else 'unavailable',
+                'scanner':'fixture' if demo else 'unavailable',
+                'verification':'trusted_fixture' if demo else 'unavailable',
+                'migration':'fixture' if demo else 'unavailable',
+                'email':'development_inbox' if demo else 'unavailable',
+                'publication':'unavailable',
+                'reasons':{'publication':'Live GitHub publication adapter and fresh remote revision checks are not configured.'}}
     @api.post('/api/v1/demo/session')
     def login(body:Login,request:Request):
         if not demo: fail(404,'NOT_FOUND','Demo sessions disabled')
@@ -142,7 +186,7 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             token=secrets.token_urlsafe(32)
             db.execute('INSERT INTO sessions VALUES(?,?,?)',(digest(token),stable(body.persona+'-user'),later(8)))
         response=JSONResponse({'mode':'local_demo','verified_email_simulated':True})
-        response.set_cookie('shockwave_session',token,httponly=True,samesite='strict',max_age=8*3600,secure=os.getenv('SHOCKWAVE_SECURE_COOKIE')=='1')
+        response.set_cookie('shockwave_session',token,httponly=True,samesite='strict',max_age=8*3600,secure=settings.secure_cookie)
         return response
     @api.delete('/api/v1/session')
     def logout(request:Request):
@@ -150,7 +194,7 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
         response=JSONResponse({'signed_out':True}); response.delete_cookie('shockwave_session'); return response
     @api.get('/api/v1/session')
     def session(request:Request):
-        with store.tx() as db:
+        with store.read() as db:
             user=identity(db,request)
             orgs=[dict(r) for r in db.execute('SELECT organizations.*,role FROM organizations JOIN memberships ON org_id=organizations.id WHERE user_id=?',(user['id'],))]
             return {'user':user,'organizations':orgs,'mode':'local_demo' if demo else 'unconfigured','consent_version':CONSENT}
@@ -161,12 +205,13 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             return store.put(db,'project',org['id'],dump(APIProject(id=uid(),provider_org_id=org['id'],created_at=now(),**body.model_dump())))
     @api.get('/api/v1/api-projects')
     def projects(request:Request):
-        with store.tx() as db:
-            _,org=context(db,request,'provider'); return page(store.list(db,'project',org['id']))
+        with store.read() as db:
+            _,org=context(db,request,'provider'); return page(store.list(db,'project',org['id']),request)
     @api.post('/api/v1/api-projects/{id}/invitations',status_code=201)
     def invite(id:str,body:InviteInput,request:Request):
         email=body.recipient_email.strip().lower()
         if '@' not in email or any(c.isspace() for c in email): fail(422,'INVALID_EMAIL','Enter a valid email')
+        operation_id=None
         with store.tx() as db:
             project,_,org=owned(db,request,id,'project','provider',True)
             scope='invite:'+id; key,fp,previous=idem(db,request,scope,{'email':email})
@@ -180,12 +225,16 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
                 else:
                     inv=dump(Invitation(id=uid(),api_project_id=id,recipient_email=email,token_hash=digest(token),expires_at=later(),status='pending',delivery_status='pending'))
                     store.put(db,'invitation',org['id'],inv,id)
-                # This inbox is the transport, recipient-only; raw URL is never in provider APIs.
-                delivery=adapters_factory().send_invitation(email,'/?invite='+token,key) if demo else DeliveryResult(status='failed',message_id=None,error='Email adapter unavailable')
-                inv['delivery_status']=delivery.status
-                store.update(db,inv)
-                if delivery.status=='development_inbox': store.put(db,'mail',org['id'],{'id':uid(),'recipient_email':email,'acceptance_url':'/?invite='+token,'invitation_id':inv['id']},inv['id'])
-            remember(db,scope,key,fp,inv['id']); return sanitized_invitation(inv)
+                # The transport runs after this transaction commits. This record is
+                # durable if the process exits before dispatch.
+                if demo: operation_id=outbox.queue_invitation(db,inv,'/?invite='+token,'invitation:'+inv['id']+':'+digest(token))
+                else:
+                    inv['delivery_status']='failed';store.update(db,inv)
+            remember(db,scope,key,fp,inv['id'])
+            invitation_id=inv['id']
+        if operation_id: outbox.dispatch(operation_id)
+        with store.read() as db:
+            return sanitized_invitation(required(store.get(db,invitation_id,'invitation',org['id'])))
     @api.get('/api/v1/api-projects/{id}/invitations')
     def invitations(id:str,request:Request):
         with store.tx() as db:
@@ -193,7 +242,21 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             items=store.list(db,'invitation',org['id'],id)
             for item in items:
                 if item['status']=='pending' and item['expires_at']<=now(): item['status']='expired'; store.update(db,item)
-            return page([sanitized_invitation(x) for x in items])
+            return page([{**sanitized_invitation(x),'delivery_attention':delivery_attention(db,x['id'])} for x in items],request)
+    @api.get('/api/v1/api-projects/{id}/consumers')
+    def consumers(id:str,request:Request):
+        with store.read() as db:
+            _,_,org=owned(db,request,id,'project','provider')
+            items=[]
+            for invitation in store.list(db,'invitation',org['id'],id):
+                enrolled=next((e for e in store.list(db,'enrollment',parent=id)
+                               if e['consumer_org_id']==invitation.get('consumer_org_id')),None)
+                items.append({'invitation_id':invitation['id'],'recipient_email':invitation['recipient_email'],
+                    'invitation_status':invitation['status'],'delivery_status':invitation['delivery_status'],
+                    'enrollment_status':enrolled['status'] if enrolled else 'not_accepted',
+                    'share_summary':bool(enrolled and enrolled['status']=='active' and enrolled['share_summary']),
+                    'delivery_attention':delivery_attention(db,invitation['id'])})
+            return page(items,request)
     @api.delete('/api/v1/invitations/{id}')
     def revoke_invitation(id:str,request:Request):
         with store.tx() as db:
@@ -203,9 +266,9 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
     @api.get('/api/v1/demo/inbox')
     def inbox(request:Request):
         if not demo: fail(404,'NOT_FOUND','Development inbox disabled')
-        with store.tx() as db:
+        with store.read() as db:
             user=identity(db,request)
-            return page([x for x in store.list(db,'mail') if x['recipient_email']==user['email']])
+            return page([x for x in store.list(db,'mail') if x['recipient_email']==user['email']],request)
     @api.post('/api/v1/invitations/preview')
     def preview(body:TokenInput,request:Request):
         # Rate-limit commits even when the token validation fails.
@@ -230,13 +293,13 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             return e
     @api.get('/api/v1/enrollments')
     def enrollments(request:Request):
-        with store.tx() as db:
-            _,org=context(db,request,'consumer');return page(store.list(db,'enrollment',org['id']))
+        with store.read() as db:
+            _,org=context(db,request,'consumer');return page(store.list(db,'enrollment',org['id']),request)
     def revoke(db,org,repo_id=None,enrollment_id=None):
         for job in store.list(db,'job',org):
             task=store.get(db,job['id']+'-task','task')
             if job['status'] in ('queued','running') and task and (repo_id is None or task.get('repository_id')==repo_id) and (enrollment_id is None or task.get('enrollment_id')==enrollment_id):
-                job.update(status='cancelled',stage='consent_revoked',updated_at=now());store.update(db,job)
+                job.update(status='cancelled',stage='consent_revoked',updated_at=now());store.update(db,job);queue.cancel(db,job['id'])
         # Purge private artifacts in this scope immediately (no cached checkout in demo).
         for artifact in store.list(db,'artifact',org):
             if (repo_id is None or artifact.get('repository_id')==repo_id) and (enrollment_id is None or artifact.get('enrollment_id')==enrollment_id):
@@ -268,10 +331,10 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
     def webhook(): fail(503,'ADAPTER_UNAVAILABLE','Live signed webhook adapter unavailable; no event accepted')
     @api.get('/api/v1/github/repositories')
     def github_repositories(request:Request):
-        with store.tx() as db:
+        with store.read() as db:
             _,org=context(db,request,'consumer',True)
             installed=db.execute('SELECT 1 FROM installations WHERE org_id=?',(org['id'],)).fetchone()
-            return page([{'github_repository_id':'fixture-'+org['id'],'full_name':'local-demo/storefront','default_branch':'main','mode':'fixture'}] if installed else [])
+            return page([{'github_repository_id':'fixture-'+org['id'],'full_name':'local-demo/storefront','default_branch':'main','mode':'fixture'}] if installed else [],request)
     @api.post('/api/v1/repository-connections',status_code=201)
     def repository(body:RepoInput,request:Request):
         with store.tx() as db:
@@ -283,12 +346,26 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             if not r:
                 r=dump(RepositoryConnection(id=uid(),consumer_org_id=org['id'],installation_id=installed['installation_id'],github_repository_id=body.github_repository_id,full_name='local-demo/storefront',default_branch='main',status='connected',scan_consent_at=now(),allow_model_processing=body.allow_model_processing,allow_pr_write=body.allow_pr_write))
                 store.put(db,'repository',org['id'],r)
-            db.execute('INSERT OR IGNORE INTO enrollment_repositories VALUES(?,?)',(body.enrollment_id,r['id']))
-            return r
+            db.execute('''INSERT INTO enrollment_repositories(enrollment_id,repository_id,allow_model_processing,allow_pr_write,scan_consent_at)
+                VALUES(?,?,?,?,?) ON CONFLICT(enrollment_id,repository_id) DO UPDATE SET
+                allow_model_processing=excluded.allow_model_processing,allow_pr_write=excluded.allow_pr_write,
+                scan_consent_at=excluded.scan_consent_at''',
+                (body.enrollment_id,r['id'],int(body.allow_model_processing),int(body.allow_pr_write),now()))
+            return {**r,'enrollment_permissions':{'enrollment_id':body.enrollment_id,
+                'allow_model_processing':body.allow_model_processing,'allow_pr_write':body.allow_pr_write}}
+    @api.get('/api/v1/enrollments/{id}/repositories')
+    def enrollment_repositories(id:str,request:Request):
+        with store.read() as db:
+            e,_,org=owned(db,request,id,'enrollment','consumer')
+            rows=db.execute('''SELECT repository_id,allow_model_processing,allow_pr_write,scan_consent_at
+                FROM enrollment_repositories WHERE enrollment_id=? ORDER BY repository_id''',(id,)).fetchall()
+            return page([{**required(store.get(db,row['repository_id'],'repository',org['id'])),
+                'enrollment_permissions':{'enrollment_id':id,'allow_model_processing':bool(row['allow_model_processing']),
+                'allow_pr_write':bool(row['allow_pr_write']),'scan_consent_at':row['scan_consent_at']}} for row in rows],request)
     @api.get('/api/v1/repository-connections')
     def repositories(request:Request):
-        with store.tx() as db:
-            _,org=context(db,request,'consumer');return page(store.list(db,'repository',org['id']))
+        with store.read() as db:
+            _,org=context(db,request,'consumer');return page(store.list(db,'repository',org['id']),request)
     @api.delete('/api/v1/repository-connections/{id}')
     def disconnect(id:str,request:Request):
         with store.tx() as db:
@@ -298,86 +375,19 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
         key,fp,previous=idem(db,request,scope,body)
         if previous: return previous
         job=dump(Job(id=uid(),owner_org_id=org,kind=kind,status='queued',stage='queued',created_at=now(),updated_at=now(),result_id=None,error=None))
-        store.put(db,'job',org,job)
+        queue.enqueue(db,job)
         store.put(db,'task',org,{'id':job['id']+'-task',**task},job['id'])
-        remember(db,scope,key,fp,job['id']);background.add_task(run_job,job['id']);return job
+        remember(db,scope,key,fp,job['id'])
+        if settings.inline_jobs: background.add_task(run_job,job['id'])
+        return job
     def artifact(db,org,content,risk,snapshot):
         data={'id':uid(),'content':content[:32000],'enrollment_id':risk['enrollment_id'],'repository_id':snapshot['repository_connection_id'],'purged':False}
         store.put(db,'artifact',org,data,risk['id']);return data['id']
     def run_job(id):
-        # Serial SQLite worker transaction prevents revocation racing an external boundary.
-        # Demo-only adapters are local and bounded; live workers need durable outbox leases.
-        try:
-            with store.tx() as db:
-                job=required(store.get(db,id,'job'))
-                if job['status']!='queued': return
-                job.update(status='running',stage='executing_fixture',updated_at=now());store.update(db,job)
-            with store.tx() as db:
-                job=required(store.get(db,id,'job'))
-                if job['status']!='running': return
-                task=required(store.get(db,id+'-task','task')); org=job['owner_org_id']
-                if not demo: raise ValueError('Live adapters have not been configured')
-                adapters=adapters_factory()
-                if job['kind']=='discovery':
-                    project=required(store.get(db,task['project_id'],'project',org))
-                    result=adapters.discover_endpoints(DiscoveryInput(service_id=project['service_id'],snapshot_id=OLD,openapi_documents=['fixture://demo'],frameworks=[]),{},None)
-                    data={'id':uid(),**dump(result)};store.put(db,'discovery',org,data,project['id'])
-                elif job['kind']=='scan':
-                    e=active(db,task['enrollment_id'],org); r=repo_active(db,task['repository_id'],org,e['id'])
-                    project=required(store.get(db,e['api_project_id'],'project'))
-                    if project['service_id']!='demo-payments': raise ValueError('Fixture scanner only supports Demo Payments')
-                    snapshot=adapters.fetch_repository(RepositoryConnection.model_validate(r),task['ref']);store.put(db,'snapshot',org,dump(snapshot),r['id'])
-                    adapters.consumer_org_id=org
-                    result=adapters.scan_repository(ScanRequest(repository_snapshot_id=snapshot.id,enrollment_id=e['id'],service_id='demo-payments',endpoint_catalog=[endpoint()],supported_languages=['python','javascript']),snapshot,Path('.'))
-                    data={'id':uid(),**dump(result)};store.put(db,'scan',org,data,e['id'])
-                    for d in result.dependencies: store.put(db,'dependency',org,dump(d),e['id'])
-                elif job['kind']=='analysis':
-                    project=required(store.get(db,task['project_id'],'project',org))
-                    if project['service_id']!='demo-payments': raise ValueError('Fixture units assessment only supports Demo Payments')
-                    changes=[APIChange.model_validate(c) for c in task['declared_changes']] or [APIChange(id=uid(),api_project_id=project['id'],service_id='demo-payments',endpoint_id=ENDPOINT,old_snapshot_id=OLD,new_snapshot_id=NEW,field_path='response.amount',kind='units_changed',old_semantics='USD cents; 1000 = $10',new_semantics='USD dollars; 10 = $10',structural_breaking=False,evidence=[evidence('declared_change',False,None,'Fictional units change; not Stripe')])]
-                    for change in changes:
-                        store.put(db,'change',org,dump(change),project['id'])
-                        deps=[]
-                        for e in store.list(db,'enrollment',parent=project['id']):
-                            if e['status']!='active' or not e['share_summary']: continue
-                            # Only most recent scan per selected repository; no accumulating stale dependencies.
-                            scans=store.list(db,'scan',e['consumer_org_id'],e['id']); latest={}
-                            for scan in scans:
-                                snap=store.get(db,scan['repository_snapshot_id'],'snapshot');r=store.get(db,snap['repository_connection_id'],'repository')
-                                if r and r['status']=='connected': latest[r['id']]=scan
-                            for scan in latest.values(): deps.extend(Dependency.model_validate(d) for d in scan['dependencies'])
-                        result=adapters.analyze_impact(change,deps)
-                        for risk in result.risks: store.put(db,'risk',risk.consumer_org_id,dump(risk),risk.enrollment_id)
-                        # Provider-owned job result stores no private analysis payload.
-                        data={'id':uid(),'change_id':change.id,'analysis_mode':result.analysis_mode};store.put(db,'assessment',org,data,project['id'])
-                elif job['kind'] in ('verification','migration'):
-                    risk,snapshot=private_risk(db,task['risk_id'],org)
-                    if job['kind']=='verification':
-                        plan=adapters.build_verification_plan(Risk.model_validate(risk),RepositorySnapshot.model_validate(snapshot))
-                        result=adapters.verify_regression(plan,Path('.'))
-                        result.artifact_ids=[artifact(db,org,adapters.logs,risk,snapshot)]
-                        data=dump(result);store.put(db,'verification',org,data,risk['id'])
-                    else:
-                        v=required(store.get(db,task['verification_id'],'verification',org))
-                        if task.get('publish'):
-                            m=required(store.get(db,task['migration_id'],'migration',org));r=repo_active(db,snapshot['repository_connection_id'],org,risk['enrollment_id'])
-                            if not r['allow_pr_write'] or m['status']!='patch_validated' or task['expected_commit']!=snapshot['commit_sha']: raise ValueError('Publication authorization or revision is invalid')
-                            result=adapters.publish_migration(MigrationResult.model_validate(m),RepositoryConnection.model_validate(r),PublicationAuthorization(user_id=task['user_id'],consumer_org_id=org,repository_connection_id=r['id'],expected_commit=task['expected_commit'],consent_timestamp=r['scan_consent_at']))
-                            data=dump(result);store.update(db,data)
-                        else:
-                            change=required(store.get(db,risk['change_id'],'change'))
-                            result=adapters.generate_migration(MigrationRequest(risk_id=risk['id'],verification_id=v['id'],repository_snapshot_id=snapshot['id'],target_contract_snapshot_id=change['new_snapshot_id'],mode='preview'),Risk.model_validate(risk),VerificationResult.model_validate(v),Path('.'))
-                            result.patch_artifact_id=artifact(db,org,adapters.patch,risk,snapshot)
-                            result.validation.artifact_ids=[artifact(db,org,adapters.logs,risk,snapshot)]
-                            data=dump(result);store.put(db,'migration',org,data,risk['id'])
-                            store.put(db,'readiness',org,{'id':uid(),**dump(Readiness(risk_id=risk['id'],migration_id=data['id'],approval='pending',merge='not_merged',deployment='unknown',deployment_evidence=None))},risk['id'])
-                job.update(status='succeeded',stage='completed_fixture',updated_at=now(),result_id=data['id']);store.update(db,job)
-        except Exception as exc:
-            with store.tx() as db:
-                job=store.get(db,id,'job')
-                if job and job['status']!='cancelled':
-                    # Do not expose adapter exception text (may contain private paths or credentials).
-                    job.update(status='failed',stage='failed',updated_at=now(),error={'code':'ADAPTER_FAILED','message':'Operation could not complete. Check configured adapter, active consent, revision, and supported fixture. Live email/GitHub/discovery adapters are not connected.','retryable':True});store.update(db,job)
+        claim=queue.claim(id)
+        if claim: orchestrator.run(claim)
+
+    api.state.process_job=run_job
 
     @api.post('/api/v1/api-projects/{id}/discoveries',status_code=202)
     def discover(id:str,body:DiscoverInput,request:Request,background:BackgroundTasks):
@@ -386,9 +396,9 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             return enqueue(db,request,background,'discovery',org['id'],{'project_id':id},body.model_dump(),'discover:'+id)
     @api.get('/api/v1/api-projects/{id}/endpoints')
     def endpoints(id:str,request:Request,filter:str=''):
-        with store.tx() as db:
+        with store.read() as db:
             _,_,org=owned(db,request,id,'project','provider');results=store.list(db,'discovery',org['id'],id)
-            return page([e for e in (results[-1]['endpoints'] if results else []) if filter.lower() in (e['method']+' '+e['path']).lower()])
+            return page([e for e in (results[-1]['endpoints'] if results else []) if filter.lower() in (e['method']+' '+e['path']).lower()],request)
     @api.post('/api/v1/repository-connections/{id}/scans',status_code=202)
     def scan(id:str,body:ScanInput,request:Request,background:BackgroundTasks):
         with store.tx() as db:
@@ -404,21 +414,54 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
             return enqueue(db,request,background,'analysis',org['id'],{'project_id':id,**body.model_dump(mode='json')},body.model_dump(mode='json'),'analysis:'+id)
     @api.get('/api/v1/jobs')
     def jobs(request:Request):
-        with store.tx() as db:
-            _,org=context(db,request);return page(store.list(db,'job',org['id']))
+        with store.read() as db:
+            _,org=context(db,request)
+            return page([job_view(db,j) for j in store.list(db,'job',org['id'])],request)
+    def job_view(db,j):
+        lease=db.execute('SELECT attempts,cancel_requested FROM job_leases WHERE job_id=?',(j['id'],)).fetchone()
+        history=[dict(row) for row in db.execute('''SELECT generation,started_at,ended_at,status,error_code
+            FROM job_attempts WHERE job_id=? ORDER BY generation''',(j['id'],))]
+        return {**j,'attempts':lease['attempts'] if lease else 0,
+                'attempt_history':history,'cancel_requested':bool(lease and lease['cancel_requested'])}
     @api.get('/api/v1/jobs/{id}')
     def job(id:str,request:Request):
+        with store.read() as db:
+            j,_,_=owned(db,request,id,'job');return job_view(db,j)
+    @api.delete('/api/v1/jobs/{id}')
+    def cancel_job(id:str,request:Request):
         with store.tx() as db:
-            j,_,_=owned(db,request,id,'job');return j
+            j,_,_=owned(db,request,id,'job')
+            if j['status'] in ('queued','running'):
+                queue.cancel(db,id)
+                j.update(status='cancelled',stage='cancel_requested',updated_at=now())
+                store.update(db,j)
+            return job_view(db,j)
+    @api.post('/api/v1/jobs/{id}/retry',status_code=202)
+    def retry_job(id:str,request:Request,background:BackgroundTasks):
+        with store.tx() as db:
+            old,_,org=owned(db,request,id,'job')
+            if old['status']!='failed' or not old['error'] or not old['error']['retryable']:
+                fail(409,'RETRY_UNAVAILABLE','This job cannot be retried')
+            task=required(store.get(db,id+'-task','task',org['id']))
+            if task.get('enrollment_id'): active(db,task['enrollment_id'],org['id'])
+            if task.get('repository_id'): repo_active(db,task['repository_id'],org['id'],task.get('enrollment_id'))
+            return enqueue(db,request,background,old['kind'],org['id'],
+                {k:v for k,v in task.items() if k!='id'}, {'retry_of':id},'retry:'+id)
     @api.get('/api/v1/consumer/risks')
     def risks(request:Request):
-        with store.tx() as db:
+        with store.read() as db:
             _,org=context(db,request,'consumer');items=[]
             for r in store.list(db,'risk',org['id']):
                 try: private_risk(db,r['id'],org['id'])
                 except Problem: continue
-                items.append({**r,'verifications':store.list(db,'verification',org['id'],r['id']),'migrations':store.list(db,'migration',org['id'],r['id']),'readiness':store.list(db,'readiness',org['id'],r['id'])})
-            return page(items)
+                items.append({**r,'verifications':store.list(db,'verification',org['id'],r['id']),'migrations':store.list(db,'migration',org['id'],r['id']),'readiness':store.list(db,'readiness',org['id'],r['id']),'evidence_state':evidence_state(store,db,r)})
+            return page(items,request)
+    @api.get('/api/v1/risks/{id}/snapshot')
+    def risk_snapshot(id:str,request:Request):
+        with store.read() as db:
+            _,org=context(db,request,'consumer');risk,snapshot=private_risk(db,id,org['id'])
+            return {'repository_snapshot_id':snapshot['id'],'commit_sha':snapshot['commit_sha'],
+                    'fetched_at':snapshot['fetched_at']}
     @api.post('/api/v1/risks/{id}/verifications',status_code=202)
     def verify(id:str,request:Request,background:BackgroundTasks):
         with store.tx() as db:
@@ -428,35 +471,37 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
     def migrate(id:str,body:MigrationInput,request:Request,background:BackgroundTasks):
         with store.tx() as db:
             _,org=context(db,request,'consumer');r,s=private_risk(db,id,org['id']);vs=store.list(db,'verification',org['id'],id)
-            if not vs or vs[-1]['status']!='verified_regression': fail(409,'VERIFICATION_REQUIRED','A verified regression is required before preview')
+            if not vs or not evidence_state(store,db,r)['verified']: fail(409,'VERIFICATION_REQUIRED','A current verified regression is required before preview')
             return enqueue(db,request,background,'migration',org['id'],{'risk_id':id,'verification_id':vs[-1]['id'],'enrollment_id':r['enrollment_id'],'repository_id':s['repository_connection_id']},body.model_dump(),'migrate:'+id)
     @api.get('/api/v1/migrations/{id}')
     def migration(id:str,request:Request):
-        with store.tx() as db:
+        with store.read() as db:
             m,_,org=owned(db,request,id,'migration','consumer');private_risk(db,m['risk_id'],org['id']);return m
     @api.post('/api/v1/migrations/{id}/publish',status_code=202)
     def publish(id:str,body:PublishInput,request:Request,background:BackgroundTasks):
         with store.tx() as db:
             m,user,org=owned(db,request,id,'migration','consumer',True);risk,snapshot=private_risk(db,m['risk_id'],org['id']);r=repo_active(db,snapshot['repository_connection_id'],org['id'],risk['enrollment_id'])
-            if not body.explicit_consent or not r['allow_pr_write']: fail(403,'WRITE_CONSENT_REQUIRED','Separate repository write authorization and explicit publication consent required')
+            grant=db.execute('SELECT allow_pr_write FROM enrollment_repositories WHERE enrollment_id=? AND repository_id=?',
+                (risk['enrollment_id'],r['id'])).fetchone()
+            if not body.explicit_consent or not grant or not grant['allow_pr_write']: fail(403,'WRITE_CONSENT_REQUIRED','Separate repository write authorization and explicit publication consent required')
             if body.expected_commit!=snapshot['commit_sha']: fail(409,'STALE_COMMIT','Repository revision changed; rescan and validate again')
-            if m['status']!='patch_validated' or not m['validation'] or m['validation']['exit_code']!=0 or m['validation']['tests_run']==0: fail(409,'PATCH_NOT_VALIDATED','Passing patch validation required')
+            if not evidence_state(store,db,risk)['validated'] or m['status']!='patch_validated': fail(409,'PATCH_NOT_VALIDATED','Current passing patch validation required')
             vs=store.list(db,'verification',org['id'],risk['id'])
             if not vs or vs[-1]['status']!='verified_regression': fail(409,'VERIFICATION_REQUIRED','Latest verification does not establish a regression')
             return enqueue(db,request,background,'migration',org['id'],{'publish':True,'migration_id':id,'risk_id':risk['id'],'verification_id':vs[-1]['id'],'user_id':user['id'],'expected_commit':body.expected_commit,'enrollment_id':risk['enrollment_id'],'repository_id':r['id']},body.model_dump(),'publish:'+id)
     @api.get('/api/v1/artifacts/{id}')
     def get_artifact(id:str,request:Request):
-        with store.tx() as db:
+        with store.read() as db:
             a,_,org=owned(db,request,id,'artifact','consumer');active(db,a['enrollment_id'],org['id']);repo_active(db,a['repository_id'],org['id'],a['enrollment_id'])
             if a['purged']: fail(404,'NOT_FOUND','Artifact was purged')
             return {'id':id,'content':a['content']}
     @api.get('/api/v1/api-projects/{id}/changes')
     def changes(id:str,request:Request):
-        with store.tx() as db:
-            _,_,org=owned(db,request,id,'project','provider');return page(store.list(db,'change',org['id'],id))
+        with store.read() as db:
+            _,_,org=owned(db,request,id,'project','provider');return page(store.list(db,'change',org['id'],id),request)
     @api.get('/api/v1/api-projects/{id}/impact')
     def impact(id:str,request:Request,change_id:str):
-        with store.tx() as db:
+        with store.read() as db:
             _,_,org=owned(db,request,id,'project','provider');change=required(store.get(db,change_id,'change',org['id']))
             if change['api_project_id']!=id: fail(404,'NOT_FOUND','Change not found')
             items=[]
@@ -467,18 +512,24 @@ def create_app(db_path=None, demo=None, adapters_factory=DemoAdapters):
                     if r['change_id']!=change_id: continue
                     try: private_risk(db,r['id'],consumer)
                     except Problem: continue
-                    rs.append(r)
+                    if evidence_state(store,db,r)['current']: rs.append(r)
                 verified=validated=pending=0
                 for r in rs:
-                    vs=store.list(db,'verification',consumer,r['id']);ms=store.list(db,'migration',consumer,r['id'])
-                    verified+=bool(vs and vs[-1]['status']=='verified_regression')
-                    good=bool(vs and vs[-1]['status']=='verified_regression' and ms and ms[-1]['status'] in ('patch_validated','pr_opened') and ms[-1]['validation'] and ms[-1]['validation']['exit_code']==0 and not ms[-1]['validation']['timed_out'] and not ms[-1]['validation']['infrastructure_error'] and ms[-1]['validation']['tests_run']>0)
-                    validated+=good;pending+=good
+                    state=evidence_state(store,db,r)
+                    verified+=state['verified']
+                    validated+=state['validated'];pending+=state['validated']
                 name=db.execute('SELECT name FROM organizations WHERE id=?',(consumer,)).fetchone()[0]
                 scans=store.list(db,'scan',consumer,e['id'])
                 active_scans=[s for s in scans if store.get(db,store.get(db,s['repository_snapshot_id'],'snapshot')['repository_connection_id'],'repository')['status']=='connected']
                 items.append(dump(ProviderImpactSummary(api_project_id=id,change_id=change_id,enrollment_id=e['id'],consumer_display_name=name,coverage='partial' if active_scans else 'unscanned',predicted_risk_count=len(rs),verified_regression_count=verified,validated_fix_count=validated,pending_approval_count=pending,deployment='unknown')))
-            return page(items)
+            return page(items,request)
     return api
 
-app=create_app()
+class LazyApp:
+    """Construct the server on first ASGI call, never during module import."""
+    def __init__(self): self.instance=None
+    async def __call__(self, scope, receive, send):
+        if self.instance is None: self.instance=create_app()
+        await self.instance(scope, receive, send)
+
+app=LazyApp()
