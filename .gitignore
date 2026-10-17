@@ -20,3 +20,6 @@ demo/reports/*
 
 # Integrated-mode adapter state (app/scripts/start-backend.sh with SHOCKWAVE_ADAPTERS=integrated)
 .shockwave-integrated/
+
+# Integrated adapter registry and snapshot copies
+app/.shockwave-integrated/
