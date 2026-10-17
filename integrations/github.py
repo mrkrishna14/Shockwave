@@ -121,7 +121,7 @@ class GitHubAdapter:
         if not consume_state(state):
             raise GitHubError('invalid_oauth_state')
         installations = self.pages('/user/installations', user_token, 'installations')
-        if installation_id not in [item['id'] for item in installations]:
+        if str(installation_id) not in [str(item['id']) for item in installations]:
             raise GitHubError('installation_not_accessible_to_authenticated_user')
         installation = self.request('GET', f'/app/installations/{int(installation_id)}', self.app_jwt())
         if installation.get('suspended_at'):
@@ -155,7 +155,7 @@ class GitHubAdapter:
         token = self.installation_token(connection.installation_id, connection.github_repository_id)
         # Recheck live repository access even for cache hits.
         repos = self.pages('/installation/repositories', token, 'repositories')
-        repo = next((r for r in repos if r['id'] == connection.github_repository_id), None)
+        repo = next((r for r in repos if str(r['id']) == str(connection.github_repository_id)), None)
         if repo is None:
             raise GitHubError('repository_removed')
         if not re.fullmatch(r'[\w.-]+/[\w.-]+', repo['full_name']):

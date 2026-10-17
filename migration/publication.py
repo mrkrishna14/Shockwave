@@ -38,7 +38,7 @@ class PublicationService:
         check()
         token = self.github.installation_token(connection.installation_id, connection.github_repository_id, write=True)
         repos = self.github.pages('/installation/repositories', token, 'repositories')
-        repo = next((r for r in repos if r['id'] == connection.github_repository_id), None)
+        repo = next((r for r in repos if str(r['id']) == str(connection.github_repository_id)), None)
         if repo is None or repo['full_name'] != connection.full_name:
             raise GitHubError('repository_removed_or_changed')
         name = repo['full_name']
@@ -75,7 +75,7 @@ class PublicationService:
             if branch_commit['tree']['sha'] != tree['sha'] or [p['sha'] for p in branch_commit['parents']] != [receipt.commit_sha]:
                 raise GitHubError('publication_branch_conflict')
         else:
-            new_commit = api('POST', '/git/commits', {'message': 'Migrate to proposed Demo Payments contract',
+            new_commit = api('POST', '/git/commits', {'message': 'Migrate to proposed API contract',
                 'tree': tree['sha'], 'parents': [receipt.commit_sha]})
             if api('GET', '/git/ref/heads/' + quote(base, safe=''))['object']['sha'] != receipt.commit_sha:
                 raise GitHubError('stale_base_commit')
@@ -84,7 +84,7 @@ class PublicationService:
         if pulls:
             pr = pulls[0]
         else:
-            pr = api('POST', '/pulls', {'title': 'Migrate Demo Payments amount display', 'head': branch,
+            pr = api('POST', '/pulls', {'title': 'Migrate amount display to proposed API contract', 'head': branch,
                 'base': base, 'body': 'Validated against the proposed contract in the registered test scope. '
                 'Requires coordinated deployment; old contract compatibility is not claimed. No automatic merge or deployment.'})
         url = pr.get('html_url', '')
