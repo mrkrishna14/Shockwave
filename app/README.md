@@ -4,7 +4,7 @@ The platform is a permissioned, local demonstration of API change impact. It sto
 
 ## Install
 
-From `/Users/ishanmysore/Shockwave/app`:
+From the `app/` directory (or use `./start-website.sh` at the repository root):
 
 ```sh
 python3 -m venv .venv
