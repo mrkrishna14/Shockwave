@@ -117,9 +117,10 @@ def validated_spec(plan: VerificationPlan) -> ScenarioSpec:
         spec = get_scenario(plan.scenario_id)
     except UnknownScenario:
         raise ValueError(f"refusing plan: unknown scenario {clip_text(plan.scenario_id, 120)!r}") from None
-    if list(plan.test_files) != [spec.staged_test_file]:
+    expected_tests = [spec.staged_test_file, *spec.additional_test_files]
+    if list(plan.test_files) != expected_tests:
         raise ValueError(
-            f"refusing plan: test_files must be exactly [{spec.staged_test_file!r}] for {spec.scenario_id}"
+            f"refusing plan: test_files must be exactly {expected_tests!r} for {spec.scenario_id}"
         )
     if (plan.old_fixture_id, plan.new_fixture_id) != (spec.old_fixture_id, spec.new_fixture_id):
         raise ValueError(

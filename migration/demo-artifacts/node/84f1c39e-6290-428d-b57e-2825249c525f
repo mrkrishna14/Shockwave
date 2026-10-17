@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="display_ten_dollars" time="0.005086" classname="test" failure="Expected values to be strictly equal:'$0.10' !== '$10.00'">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:'$0.10' !== '$10.00'">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+'$0.10' !== '$10.00'
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  '$0.10' !== '$10.00'
+  
+      at TestContext.&lt;anonymous> (/private/var/folders/9n/6tnrgjhd7mbdzs814r_dt54w0000gn/T/shockwave-run-b7lu247t/repo/display.test.cjs:4:42)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1062:25)
+      at Test.start (node:internal/test_runner/test:959:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:332:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '$0.10',
+    expected: '$10.00',
+    operator: 'strictEqual'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="unrelated_conversion" time="0.000482" classname="test"/>
+	<!-- tests 2 -->
+	<!-- suites 0 -->
+	<!-- pass 1 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 191.49175 -->
+</testsuites>

@@ -1,0 +1,156 @@
+[
+  {
+    "mode": "trusted_fixture_demo",
+    "language": "python",
+    "service_id": "demo-payments",
+    "verification": {
+      "schema_version": "shockwave.v1",
+      "id": "70c0e7e3-4190-4301-ac75-cfe173c30d6a",
+      "risk_id": "risk",
+      "repository_snapshot_id": "snapshot",
+      "status": "verified_regression",
+      "baseline": {
+        "exit_code": 0,
+        "timed_out": false,
+        "infrastructure_error": null,
+        "artifact_ids": [
+          "44d7e59f-8176-4afd-898c-a758260a04fa"
+        ],
+        "duration_ms": 1414,
+        "tests_run": 2
+      },
+      "proposed": {
+        "exit_code": 1,
+        "timed_out": false,
+        "infrastructure_error": null,
+        "artifact_ids": [
+          "feee7179-c760-4bad-8f9f-d628e07784ba"
+        ],
+        "duration_ms": 1169,
+        "tests_run": 2
+      },
+      "scenario_id": "scenario",
+      "summary": "verified_regression; only the registered scenario scope was tested.",
+      "artifact_ids": [
+        "44d7e59f-8176-4afd-898c-a758260a04fa",
+        "feee7179-c760-4bad-8f9f-d628e07784ba"
+      ]
+    },
+    "migration": {
+      "schema_version": "shockwave.v1",
+      "id": "0e618ec5-6e01-43c0-ba47-d0926ca8c5b8",
+      "risk_id": "risk",
+      "repository_snapshot_id": "snapshot",
+      "target_contract_snapshot_id": "new-contract",
+      "status": "patch_validated",
+      "generation_mode": "rule",
+      "patch_artifact_id": "b5157f95-d94a-4e06-8309-1c6c262aee66",
+      "changed_files": [
+        "consumer.py"
+      ],
+      "validation": {
+        "exit_code": 0,
+        "timed_out": false,
+        "infrastructure_error": null,
+        "artifact_ids": [
+          "31f52a45-af16-4601-b0ef-fd7db7a6ac19"
+        ],
+        "duration_ms": 1174,
+        "tests_run": 2
+      },
+      "pr_url": null,
+      "branch": null,
+      "warnings": [
+        "Targets the proposed contract only; deployment must be coordinated. Old responses are not supported by this migration."
+      ]
+    },
+    "patched_old_contract": {
+      "exit_code": 1,
+      "timed_out": false,
+      "infrastructure_error": null,
+      "artifact_ids": [
+        "6c4c1351-2e1e-4c5d-af72-27cf855df2d3"
+      ],
+      "duration_ms": 973,
+      "tests_run": 2
+    },
+    "live_pr_acceptance": "incomplete"
+  },
+  {
+    "mode": "trusted_fixture_demo",
+    "language": "node",
+    "service_id": "demo-payments",
+    "verification": {
+      "schema_version": "shockwave.v1",
+      "id": "cb320395-047b-41e8-b530-2c24ecafc651",
+      "risk_id": "risk",
+      "repository_snapshot_id": "snapshot",
+      "status": "verified_regression",
+      "baseline": {
+        "exit_code": 0,
+        "timed_out": false,
+        "infrastructure_error": null,
+        "artifact_ids": [
+          "a08d3e48-4a2c-4452-90d5-c2a25fd8a053"
+        ],
+        "duration_ms": 514,
+        "tests_run": 2
+      },
+      "proposed": {
+        "exit_code": 1,
+        "timed_out": false,
+        "infrastructure_error": null,
+        "artifact_ids": [
+          "84f1c39e-6290-428d-b57e-2825249c525f"
+        ],
+        "duration_ms": 322,
+        "tests_run": 2
+      },
+      "scenario_id": "scenario",
+      "summary": "verified_regression; only the registered scenario scope was tested.",
+      "artifact_ids": [
+        "a08d3e48-4a2c-4452-90d5-c2a25fd8a053",
+        "84f1c39e-6290-428d-b57e-2825249c525f"
+      ]
+    },
+    "migration": {
+      "schema_version": "shockwave.v1",
+      "id": "5aa62216-da9f-40e3-ad70-9b6a9ef679bf",
+      "risk_id": "risk",
+      "repository_snapshot_id": "snapshot",
+      "target_contract_snapshot_id": "new-contract",
+      "status": "patch_validated",
+      "generation_mode": "rule",
+      "patch_artifact_id": "21cf7d81-b8f0-46dd-a93f-dbbf3966de7f",
+      "changed_files": [
+        "consumer.cjs"
+      ],
+      "validation": {
+        "exit_code": 0,
+        "timed_out": false,
+        "infrastructure_error": null,
+        "artifact_ids": [
+          "32637f40-4dc1-4392-beeb-5994861a824d"
+        ],
+        "duration_ms": 352,
+        "tests_run": 2
+      },
+      "pr_url": null,
+      "branch": null,
+      "warnings": [
+        "Targets the proposed contract only; deployment must be coordinated. Old responses are not supported by this migration."
+      ]
+    },
+    "patched_old_contract": {
+      "exit_code": 1,
+      "timed_out": false,
+      "infrastructure_error": null,
+      "artifact_ids": [
+        "73bd1f15-b457-4e56-8530-29c2e37f0282"
+      ],
+      "duration_ms": 383,
+      "tests_run": 2
+    },
+    "live_pr_acceptance": "incomplete"
+  }
+]
