@@ -1,0 +1,532 @@
+{
+  "schema": "shockwave-demo.github-onboarding-flow@1",
+  "status": "PREPARED DESIGN ONLY. Nothing has been created, pushed or installed on GitHub, no GitHub App is registered, and no GitHub API call has been made by this demo.",
+  "github_api_version": "2026-03-10",
+  "docs_verified": "demo/github/docs-verified.json",
+  "labels": {
+    "provider": "Stripe is the API provider in this demo. Stripe is not a Shockwave customer, has not endorsed Shockwave and did not send any invitation; the demo operator plays the provider role for the Stripe API project.",
+    "change": "The Stripe change analyzed after onboarding is SIMULATED: not proposed or announced by Stripe.",
+    "consumers": "The three consumer repositories are team-created demo applications for three fictional companies, not Stripe customers.",
+    "scan": "Consumer dependencies are a FIXTURE until Noirit's scanner exists.",
+    "runner": "Verification runs on the LOCAL RUNNER DOUBLE (trusted local fixtures; plain subprocess; not a sandbox; not Sai's runner).",
+    "analysis": "Deterministic rules (no LLM).",
+    "provider_source": "Stripe provider source discovery is unavailable.",
+    "identity_isolation": "A local single-account simulation (one GitHub account owning all three consumer repositories and both private apps) does NOT prove cross-company identity isolation."
+  },
+  "team": {
+    "Ishan": "authentication, invitations, consent, backend orchestration, dashboards",
+    "Sai": "GitHub adapters/transport, execution harness (runner), migrations, PR publication",
+    "Noirit": "consumer scanning and language adapters",
+    "Kanishk": "provider discovery, change analysis, behavioral scenarios, demo environment"
+  },
+  "apps": {
+    "reader": {
+      "manifest": "demo/github/app-manifest.json",
+      "permissions": {"metadata": "read", "contents": "read"},
+      "events": ["repository"],
+      "default_delivered_events": ["installation", "installation_repositories", "github_app_authorization"],
+      "used_for": ["sign-in (user access token: identity and installation binding only)", "repository access for pinned snapshot fetches"],
+      "docs": ["manifest-parameters", "minimum-permissions", "permission-keys", "webhook-repository", "webhook-installation", "webhook-installation-repositories", "webhook-github-app-authorization"]
+    },
+    "pr_writer": {
+      "manifest": "demo/github/app-manifest.pr-writer.json",
+      "permissions": {"metadata": "read", "contents": "write", "pull_requests": "write"},
+      "events": [],
+      "default_delivered_events": ["installation", "installation_repositories", "github_app_authorization"],
+      "used_for": ["pushing a new migration branch and opening a pull request, only on repositories where the consumer authorized migration PRs"],
+      "docs": ["permissions-required-github-apps", "permission-keys", "create-pull-request", "installation-token-git-https"]
+    },
+    "decision": "two_apps",
+    "reasons": [
+      "GitHub enforces the split: an installation token 'cannot be granted permissions that the app was not granted', so no Reader token can ever write, whatever Shockwave's database says (installation-access-token).",
+      "The write scope is chosen in GitHub by the installer: the PR Writer is installed with 'Only select repositories' on exactly the repositories where migration PRs are authorized, while permissions are per installation, so one upgraded app would hold write access on every repository selected for analysis (install-selected-repositories).",
+      "Adding permissions to one app asks every installation to approve them and, until approved, the installation keeps its old permissions, so analysis-only consumers would face a write request they never asked for (permission-change-approval, approve-updated-permissions).",
+      "Revoking PR writes is a GitHub-native, observable action (uninstall the PR Writer or remove a repository from it; installation and installation_repositories webhooks are delivered by default) that leaves read access and analysis untouched (webhook-installation, webhook-installation-repositories)."
+    ],
+    "rejected_alternative": "One app upgraded to contents:write + pull_requests:write plus a Shockwave-side per-repository PR flag: one install and one key pair, but write capability would exist on every selected repository and the per-repository restriction would live only in Shockwave (narrowing tokens with repository_ids and permissions helps, but is still enforced only by Shockwave).",
+    "tradeoffs": [
+      "Two app registrations: two private keys and two webhook secrets to manage, and two installation steps for the consumer.",
+      "Installing the PR Writer needs the account owner, an organization owner, or a repository admin for repositories they administer (neither app requests organization permissions) (install-selected-repositories).",
+      "contents:write covers every branch of an installed repository; 'never push to the default branch, never force-push, never merge' is Shockwave policy, and consumers may add default-branch protection (not verified in this session: default-branch-protection).",
+      "Defense in depth: Shockwave still records a per-repository PR authorization and narrows every PR token to one repository and {contents: write, pull_requests: write}, so GitHub and Shockwave must both agree before a branch is pushed."
+    ],
+    "binding_checks": {
+      "reader": "The setup URL's installation_id is untrusted. Bind an installation to a consumer only if GET /user/installations with the signed-in user's user access token lists it (setup-url-spoofing, installations-rest).",
+      "pr_writer": "The PR Writer has no sign-in callback. Bind its installation only if (1) GET /repos/{owner}/{repo}/installation with the PR Writer's app JWT returns that installation for a repository the consumer marked for PRs, (2) its account matches the account of the consumer's verified Reader installation, and (3) the signature-verified installation.created webhook's sender is the signed-in GitHub user who requested PR authorization. This is a Shockwave design decision, not a GitHub-documented procedure (installation-token-generation, webhook-installation, webhook-signature)."
+    }
+  },
+  "authorizations": {
+    "sign_in": {
+      "grants": "Identity and a Shockwave session for one person.",
+      "mechanism": "Ishan's auth: 'Sign in with GitHub' through the Reader app's user authorization (web application flow with state and PKCE S256), or Ishan's own identity provider. The GitHub user access token is used only for GET /user (identity) and GET /user/installations (installation binding); it expires after 8 hours.",
+      "granted_by": "the person signing in",
+      "stored_as": "user identity (GitHub user id and login) and session; a user token, if kept, is stored encrypted",
+      "does_not_grant": ["repository_access", "analysis_consent", "pr_write"],
+      "revoked_by": ["sign-out or session expiry", "GitHub: Settings > Applications > Authorized GitHub Apps > Revoke (github_app_authorization webhook)"],
+      "effect_of_revocation": "End the person's sessions and delete stored user tokens. Does not by itself change installations, repository selections or consents (separate authorizations held by the consumer organization); any further consent or PR-authorization change requires signing in again.",
+      "owner": "Ishan",
+      "docs": ["user-access-token-web-flow", "login-with-github-tutorial", "on-behalf-of-user", "webhook-github-app-authorization", "revoke-user-authorization"]
+    },
+    "repository_access": {
+      "grants": "Shockwave may mint Reader installation tokens narrowed to one explicitly selected private repository with {contents: read, metadata: read} to fetch pinned snapshots.",
+      "mechanism": "GitHub: the Reader app installed with 'Only select repositories'. Shockwave: a RepositoryConnection per repository the signed-in consumer explicitly selected (a subset of the installation's repositories).",
+      "granted_by": "the consumer account or organization owner (installation) and a signed-in consumer user (selection)",
+      "stored_as": "github installation record + RepositoryConnection records",
+      "does_not_grant": ["analysis_consent", "pr_write", "provider visibility of anything"],
+      "revoked_by": ["uninstall (installation deleted)", "suspend (installation suspend)", "removing the repository from the installation (installation_repositories removed)", "deselecting it in Shockwave", "repository deleted or transferred (repository webhook)"],
+      "effect_of_revocation": "Stop new snapshot fetches, scans, consumer-findings updates and provider-summary publication for the affected repositories; cancel queued jobs; delete stored snapshot archives.",
+      "owner": "Sai (GitHub transport) with Ishan (records)",
+      "docs": ["install-selected-repositories", "installation-access-token", "installations-rest", "webhook-installation", "webhook-installation-repositories", "webhook-repository"]
+    },
+    "analysis_consent": {
+      "grants": "Shockwave may scan the selected repositories' pinned snapshots for dependencies on the provider's API, analyze the provider's (here SIMULATED) change, run verification scenarios, prepare migration proposals, and publish the restricted provider summary.",
+      "mechanism": "Shockwave-only record; GitHub has no notion of it.",
+      "granted_by": "a signed-in consumer organization admin, after seeing the exact provider_visibility.allowed_fields",
+      "stored_as": "AnalysisConsent: consent_id, consumer_org_id, enrollment_id, api_project_id, repository_connection_ids, purposes, allow_model_processing (false: deterministic rules only), provider_summary_fields, consent text version, granted_by, granted_at, withdrawn_at",
+      "does_not_grant": ["repository_access", "pr_write"],
+      "revoked_by": ["consumer withdraws consent in Shockwave"],
+      "effect_of_revocation": "Stop new processing and publication for the covered repositories immediately; queued jobs fail their re-check; the provider summary shows only 'consent withdrawn'.",
+      "owner": "Ishan",
+      "docs": []
+    },
+    "pr_write": {
+      "grants": "Push a NEW branch and open a migration pull request in one repository.",
+      "mechanism": "Both required: the PR Writer app installed with 'Only select repositories' on that repository, and a Shockwave per-repository PR authorization record. Tokens are narrowed to repository_ids=[that repository] and {contents: write, pull_requests: write}.",
+      "granted_by": "a consumer repository admin or account/organization owner (installation) and a signed-in consumer user (Shockwave authorization)",
+      "stored_as": "PR-writer installation record + PullRequestAuthorization per repository connection",
+      "does_not_grant": ["merging", "pushing to the default branch", "force-pushing", "provider visibility of patches or pull requests"],
+      "revoked_by": ["PR Writer uninstalled or suspended", "repository removed from the PR Writer installation", "PR authorization withdrawn in Shockwave", "repository_access or analysis_consent revoked"],
+      "effect_of_revocation": "Cancel queued PR jobs; no new branches, pushes, pull requests or PR updates. Pull requests already opened stay under the consumer's control; Shockwave does not touch them again.",
+      "owner": "Sai (PR publication) with Ishan (records)",
+      "docs": ["permissions-required-github-apps", "installation-access-token", "installation-token-git-https", "create-pull-request", "webhook-installation", "webhook-installation-repositories"]
+    }
+  },
+  "provider_visibility": {
+    "rule": "Default deny. The provider sees only allowed_fields, produced by an allowlist projection of consumer records, never by copying them. Everything in never_visible stays consumer-private at every step.",
+    "allowed_fields": {
+      "invitation.status": "pending | accepted | declined | expired | cancelled",
+      "consumer_org.display_name": "the organization name the consumer agreed to show (fictional companies in this demo)",
+      "enrollment.status": "invited | accepted | connecting | connected | paused | access_revoked",
+      "analysis_consent.status": "not_granted | granted | withdrawn",
+      "summary.change_id": "the provider's own (here SIMULATED) change",
+      "summary.endpoint": "provider-owned operation, e.g. GET /v1/payment_intents/{intent}",
+      "summary.field_path": "provider-owned field, e.g. response.amount",
+      "summary.impact_status": "affected | not_affected_within_tested_scope | unresolved | not_run | access_revoked | consent_withdrawn",
+      "summary.max_severity": "critical | high | medium | low | unknown",
+      "summary.risk_counts_by_category": "counts only, e.g. conversion / comparison / storage",
+      "summary.verification_status_counts": "counts of verified_regression / compatible_within_tested_scope / inconclusive / not_run",
+      "summary.migration_readiness": "none | prepared | validated_within_tested_scope (no patch content, no pull request link)",
+      "summary.labels": "SIMULATED change, deterministic rules (no LLM), LOCAL RUNNER DOUBLE, scanner FIXTURE"
+    },
+    "never_visible": [
+      "consumer_source",
+      "private_paths",
+      "code_snippets",
+      "logs",
+      "patch_artifacts",
+      "repository_names_and_urls",
+      "commit_shas",
+      "dependency_evidence",
+      "test_names_and_assertion_output",
+      "pull_request_links",
+      "github_installation_and_account_identifiers",
+      "consumer_user_identities",
+      "snapshot_archives"
+    ],
+    "aggregation": "Counts are per consumer organization, never per repository, so repository names and counts are not revealed."
+  },
+  "states": [
+    "none",
+    "invited",
+    "accepted",
+    "app_installed",
+    "repositories_selected",
+    "consent_granted",
+    "snapshot_fetched",
+    "scanned",
+    "consumer_findings_ready",
+    "provider_summary_published"
+  ],
+  "terminal_or_side_states": {
+    "declined": "consumer declined the invitation",
+    "expired": "invitation expired or was cancelled by the provider",
+    "paused": "installation suspended, or repository made public: no processing until resolved and re-confirmed",
+    "access_revoked": "installation deleted, repository removed, deselected, deleted or transferred",
+    "consent_withdrawn": "analysis consent withdrawn"
+  },
+  "steps": [
+    {
+      "order": 1,
+      "id": "provider_invitation",
+      "granularity": "enrollment",
+      "from_state": "none",
+      "to_state": "invited",
+      "actor": "Provider administrator (the demo operator acting for the Stripe API project; Stripe itself is not involved)",
+      "owner": "Ishan",
+      "collaborators": [],
+      "requires_authorizations": [],
+      "preconditions": ["provider administrator signed in to Shockwave as a member of the provider organization (Ishan)"],
+      "github": [],
+      "stores": ["Invitation: invitation_id, provider_org_id, api_project_id (Stripe API project), consumer organization display name and contact address entered by the provider, single-use token hash, expires_at, status"],
+      "provider_visible": ["invitation.status", "consumer_org.display_name"],
+      "revocation": "The provider can cancel a pending invitation; an expired or cancelled invitation cannot be accepted. Nothing exists on GitHub yet.",
+      "demo_status": "Not executed: Ishan's invitation flow is not in this repository. The demo uses three fixed fictional consumer organizations (demo/expected/demo-ids.json)."
+    },
+    {
+      "order": 2,
+      "id": "authenticated_consumer_acceptance",
+      "granularity": "enrollment",
+      "from_state": "invited",
+      "to_state": "accepted",
+      "actor": "Consumer user at the invited company, signed in",
+      "owner": "Ishan",
+      "collaborators": [],
+      "requires_authorizations": ["sign_in"],
+      "preconditions": ["valid, unexpired invitation token", "signed-in user accepts on behalf of the consumer organization"],
+      "github": [
+        {"kind": "browser", "call": "GET https://github.com/login/oauth/authorize with client_id (Reader app), redirect_uri, state, code_challenge, code_challenge_method=S256", "auth": "browser session", "docs": ["user-access-token-web-flow"]},
+        {"kind": "oauth", "call": "POST https://github.com/login/oauth/access_token with client_id, client_secret, code, redirect_uri, code_verifier (abort if state does not match)", "auth": "Reader client secret (server side)", "docs": ["user-access-token-web-flow"]},
+        {"kind": "rest", "call": "GET /user", "auth": "user access token", "docs": ["login-with-github-tutorial"]}
+      ],
+      "stores": ["Enrollment: enrollment_id, consumer_org_id, invitation_id, accepted_by, accepted_at", "identity: GitHub user id and login of the accepting user, session; user token short-lived and encrypted if kept"],
+      "provider_visible": ["invitation.status", "consumer_org.display_name", "enrollment.status"],
+      "revocation": "Sign-in revocation ends sessions and deletes stored user tokens, nothing more (see authorizations.sign_in). The consumer may decline instead of accepting (state declined).",
+      "demo_status": "Not executed: no live GitHub sign-in in this demo; Ishan's auth is not in this repository."
+    },
+    {
+      "order": 3,
+      "id": "github_app_installation",
+      "granularity": "enrollment",
+      "from_state": "accepted",
+      "to_state": "app_installed",
+      "actor": "Consumer GitHub account owner or organization owner (repository admins may install for repositories they administer)",
+      "owner": "Sai",
+      "collaborators": ["Ishan"],
+      "requires_authorizations": ["sign_in"],
+      "preconditions": ["enrollment accepted", "Reader app registered from demo/github/app-manifest.json"],
+      "github": [
+        {"kind": "browser", "call": "https://github.com/apps/<reader-app-slug>/installations/new -> choose the consumer account -> 'Only select repositories' -> pick the repositories -> Install", "auth": "consumer's GitHub session", "docs": ["install-selected-repositories"]},
+        {"kind": "redirect", "call": "setup_url?installation_id=... (untrusted; never used without verification)", "auth": "none", "docs": ["setup-url-spoofing", "registration-options"]},
+        {"kind": "rest", "call": "GET /user/installations: the installation must be listed for the signed-in user before it is bound to the enrollment", "auth": "user access token", "docs": ["installations-rest", "setup-url-spoofing"]},
+        {"kind": "webhook", "call": "installation (action created), X-Hub-Signature-256 verified", "auth": "webhook secret", "docs": ["webhook-installation", "webhook-signature"]}
+      ],
+      "stores": ["GitHubInstallation: installation_id, app (reader), account id and login (consumer-private), repository_selection, granted permissions, installed_by GitHub user id, bound enrollment_id"],
+      "provider_visible": ["enrollment.status"],
+      "revocation": "installation deleted or suspend stops all processing and publication for the enrollment's repositories (revocation_events).",
+      "demo_status": "Not executed: no app is registered or installed. Manual steps are in demo/GITHUB_SETUP.md and printed by demo/scripts/publish_consumer_repos.py."
+    },
+    {
+      "order": 4,
+      "id": "explicit_private_repository_selection",
+      "granularity": "repository",
+      "from_state": "app_installed",
+      "to_state": "repositories_selected",
+      "actor": "Consumer user, signed in, inside Shockwave",
+      "owner": "Ishan",
+      "collaborators": ["Sai"],
+      "requires_authorizations": ["sign_in", "repository_access"],
+      "preconditions": ["installation bound to this enrollment"],
+      "github": [
+        {"kind": "rest", "call": "GET /user/installations/{installation_id}/repositories (repositories this user can access through the installation)", "auth": "user access token", "docs": ["installations-rest"]},
+        {"kind": "rest", "call": "GET /installation/repositories (repositories the installation can access)", "auth": "Reader installation token", "docs": ["installations-rest"]},
+        {"kind": "rest", "call": "GET /repos/{owner}/{repo} (confirm private: true)", "auth": "Reader installation token (metadata read)", "docs": ["get-repository", "permissions-required-github-apps"]}
+      ],
+      "selection_rules": [
+        "Only repositories present in both listings and private are selectable.",
+        "The user ticks each repository explicitly; nothing is pre-selected and there is no 'select all'.",
+        "Repositories added to the installation later (installation_repositories added) are never selected automatically."
+      ],
+      "stores": ["RepositoryConnection per selected repository: repository_connection_id, installation_id, GitHub repository id (stable across renames), full_name and default branch (consumer-private), private=true at selection, selected_by, selected_at"],
+      "provider_visible": ["enrollment.status"],
+      "revocation": "Deselecting in Shockwave, removing the repository from the installation, or the repository being deleted, transferred or made public revokes or pauses the connection.",
+      "demo_status": "Not executed: the three repositories exist only as local templates (demo/templates) and local snapshots (demo/.work/repos after `demo.py prepare`)."
+    },
+    {
+      "order": 5,
+      "id": "analysis_consent",
+      "granularity": "repository",
+      "from_state": "repositories_selected",
+      "to_state": "consent_granted",
+      "actor": "Consumer organization admin, signed in",
+      "owner": "Ishan",
+      "collaborators": [],
+      "requires_authorizations": ["sign_in", "repository_access"],
+      "preconditions": ["the consent screen lists the selected repositories, the purposes and the exact provider_visibility.allowed_fields"],
+      "github": [],
+      "stores": ["AnalysisConsent (see authorizations.analysis_consent.stored_as)"],
+      "provider_visible": ["analysis_consent.status", "enrollment.status"],
+      "revocation": "Withdrawal stops new snapshot fetches, scans, findings updates and provider-summary publication immediately; queued jobs fail their re-check.",
+      "demo_status": "Not executed: Ishan's consent records are not in this repository."
+    },
+    {
+      "order": 6,
+      "id": "pinned_snapshot_fetch",
+      "granularity": "repository",
+      "from_state": "consent_granted",
+      "to_state": "snapshot_fetched",
+      "actor": "Shockwave worker",
+      "owner": "Sai",
+      "collaborators": [],
+      "requires_authorizations": ["repository_access", "analysis_consent"],
+      "preconditions": ["job_guards.before_snapshot_fetch passes"],
+      "github": [
+        {"kind": "rest", "call": "POST /app/installations/{installation_id}/access_tokens with repository_ids=[<this repository id>] and permissions={contents: read, metadata: read}", "auth": "Reader app JWT (RS256, exp <= 10 minutes)", "docs": ["installation-access-token", "installation-token-generation", "app-jwt"]},
+        {"kind": "rest", "call": "GET /repos/{owner}/{repo}/commits/{ref}: resolve the default branch (or a consumer-chosen ref) to a full commit SHA", "auth": "installation token", "docs": ["get-commit-ref"]},
+        {"kind": "rest", "call": "GET /repos/{owner}/{repo}/tarball/{sha} (follow the 302; private links expire after five minutes), or git fetch of that SHA over HTTPS with the installation token as the password", "auth": "installation token", "docs": ["tarball-snapshot", "installation-token-git-https"]},
+        {"kind": "rest", "call": "DELETE /installation/token when the fetch is done", "auth": "installation token", "docs": ["installations-rest"]}
+      ],
+      "unverified_caveats": ["tarball-ref-commit-sha"],
+      "stores": ["RepositorySnapshot (shockwave.v1): id, repository_connection_id, commit_sha, fetched_at, content_hash", "the archive itself: consumer-private, encrypted at rest, retention-limited"],
+      "provider_visible": [],
+      "revocation": "Checked immediately before minting the token; GitHub also refuses tokens for repositories the installation no longer has.",
+      "demo_status": "LOCAL ONLY: `demo.py prepare` builds deterministic local git snapshots under demo/.work/repos; no GitHub fetch has been performed."
+    },
+    {
+      "order": 7,
+      "id": "scan",
+      "granularity": "repository",
+      "from_state": "snapshot_fetched",
+      "to_state": "scanned",
+      "actor": "Shockwave worker",
+      "owner": "Noirit",
+      "collaborators": [],
+      "requires_authorizations": ["repository_access", "analysis_consent"],
+      "preconditions": ["job_guards.before_scan passes"],
+      "github": [],
+      "stores": ["Dependency records (shockwave.v1) with consumer_private evidence: file, line, excerpt"],
+      "provider_visible": [],
+      "revocation": "Checked before the scan starts; a revoked repository's scan is cancelled and partial results are discarded.",
+      "demo_status": "FIXTURE until Noirit's scanner exists: contract-shaped expected dependencies are labeled as fixtures, not completed scans."
+    },
+    {
+      "order": 8,
+      "id": "private_consumer_findings",
+      "granularity": "repository",
+      "from_state": "scanned",
+      "to_state": "consumer_findings_ready",
+      "actor": "Shockwave worker produces; consumer organization members view",
+      "owner": "Kanishk",
+      "collaborators": ["Sai", "Ishan"],
+      "requires_authorizations": ["repository_access", "analysis_consent"],
+      "preconditions": ["job_guards.before_consumer_findings_publication passes"],
+      "github": [],
+      "stores": ["AnalysisResult and Risk records (analysis_mode rules)", "VerificationResult records (baseline / proposed runs, commands, counts, bounded logs)", "migration artifacts (patches)"],
+      "consumer_visible": ["risks with file and line evidence", "verification commands, test counts and bounded logs", "migration patches"],
+      "provider_visible": [],
+      "revocation": "Checked before publishing to the consumer dashboard; after revocation findings are no longer updated.",
+      "demo_status": "Deterministic rules (no LLM); verification by the LOCAL RUNNER DOUBLE (trusted local fixtures; plain subprocess; not a sandbox; not Sai's runner); the Stripe change is SIMULATED."
+    },
+    {
+      "order": 9,
+      "id": "restricted_provider_summary",
+      "granularity": "enrollment",
+      "from_state": "consumer_findings_ready",
+      "to_state": "provider_summary_published",
+      "actor": "Shockwave publishes; provider administrator views",
+      "owner": "Ishan",
+      "collaborators": ["Kanishk"],
+      "requires_authorizations": ["repository_access", "analysis_consent"],
+      "preconditions": ["job_guards.before_provider_summary_publication passes"],
+      "github": [],
+      "stores": ["ProviderSummary: the allowlist projection per consumer organization (provider_visibility.allowed_fields)"],
+      "provider_visible": [
+        "consumer_org.display_name",
+        "enrollment.status",
+        "analysis_consent.status",
+        "summary.change_id",
+        "summary.endpoint",
+        "summary.field_path",
+        "summary.impact_status",
+        "summary.max_severity",
+        "summary.risk_counts_by_category",
+        "summary.verification_status_counts",
+        "summary.migration_readiness",
+        "summary.labels"
+      ],
+      "revocation": "Re-checked before every publication. After revocation nothing new is published and the consumer's entry shows only access_revoked or consent_withdrawn.",
+      "demo_status": "Dashboard-compatible JSON is produced locally; Ishan's dashboard is not integrated."
+    }
+  ],
+  "optional_pr_branch": {
+    "note": "Outside the required flow. Runs only after private_consumer_findings, only for a validated migration, and only where pr_write is granted.",
+    "steps": [
+      {
+        "order": 1,
+        "id": "pr_write_authorization",
+        "actor": "Consumer repository admin or account/organization owner, signed in",
+        "owner": "Ishan",
+        "collaborators": ["Sai"],
+        "requires_authorizations": ["sign_in", "repository_access", "analysis_consent"],
+        "github": [
+          {"kind": "browser", "call": "https://github.com/apps/<pr-writer-app-slug>/installations/new -> 'Only select repositories' -> only the repositories authorized for migration PRs", "auth": "consumer's GitHub session", "docs": ["install-selected-repositories"]},
+          {"kind": "rest", "call": "GET /repos/{owner}/{repo}/installation (binding check, see apps.binding_checks.pr_writer)", "auth": "PR Writer app JWT", "docs": ["installation-token-generation"]},
+          {"kind": "webhook", "call": "installation (action created) for the PR Writer, X-Hub-Signature-256 verified", "auth": "PR Writer webhook secret", "docs": ["webhook-installation", "webhook-signature"]}
+        ],
+        "stores": ["PullRequestAuthorization: repository_connection_id, pr_writer installation_id, authorized_by, authorized_at, withdrawn_at"],
+        "provider_visible": []
+      },
+      {
+        "order": 2,
+        "id": "migration_pr_publication",
+        "actor": "Shockwave worker",
+        "owner": "Sai",
+        "collaborators": [],
+        "requires_authorizations": ["repository_access", "analysis_consent", "pr_write"],
+        "github": [
+          {"kind": "rest", "call": "POST /app/installations/{installation_id}/access_tokens with repository_ids=[<this repository id>] and permissions={contents: write, pull_requests: write}", "auth": "PR Writer app JWT", "docs": ["installation-access-token", "app-jwt"]},
+          {"kind": "git", "call": "push a NEW branch (never the default branch, never --force) over HTTPS with the installation token as the password, or POST /repos/{owner}/{repo}/git/refs", "auth": "PR Writer installation token", "docs": ["installation-token-git-https", "permissions-required-github-apps"]},
+          {"kind": "rest", "call": "POST /repos/{owner}/{repo}/pulls with title, head (the new branch), base (default branch), body (includes the pinned-contract caveat)", "auth": "PR Writer installation token", "docs": ["create-pull-request"]}
+        ],
+        "stores": ["PR publication record: repository_connection_id, branch name, pull request number (consumer-private)"],
+        "provider_visible": []
+      }
+    ]
+  },
+  "job_guards": {
+    "rule": "Authorization is re-checked immediately before each action, not only when a job is enqueued. A failed check cancels the job without side effects and records why. Lost or late webhooks are covered because the re-check asks GitHub (token minting) and Shockwave's records directly.",
+    "checks": {
+      "reader_installation_active": "Reader installation not deleted or suspended",
+      "repository_in_installation": "a Reader token narrowed with repository_ids=[repository] can be minted",
+      "repository_connection_active": "RepositoryConnection selected and not revoked or paused",
+      "repository_still_private": "repository not made public since selection (pause otherwise)",
+      "analysis_consent_active": "consent granted, not withdrawn, and covering this purpose",
+      "pr_writer_installation_active": "PR Writer installation not deleted or suspended and includes the repository",
+      "pr_authorization_active": "Shockwave PullRequestAuthorization present and not withdrawn",
+      "branch_policy": "branch name is new; never the default branch; never forced"
+    },
+    "checkpoints": {
+      "before_snapshot_fetch": ["reader_installation_active", "repository_in_installation", "repository_connection_active", "repository_still_private", "analysis_consent_active"],
+      "before_scan": ["reader_installation_active", "repository_connection_active", "analysis_consent_active"],
+      "before_consumer_findings_publication": ["reader_installation_active", "repository_connection_active", "analysis_consent_active"],
+      "before_provider_summary_publication": ["reader_installation_active", "repository_connection_active", "analysis_consent_active"],
+      "before_pr_branch_push": ["reader_installation_active", "repository_connection_active", "analysis_consent_active", "pr_writer_installation_active", "pr_authorization_active", "branch_policy"],
+      "before_pr_open": ["reader_installation_active", "repository_connection_active", "analysis_consent_active", "pr_writer_installation_active", "pr_authorization_active"]
+    }
+  },
+  "revocation_events": [
+    {
+      "source": "github_webhook", "app": "reader", "event": "installation", "action": "deleted",
+      "docs": ["webhook-installation"],
+      "affects_authorization": "repository_access",
+      "stops": ["new_processing", "publication"],
+      "effect": "All of the installation's RepositoryConnections become access_revoked; queued jobs are cancelled; stored snapshot archives are deleted; the provider summary shows access_revoked only."
+    },
+    {
+      "source": "github_webhook", "app": "reader", "event": "installation", "action": "suspend",
+      "docs": ["webhook-installation", "installed-app-management"],
+      "affects_authorization": "repository_access",
+      "stops": ["new_processing", "publication"],
+      "effect": "Enrollment paused. On unsuspend, processing resumes only after a successful re-check (token minting, selection, consent); nothing is backfilled automatically."
+    },
+    {
+      "source": "github_webhook", "app": "reader", "event": "installation_repositories", "action": "removed",
+      "docs": ["webhook-installation-repositories", "installations-rest"],
+      "affects_authorization": "repository_access",
+      "stops": ["new_processing", "publication"],
+      "effect": "Re-list GET /installation/repositories and revoke every RepositoryConnection no longer listed (repositories_removed is empty when selection changes from all to selected)."
+    },
+    {
+      "source": "github_webhook", "app": "reader", "event": "repository", "action": "deleted",
+      "docs": ["webhook-repository"],
+      "affects_authorization": "repository_access",
+      "stops": ["new_processing", "publication"],
+      "effect": "RepositoryConnection access_revoked; snapshot archives deleted."
+    },
+    {
+      "source": "github_webhook", "app": "reader", "event": "repository", "action": "transferred",
+      "docs": ["webhook-repository"],
+      "affects_authorization": "repository_access",
+      "stops": ["new_processing", "publication"],
+      "effect": "RepositoryConnection access_revoked; the new owner must onboard again."
+    },
+    {
+      "source": "github_webhook", "app": "reader", "event": "repository", "action": "publicized",
+      "docs": ["webhook-repository"],
+      "affects_authorization": "repository_access",
+      "stops": ["new_processing", "publication"],
+      "effect": "RepositoryConnection paused: it is no longer a private repository; the consumer must re-confirm selection and consent."
+    },
+    {
+      "source": "shockwave", "app": null, "event": "repository_deselected", "action": null,
+      "docs": [],
+      "affects_authorization": "repository_access",
+      "stops": ["new_processing", "publication"],
+      "effect": "RepositoryConnection access_revoked; queued jobs cancelled. The repository may stay in the GitHub installation, but Shockwave no longer uses it."
+    },
+    {
+      "source": "shockwave", "app": null, "event": "consent_withdrawn", "action": null,
+      "docs": [],
+      "affects_authorization": "analysis_consent",
+      "stops": ["new_processing", "publication"],
+      "effect": "Covered repositories stop immediately; queued jobs fail their re-check; the provider summary shows consent_withdrawn only."
+    },
+    {
+      "source": "github_webhook", "app": "pr_writer", "event": "installation", "action": "deleted",
+      "docs": ["webhook-installation"],
+      "affects_authorization": "pr_write",
+      "stops": ["pr_publication"],
+      "effect": "All PullRequestAuthorizations through this installation become revoked; queued PR jobs cancelled; analysis continues."
+    },
+    {
+      "source": "github_webhook", "app": "pr_writer", "event": "installation", "action": "suspend",
+      "docs": ["webhook-installation"],
+      "affects_authorization": "pr_write",
+      "stops": ["pr_publication"],
+      "effect": "PR publication paused until unsuspended and re-checked."
+    },
+    {
+      "source": "github_webhook", "app": "pr_writer", "event": "installation_repositories", "action": "removed",
+      "docs": ["webhook-installation-repositories"],
+      "affects_authorization": "pr_write",
+      "stops": ["pr_publication"],
+      "effect": "Re-list the PR Writer installation's repositories; revoke PR authorization for every repository no longer listed."
+    },
+    {
+      "source": "shockwave", "app": null, "event": "pr_authorization_withdrawn", "action": null,
+      "docs": [],
+      "affects_authorization": "pr_write",
+      "stops": ["pr_publication"],
+      "effect": "No new branches, pushes or pull requests for the repository, even though the PR Writer may still be installed."
+    },
+    {
+      "source": "github_webhook", "app": "reader", "event": "github_app_authorization", "action": "revoked",
+      "docs": ["webhook-github-app-authorization", "revoke-user-authorization"],
+      "affects_authorization": "sign_in",
+      "stops": ["sessions", "consent_and_pr_authorization_changes_until_sign_in"],
+      "effect": "End the user's sessions and delete stored user tokens. Installations, selections and consents are separate authorizations and are not changed by this event alone."
+    }
+  ],
+  "non_revocation_events": [
+    {
+      "source": "github_webhook", "app": "reader", "event": "installation_repositories", "action": "added",
+      "docs": ["webhook-installation-repositories"],
+      "effect": "Not a grant of analysis: new repositories are listed as selectable but never selected or consented automatically."
+    },
+    {
+      "source": "github_webhook", "app": "any", "event": "installation", "action": "new_permissions_accepted",
+      "docs": ["webhook-installation", "permission-change-approval"],
+      "effect": "Recorded only; never widens what Shockwave does without a separate consent or PR authorization."
+    },
+    {
+      "source": "github_webhook", "app": "reader", "event": "repository", "action": "renamed",
+      "docs": ["webhook-repository"],
+      "effect": "Update the consumer-private full_name; connections are keyed by repository id."
+    }
+  ],
+  "environment_variables": [
+    {"name": "GITHUB_TOKEN", "owner": "operator", "purpose": "demo/scripts/publish_consumer_repos.py --execute only: creates the three private repositories and pushes the prepared snapshots; never printed or stored"},
+    {"name": "SHOCKWAVE_PUBLIC_BASE_URL", "owner": "Ishan", "purpose": "replaces https://shockwave.example.invalid in callback, setup and webhook URLs"},
+    {"name": "SHOCKWAVE_GITHUB_API_VERSION", "owner": "Sai", "purpose": "X-GitHub-Api-Version header (2026-03-10)"},
+    {"name": "SHOCKWAVE_GITHUB_READER_APP_ID", "owner": "Sai", "purpose": "Reader app id"},
+    {"name": "SHOCKWAVE_GITHUB_READER_CLIENT_ID", "owner": "Ishan", "purpose": "sign-in web flow; recommended JWT issuer for Sai"},
+    {"name": "SHOCKWAVE_GITHUB_READER_CLIENT_SECRET", "owner": "Ishan", "purpose": "sign-in code exchange (server side only)"},
+    {"name": "SHOCKWAVE_GITHUB_READER_PRIVATE_KEY_PATH", "owner": "Sai", "purpose": "Reader app private key file for JWTs (outside the repository)"},
+    {"name": "SHOCKWAVE_GITHUB_READER_WEBHOOK_SECRET", "owner": "Ishan", "purpose": "X-Hub-Signature-256 validation for Reader webhooks"},
+    {"name": "SHOCKWAVE_GITHUB_READER_APP_SLUG", "owner": "Ishan", "purpose": "install link https://github.com/apps/<slug>/installations/new"},
+    {"name": "SHOCKWAVE_GITHUB_PR_WRITER_APP_ID", "owner": "Sai", "purpose": "PR Writer app id"},
+    {"name": "SHOCKWAVE_GITHUB_PR_WRITER_CLIENT_ID", "owner": "Sai", "purpose": "recommended JWT issuer for the PR Writer"},
+    {"name": "SHOCKWAVE_GITHUB_PR_WRITER_PRIVATE_KEY_PATH", "owner": "Sai", "purpose": "PR Writer private key file for JWTs (outside the repository)"},
+    {"name": "SHOCKWAVE_GITHUB_PR_WRITER_WEBHOOK_SECRET", "owner": "Ishan", "purpose": "X-Hub-Signature-256 validation for PR Writer webhooks"},
+    {"name": "SHOCKWAVE_GITHUB_PR_WRITER_APP_SLUG", "owner": "Ishan", "purpose": "install link for the PR Writer"}
+  ]
+}

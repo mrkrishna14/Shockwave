@@ -1,0 +1,24 @@
+{
+  "name": "Shockwave Demo Reader",
+  "url": "https://shockwave.example.invalid/",
+  "description": "Shockwave hackathon demo (team-created). Read-only: fetches pinned snapshots of repositories the installer explicitly selects, for API-impact analysis the consumer consents to. Cannot write code, branches or pull requests.",
+  "hook_attributes": {
+    "url": "https://shockwave.example.invalid/github/webhooks/reader",
+    "active": true
+  },
+  "redirect_url": "https://shockwave.example.invalid/github/apps/manifest-callback/reader",
+  "callback_urls": [
+    "https://shockwave.example.invalid/auth/github/callback"
+  ],
+  "setup_url": "https://shockwave.example.invalid/github/apps/reader/setup",
+  "setup_on_update": true,
+  "public": false,
+  "default_events": [
+    "repository"
+  ],
+  "default_permissions": {
+    "metadata": "read",
+    "contents": "read"
+  },
+  "request_oauth_on_install": false
+}

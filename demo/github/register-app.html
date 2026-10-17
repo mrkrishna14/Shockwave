@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Register Shockwave Demo App</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1d1d1f; --muted: #5b5b66; --border: #d4d4dc; --field: #f7f7fa;
+    --accent: #1f5fbf; --accent-fg: #ffffff; --warn-bg: #fff4d6; --warn-fg: #5c4300; --err: #b42318;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --fg: #ececf1; --muted: #a3a3ad; --border: #3a3a42; --field: #1d1d22;
+      --accent: #6ea2ff; --accent-fg: #0b1020; --warn-bg: #3a3000; --warn-fg: #ffe08a; --err: #ff8a80;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --fg: #ececf1; --muted: #a3a3ad; --border: #3a3a42; --field: #1d1d22;
+    --accent: #6ea2ff; --accent-fg: #0b1020; --warn-bg: #3a3000; --warn-fg: #ffe08a; --err: #ff8a80;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.4rem; margin: 0 0 8px; }
+  p, li { color: var(--muted); }
+  .note { background: var(--warn-bg); color: var(--warn-fg); border-radius: 8px; padding: 10px 12px; }
+  fieldset { border: 1px solid var(--border); border-radius: 8px; margin: 16px 0; padding: 12px; }
+  legend { padding: 0 6px; font-weight: 600; }
+  label { display: block; margin: 6px 0; }
+  input[type="text"], textarea { width: 100%; background: var(--field); color: var(--fg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; font: 13px/1.4 ui-monospace, Menlo, monospace; }
+  textarea { min-height: 260px; }
+  button { background: var(--accent); color: var(--accent-fg); border: 0; border-radius: 6px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+  code { font: 13px ui-monospace, Menlo, monospace; overflow-wrap: anywhere; }
+  #problems { color: var(--err); white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Register a Shockwave demo GitHub App from its manifest</h1>
+  <p>Local helper for GitHub's documented manifest flow (see demo/github/docs-verified.json, entry <code>manifest-flow</code>). It sends the manifest you paste to GitHub only, after you press the button. It stores nothing, installs nothing and talks to no other server.</p>
+  <p class="note">Shockwave hackathon demo. Register the app under the same account that owns the private consumer repositories: an app with <code>"public": false</code> can only be installed on the account that owns it. After you click "Create GitHub App" on GitHub, GitHub redirects to the manifest's <code>redirect_url</code> with <code>?code=...&amp;state=...</code>. With the <code>shockwave.example.invalid</code> placeholders that page cannot load, but the address bar still shows the code. Exchange it within one hour (demo/GITHUB_SETUP.md) and keep the returned secrets outside the repository.</p>
+
+  <form id="register" method="post">
+    <fieldset>
+      <legend>Owner account</legend>
+      <label><input type="radio" name="owner-kind" value="user" checked> My personal account</label>
+      <label><input type="radio" name="owner-kind" value="org"> Organization: <input type="text" id="org" placeholder="organization login" autocomplete="off"></label>
+    </fieldset>
+    <fieldset>
+      <legend>Manifest</legend>
+      <label for="manifest-text">Paste demo/github/app-manifest.json (Reader) or demo/github/app-manifest.pr-writer.json (PR Writer)</label>
+      <textarea id="manifest-text" spellcheck="false"></textarea>
+    </fieldset>
+    <input type="hidden" name="manifest" id="manifest">
+    <p>State sent with this request (GitHub returns it with the code; it must match): <code id="state"></code></p>
+    <p id="problems" role="alert"></p>
+    <button type="submit">Continue to GitHub</button>
+  </form>
+</main>
+<script>
+  "use strict";
+  const ALLOWED_KEYS = ["name", "url", "hook_attributes", "redirect_url", "callback_urls", "setup_url",
+    "description", "public", "default_events", "default_permissions", "request_oauth_on_install", "setup_on_update"];
+  const READER = { metadata: "read", contents: "read" };
+  const PR_WRITER = { metadata: "read", contents: "write", pull_requests: "write" };
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  const state = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  document.getElementById("state").textContent = state;
+
+  function samePermissions(actual, expected) {
+    const keys = Object.keys(actual || {});
+    return keys.length === Object.keys(expected).length && keys.every((k) => actual[k] === expected[k]);
+  }
+
+  function problemsFor(manifest) {
+    const problems = [];
+    for (const key of Object.keys(manifest)) {
+      if (!ALLOWED_KEYS.includes(key)) problems.push("Unknown manifest key: " + key);
+    }
+    if (manifest.public !== false) problems.push('"public" must be false for this demo.');
+    if (typeof manifest.name !== "string" || manifest.name.length === 0 || manifest.name.length > 34) {
+      problems.push("The app name must be 1-34 characters.");
+    }
+    if (!samePermissions(manifest.default_permissions, READER) && !samePermissions(manifest.default_permissions, PR_WRITER)) {
+      problems.push("default_permissions must be exactly the Reader set {metadata: read, contents: read} or the PR Writer set {metadata: read, contents: write, pull_requests: write}.");
+    }
+    if (!manifest.hook_attributes || typeof manifest.hook_attributes.url !== "string") {
+      problems.push("hook_attributes.url is required.");
+    }
+    return problems;
+  }
+
+  document.getElementById("register").addEventListener("submit", (event) => {
+    const out = document.getElementById("problems");
+    out.textContent = "";
+    let manifest;
+    try {
+      manifest = JSON.parse(document.getElementById("manifest-text").value);
+    } catch (error) {
+      event.preventDefault();
+      out.textContent = "The manifest is not valid JSON: " + error.message;
+      return;
+    }
+    const problems = problemsFor(manifest);
+    const kind = document.querySelector('input[name="owner-kind"]:checked').value;
+    const org = document.getElementById("org").value.trim();
+    if (kind === "org" && !/^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/.test(org)) {
+      problems.push("Enter the organization login.");
+    }
+    if (problems.length > 0) {
+      event.preventDefault();
+      out.textContent = problems.join("\n");
+      return;
+    }
+    if (JSON.stringify(manifest).includes("shockwave.example.invalid") &&
+        !window.confirm("The manifest still uses the shockwave.example.invalid placeholders: GitHub will not be able to deliver webhooks or redirects. Continue anyway?")) {
+      event.preventDefault();
+      return;
+    }
+    const base = kind === "org"
+      ? "https://github.com/organizations/" + encodeURIComponent(org) + "/settings/apps/new"
+      : "https://github.com/settings/apps/new";
+    event.target.action = base + "?state=" + state;
+    document.getElementById("manifest").value = JSON.stringify(manifest);
+  });
+</script>
+</body>
+</html>
